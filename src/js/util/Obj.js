@@ -68,7 +68,7 @@ class Obj {
     for (let key in this) {
       //
       //process cyclic reference
-      if (this.owned_members.indexOf(key) < 0) {
+      if (!this.owned_members.includes(key)) {
         if (this[key] != obj[key]) {
           return false;
         }
@@ -116,7 +116,7 @@ class Obj {
         continue;
       }
 
-      if (this.owned_members.indexOf(key) >= 0) {
+      if (this.owned_members.includes(key)) {
         ret[key] = Json.to_json_value(this[key], only_owned_members);
 
         continue;
@@ -139,7 +139,7 @@ class Obj {
         continue;
       }
 
-      if (this.owned_members.indexOf(key) >= 0) {
+      if (this.owned_members.includes(key)) {
         ret[key] = Json.to_json_value(this[key], only_owned_members);
       } else {
         if (!only_owned_members) {
@@ -168,7 +168,7 @@ class Obj {
     let ret = {};
 
     for (let key in this) {
-      if (this.owned_members.indexOf(key) >= 0) {
+      if (this.owned_members.includes(key)) {
         ret[key] = Json.clone_value(this[key]);
 
         /*const type = typeof ret[key];
@@ -188,10 +188,14 @@ class Obj {
 
   /**
    * Set every members in obj but functions
+   *
+   * @param {json|object} obj
+   * @param {bool} update_members If true, specifies set members into update_members
+   *
    * @return number of set/not set members which are not a function
    *          3 values : nb_set, nb_not_set, that
    */
-  set(obj) {
+  set(obj, update_members = false) {
     let ret = {
       nb_set: 0,
       nb_not_set: 0,
@@ -202,7 +206,7 @@ class Obj {
       return ret;
     }
 
-    for (let key in this) {
+    for (const key in this) {
       const this_type = typeof this[key];
       if (
         this_type !== undefined &&
@@ -211,6 +215,9 @@ class Obj {
       ) {
         this[key] = obj[key];
         ret.nb_set++;
+        if (update_members) {
+          this.push_updated_member(key);
+        }
       } else {
         ret.nb_not_set++;
       }
@@ -293,11 +300,19 @@ class Obj {
     this.updated_members = [];
   }
 
+  /**
+   * Push member_name in this.updated_members if it's not already inside
+   * @param {string} member_name
+   */
+  push_updated_member(member_name) {
+    if (!this.updated_members.includes(member_name)) {
+      this.updated_members.push(member_name);
+    }
+  }
+
   set_updated_members(object_memberNames_to_DB_format) {
     for (const member_name in object_memberNames_to_DB_format) {
-      if (this.updated_members.indexOf(member_name) < 0) {
-        this.updated_members.push(member_name);
-      }
+      this.push_updated_member(member_name);
     }
   }
 }
