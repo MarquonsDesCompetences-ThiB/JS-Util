@@ -7,14 +7,13 @@ if (typeof process !== "undefined") {
 class Obj {
   /**
    *
-   * @param {string[]} cycle_reference_members Key members in this which raise
-   *                                            a cyclic references
-   *                                            Their value won't be converted
-   *                                            to simple Json object
-   *                                            => they're returned as is
+   * @param {string[]} owned_members Names of members in this
+   *                                              which are owned by this
+   *                                              => they never raise a cyclic
+   *                                              reference error
    */
-  constructor(cycle_reference_members = []) {
-    this.cycle_reference_members = cycle_reference_members;
+  constructor(owned_members = []) {
+    this.owned_members = owned_members;
 
     /*
       Members updated that need to be stored in DB
@@ -69,7 +68,7 @@ class Obj {
     for (let key in this) {
       //
       //process cyclic reference
-      if (this.cycle_reference_members.indexOf(key) >= 0) {
+      if (this.owned_members.indexOf(key) < 0) {
         if (this[key] != obj[key]) {
           return false;
         }
@@ -117,15 +116,15 @@ class Obj {
         continue;
       }
 
-      if (this.cycle_reference_members.indexOf(key) >= 0) {
-        if (!only_owned_members) {
-          ret[key] = this[key];
-        }
+      if (this.owned_members.indexOf(key) >= 0) {
+        ret[key] = Json.to_json_value(this[key], only_owned_members);
 
         continue;
       }
-      //else : not a cycle member
-      ret[key] = Json.to_json_value(this[key], only_owned_members);
+      //else : cycle member
+      if (!only_owned_members) {
+        ret[key] = this[key];
+      }
     }
 
     return ret;
@@ -140,12 +139,12 @@ class Obj {
         continue;
       }
 
-      if (this.cycle_reference_members.indexOf(key) >= 0) {
+      if (this.owned_members.indexOf(key) >= 0) {
+        ret[key] = Json.to_json_value(this[key], only_owned_members);
+      } else {
         if (!only_owned_members) {
           ret[key] = this[key];
         }
-      } else {
-        ret[key] = Json.to_json_value(this[key], only_owned_members);
       }
 
       //to string conversion
@@ -169,9 +168,7 @@ class Obj {
     let ret = {};
 
     for (let key in this) {
-      if (this.cycle_reference_members.indexOf(key) >= 0) {
-        ret[key] = this[key];
-      } else {
+      if (this.owned_members.indexOf(key) >= 0) {
         ret[key] = Json.clone_value(this[key]);
 
         /*const type = typeof ret[key];
@@ -182,6 +179,8 @@ class Obj {
       else if (typeof this[key] !== "function") {
         ret.nb_not_cloned++;
       }*/
+      } else {
+        ret[key] = this[key];
       }
     }
     return ret;
