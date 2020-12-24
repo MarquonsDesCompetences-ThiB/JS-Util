@@ -15,7 +15,12 @@ class Obj {
    */
   constructor(cycle_reference_members = []) {
     this.cycle_reference_members = cycle_reference_members;
-    return this;
+
+    /*
+      Members updated that need to be stored in DB
+      string[] : members name
+    */
+    this.updated_members = [];
   }
 
   static clone(obj) {
@@ -87,21 +92,65 @@ class Obj {
     return true;
   }
 
+  //
+  // === GETTERS / SETTERS ===
   /**
    *
-   * Key members in this.cycle_reference_members
-   * aren't converted to simple Json object => they're returned as is
+   * @param {bool} only_owned_members If true,
+   *                                key members in this.cycle_reference_members
+   *                                aren't converted to simple Json object
+   *                                => they're returned as is
+   * @param {bool} as_string  If true, everything is processed by
+   *                          this.get_JSON_as_string
+   *                          => numbers are converted to string
    */
-  get_JSON(only_owned_members = false) {
+  get_JSON(only_owned_members = false, as_string = false) {
+    if (as_string) {
+      return this.get_JSON_as_string(only_owned_members);
+    }
+
     let ret = {};
 
     for (let key in this) {
+      //if is undefined or null
+      if (this[key] == null) {
+        continue;
+      }
+
+      if (this.cycle_reference_members.indexOf(key) >= 0) {
+        if (!only_owned_members) {
+          ret[key] = this[key];
+        }
+
+        continue;
+      }
+      //else : not a cycle member
+      ret[key] = Json.to_json_value(this[key], only_owned_members);
+    }
+
+    return ret;
+  }
+
+  get_JSON_as_string(only_owned_members = false) {
+    let ret = {};
+
+    for (let key in this) {
+      //if is undefined or null
+      if (this[key] == null) {
+        continue;
+      }
+
       if (this.cycle_reference_members.indexOf(key) >= 0) {
         if (!only_owned_members) {
           ret[key] = this[key];
         }
       } else {
         ret[key] = Json.to_json_value(this[key], only_owned_members);
+      }
+
+      //to string conversion
+      if (typeof ret[key] === "number" || ret[key] instanceof Number) {
+        ret[key] = ret[key] + "";
       }
     }
 
@@ -169,6 +218,88 @@ class Obj {
     }
 
     return ret;
+  }
+
+  //
+  // === DB SYNCHRONIZATION ===
+  /**
+   * Return updated members values (identified by this.updated_members)
+   * to be Redis set compliant => 2n values alternating
+   * member key (Redis structure format), member value
+   *
+   * @param{json} Json associating ever member with its Redis format
+   *
+   * @return{string[]}
+   */
+  get_redis_array(key_members_to_redis) {
+    let arr = [];
+
+    for (let i = 0; i < this.updated_members.length; i++) {
+      let member = this.updated_members[i];
+      const value = this[member];
+      const value_type = typeof value;
+
+      if (
+        value === null ||
+        value_type === "undefined" ||
+        (value_type === "object" && !(value instanceof Date))
+      ) {
+        logger.warn(
+          "Obj#get_redis_array Member " +
+            member +
+            " has wrong type " +
+            value_type +
+            " ; skipping it"
+        );
+        continue;
+      }
+      logger.log(
+        "Obj#get_redis_array Member " + member + " type : " + value_type
+      );
+
+      //
+      // Redis member key
+      {
+        if (!key_members_to_redis[member]) {
+          logger.error(
+            "Obj#get_redis_array No Redis key format associated to member " +
+              member
+          );
+          continue;
+        }
+        arr.push(key_members_to_redis[member]);
+      }
+
+      //
+      // Member's value
+      {
+        let string_value = value;
+        // number to string
+        if (value_type === "number" || value instanceof Number) {
+          string_value = value + "";
+        }
+        // Date to string
+        else if (value instanceof Date) {
+          string_value = value.toString();
+        }
+
+        arr.push(string_value);
+      }
+    }
+
+    return arr;
+  }
+
+  flush_updated_members() {
+    this.updated_members = [];
+  }
+
+  set_updated_members(object_memberNames_to_DB_format) {
+    for (const member_name in object_memberNames_to_DB_format) {
+      if (this.updated_members.indexOf(member_name) < 0) {
+        this.updated_members.push(member_name);
+      }
+    }
   }
 }
 
