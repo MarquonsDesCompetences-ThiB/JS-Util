@@ -35,6 +35,12 @@ class Regex {
     return /^(\+\d{11})|(\d{10})$/.test(no);
   }
 
+  static is_website(url) {
+    return /^((https?):\/\/)?(www.)?[a-z0-9]+\.[a-z]+(\/[a-zA-Z0-9#]+\/?)*$/.test(
+      url
+    );
+  }
+
   static is_zip_code(no) {
     return /^\d{5}$/.test(no);
   }
