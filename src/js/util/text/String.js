@@ -4,6 +4,10 @@ const randomstring = require("randomstring");
 class String {
   constructor() {}
 
+  static has_special_characters(str) {
+    return /[$-/:-?{-~!"^_`\[\]]/.test(str);
+  }
+
   static is_string(val) {
     return typeof val === "string" || val instanceof String;
   }
