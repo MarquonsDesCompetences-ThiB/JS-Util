@@ -122,7 +122,16 @@ class Scripted_File extends _File {
           if (!util.text.String.is_string(type) || type.length === 0) {
             const msg =
               "Column " + i + " from file " + that.name + " has no type";
-            logger.warn("Scripted_File#parse::read " + msg);
+            logger.error("Scripted_File#parse::read " + msg);
+          } else if (!this.request_object(type)) {
+            const msg =
+              "Unexisting type " +
+              type +
+              " used in column " +
+              i +
+              " of file " +
+              that.name;
+            logger.error("Scripted_File#parse::read " + msg);
           }
           that.cols_types.push(type);
         }
@@ -272,106 +281,92 @@ class Scripted_File extends _File {
   }
 
   /**
-   * TODO
    * @param {*} col_id
    * @param {*} value
    */
   parse_column_value(col_id, value) {
     //
-    // Extract variables
-    let value_parts = [];
+    // Check arguments
     {
-      let start_extract_idx = 0;
-      let bracket_idx, end_brack_idx;
-      while ((bracket_idx = str.find("{", start_extract_idx)) >= 0) {
-        //
-        // Extract part before opening bracket
-        {
-          if (bracket_idx > start_extract_idx) {
-            value_parts.push(str.substring(start_extract_idx, bracket_idx));
-          }
+      if (!value || value.length === 0) {
+        const msg = "Value is missing in column " + col_id;
+        logger.warn("Scripted_File#parse_column_value " + msg);
+        return "";
+      }
+    }
+
+    //
+    // Value is a variable
+    {
+      if (value[0] === "{") {
+        const last_char = value.length - 1;
+        if (value[last_char] !== "}") {
+          const msg =
+            "Variable in column " + col_id + " has no closing bracket";
+          logger.error("Scripted_File#parse_column_value " + msg);
+          return undefined;
         }
 
-        //
-        // Extract variable
-        {
-          end_brack_idx = str.find("}", search_idx);
-          //
-          // No end bracket
-          if (end_bracket_idx < 0) {
-            const msg =
-              "Opening bracket at index " +
-              bracket_idx +
-              " has no closing bracket";
-            logger.error("Scripted_File#parse_column_value " + msg);
-            return null;
-          }
+        const var_name = value.substring(1, last_char);
+        let obj = this.get_object(var_name);
+        if (obj == null) {
+          const msg =
+            "Variable " +
+            var_name +
+            " does not exist in file " +
+            this.name +
+            " ; checking environment...";
+          logger.log("Scripted_File#parse_column_value " + msg);
 
           //
-          // Get variable value
-          const var_name = str.substring(start_extract_idx + 1, bracket_idx);
-          let obj = this.get_object(var_name);
+          // Request from environment
+          obj = this.request_object(var_name);
           if (obj == null) {
             const msg =
-              "Variable " + var_name + " does not exist in file " + this.name;
-            logger.log("Scripted_File#parse_column_value " + msg);
-
-            //
-            // Request from environment
-            obj = this.request_object(var_name);
-            if (obj == null) {
-              const msg =
-                "Variable " +
-                var_name +
-                " does not exist in environment neither";
-              logger.warn("Scripted_File#parse_column_value " + msg);
-              value_parts.push("<undefined " + var_name + ">");
-              continue;
-            }
+              "Variable " + var_name + " does not exist in environment neither";
+            logger.error("Scripted_File#parse_column_value " + msg);
           }
-          //
-          //else convert obj to string
-          let str_val = obj;
-          if (typeof str_val === "function") {
-            str_val = str_val();
-          }
-
-          //
-          //str_val is an object with to_string/toString function
-          if (
-            typeof str_val === "object" &&
-            (str_val.to_string || str_val.toString)
-          ) {
-            str_val = str_val.toString
-              ? str_val.toString()
-              : str_val.to_string();
-          }
-
-          //
-          // str_val is neither a string or number
-          if (
-            !util.text.String.is_string(str_val) &&
-            !util.text.Number.is_number(str_val)
-          ) {
-            const msg =
-              "Variable " +
-              var_name +
-              " is neither a string, number or object with to_string/toString method";
-            logger.warn("Scripted_File#parse_column_value " + msg);
-            str_parts.push("<not stringable " + var_name + ">");
-            continue;
-          }
-
-          str_parts.push(str_val);
         }
+        return obj;
+      }
+    }
 
-        start_extract_idx = end_brack_idx + 1;
+    //
+    // Value is a parameter
+    let constructor;
+    //
+    // Fetch constructor
+    {
+      let type_name = this.cols_types[col_id];
+      if (!type_name) {
+        const msg = "Column " + col_id + " has no type set";
+        logger.error("Scripted_File#parse_column_value " + msg);
+        return undefined;
       }
 
-      //
-      // Extract the eventual final string part
-      str_parts.push(str.substring(start_extract_idx));
+      constructor = this.get_object(type_name);
+      if (constructor == null) {
+        const msg =
+          "Type " +
+          type_name +
+          " does not exist in file " +
+          this.name +
+          " ; checking environment...";
+        logger.log("Scripted_File#parse_column_value " + msg);
+
+        //
+        // Request from environment
+        constructor = this.request_object(type_name);
+        if (constructor == null) {
+          const msg =
+            "Type " + type_name + " does not exist in environment neither";
+          logger.error("Scripted_File#parse_column_value " + msg);
+          return undefined;
+        }
+      }
     }
+
+    return constructor(value);
   }
 
   //
