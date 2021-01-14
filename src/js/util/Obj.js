@@ -190,7 +190,8 @@ class Obj {
    * Set every members in obj but functions
    *
    * @param {json|object} obj
-   * @param {bool} update_members If true, specifies set members into update_members
+   * @param {bool} update_members If true, specifies set m
+   * mbers into update_members
    *
    * @return number of set/not set members which are not a function
    *          3 values : nb_set, nb_not_set, that
