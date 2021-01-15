@@ -190,18 +190,15 @@ class Scripted_File extends _File {
     // Fetch/create object reference from 1st column
     let obj_name = row[0];
     let obj_ref = this.objects;
+    let obj_params = {};
     {
-      const name_parts = obj_name.split(".");
-      //
-      // Iterate name_parts ignoring last one
-      for (let i = 0; i < name_parts.length - 1; i++) {
-        const subname = name_parts[i];
-        if (!obj_ref[subname]) {
-          obj_ref[subname] = {};
-        }
-        obj_ref = obj_ref[subname];
+      const name_parts = this.parse_column_name(obj_name);
+      obj_ref = name_parts.obj_ref;
+      obj_name = name_parts.member_name;
+
+      if (name_parts.init_obj) {
+        obj_params = name_parts.init_obj;
       }
-      obj_name = name_parts[name_parts.length - 1];
 
       nb_parsed_cols++;
     }
@@ -222,7 +219,6 @@ class Scripted_File extends _File {
 
     //
     // Fetch params from next columns
-    let obj_params = {};
     {
       for (let col_id = 1; col_id < row.length; col_id++) {
         const member_name = this.cols_names[col_id];
@@ -278,6 +274,70 @@ class Scripted_File extends _File {
     const msg = nb_parsed_cols + " columns parsed/" + row.length;
     logger.log("Scripted_File#parse_object_row " + msg);
     return true;
+  }
+
+  /**
+   *
+   * @param {string} name Name can include multiple variables separated by dot
+   *                      This name can ended by =<object_name_to_copy>
+   *
+   * @return {Object} Object containing :
+   *                    - obj_ref,
+   *                    - member_name,
+   *                    - init_obj : Object to use
+   *                                  to init obj_ref[member_name] members
+   */
+  parse_column_name(name) {
+    const equal_parts = name.split("=");
+
+    const name_parts = equal_parts[0].split(".");
+    let obj_ref = this.objects;
+    //
+    // Fetch obj_ref iterating name_parts ignoring last one
+    {
+      for (let i = 0; i < name_parts.length - 1; i++) {
+        const subname = name_parts[i];
+        if (!obj_ref[subname]) {
+          obj_ref[subname] = {};
+        }
+        obj_ref = obj_ref[subname];
+      }
+    }
+
+    //
+    // Another object has to be cloned
+    let obj;
+    {
+      if (equal_parts[1]) {
+        obj = this.get_object(equal_parts[1], true);
+        if (!obj) {
+          const msg =
+            "Could not find object " +
+            equal_parts[1] +
+            " to be cloned to " +
+            equal_parts[0];
+          logger.error("Scripted_File#parse_column_name " + msg);
+        }
+        // else if obj has a clone function -> clone it
+        else if (typeof obj.clone === "function") {
+          obj = obj.clone();
+        }
+        //else warn the object will be given as is
+        else {
+          const msg =
+            "The object " +
+            equal_parts[1] +
+            " has no clone method ; original references will be used";
+          logger.warn("Scripted_File#parse_column_name " + msg);
+        }
+      }
+    }
+
+    return {
+      obj_ref: obj_ref,
+      member_name: name_parts[name_parts.length - 1],
+      init_obj: obj,
+    };
   }
 
   /**
