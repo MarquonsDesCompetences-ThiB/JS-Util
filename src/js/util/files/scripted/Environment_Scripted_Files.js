@@ -498,8 +498,8 @@ class Environment_Scripted_Files {
     }
 
     let file_obj = file;
+    file_obj.request_object = this.get_object;
     if(!(file_obj instanceof Scripted_File)){
-        file_obj.request_object = this.get_object;
         file_obj = new Scripted_File(file_obj);
     }
 
