@@ -281,8 +281,10 @@ class Scripted_File extends _File {
   }
 
   /**
-   * @param {*} col_id
-   * @param {*} value
+   * @param {integer} col_id
+   * @param {string} value Can be a string containing :
+   *                    - array of values
+   *                    - value : variable | raw value
    */
   parse_column_value(col_id, value) {
     //
@@ -293,85 +295,108 @@ class Scripted_File extends _File {
         logger.warn("Scripted_File#parse_column_value " + msg);
         return "";
       }
+
+      if (col_id >= this.cols_types.length) {
+        const msg =
+          "Argument col_id is wrong (" +
+          col_id +
+          ") ; should be in [0; " +
+          this.cols_types.length +
+          "[";
+        logger.error("Scripted_File#parse_column_value " + msg);
+        return undefined;
+      }
     }
 
+    let is_array = false;
+    let arr_strings;
+    let arr_objects = [];
+
     //
-    // Value is a variable
+    // Value is an array
     {
-      if (value[0] === "{") {
+      if (value[0] === "[") {
         const last_char = value.length - 1;
-        if (value[last_char] !== "}") {
+        if (value[last_char] !== "]") {
           const msg =
             "Variable in column " + col_id + " has no closing bracket";
           logger.error("Scripted_File#parse_column_value " + msg);
           return undefined;
         }
 
-        const var_name = value.substring(1, last_char);
-        let obj = this.get_object(var_name);
-        if (obj == null) {
-          const msg =
-            "Variable " +
-            var_name +
-            " does not exist in file " +
-            this.name +
-            " ; checking environment...";
-          logger.log("Scripted_File#parse_column_value " + msg);
+        is_array = true;
+        arr_strings = value.split(",");
+      } else {
+        arr_strings = [value];
+      }
+    }
 
-          //
-          // Request from environment
-          obj = this.request_object(var_name);
-          if (obj == null) {
+    for (let i = 0; i < arr_strings.length; i++) {
+      const value = arr_strings[i];
+
+      //
+      // Value is a variable
+      {
+        if (value[0] === "{") {
+          const last_char = value.length - 1;
+          if (value[last_char] !== "}") {
             const msg =
-              "Variable " + var_name + " does not exist in environment neither";
+              "Variable in column " + col_id + " has no closing brace";
+            logger.error("Scripted_File#parse_column_value " + msg);
+            return undefined;
+          }
+
+          const var_name = value.substring(1, last_char);
+          let obj = this.get_object(var_name);
+          if (obj == null) {
+            const msg = "Variable " + var_name + " does not exist";
             logger.error("Scripted_File#parse_column_value " + msg);
           }
+          arr_objects.push(obj);
+          continue;
         }
-        return obj;
-      }
-    }
-
-    //
-    // Value is a parameter
-    let constructor;
-    //
-    // Fetch constructor
-    {
-      let type_name = this.cols_types[col_id];
-      if (!type_name) {
-        const msg = "Column " + col_id + " has no type set";
-        logger.error("Scripted_File#parse_column_value " + msg);
-        return undefined;
       }
 
-      constructor = this.get_object(type_name);
-      if (constructor == null) {
-        const msg =
-          "Type " +
-          type_name +
-          " does not exist in file " +
-          this.name +
-          " ; checking environment...";
-        logger.log("Scripted_File#parse_column_value " + msg);
-
-        //
-        // Request from environment
-        constructor = this.request_object(type_name);
-        if (constructor == null) {
-          const msg =
-            "Type " + type_name + " does not exist in environment neither";
+      //
+      // Value is a parameter
+      let constructor;
+      //
+      // Fetch constructor
+      {
+        let type_name = this.cols_types[col_id];
+        if (!type_name) {
+          const msg = "Column " + col_id + " has no type set";
           logger.error("Scripted_File#parse_column_value " + msg);
-          return undefined;
+          arr_objects.push(undefined);
+          continue;
+        }
+
+        constructor = this.get_object(type_name, true);
+        if (constructor == null) {
+          const msg = "Type " + type_name + " does not exist";
+          logger.error("Scripted_File#parse_column_value " + msg);
+          arr_objects.push(undefined);
+          continue;
         }
       }
+      arr_objects.push(constructor(value));
     }
 
-    return constructor(value);
+    if (is_array) {
+      return arr_objects;
+    }
+    return arr_objects[0];
   }
 
   //
   // === GETTERS ===
-  get_object(name) {
+  /**
+   *
+   * @param {*} name
+   * @param {bool | optional} request_environment If must request parent when object
+   *                                              is missing from this
+   */
+  get_object(name, request_environment = false) {
     const name_parts = name.split(".");
     //
     // Looking for in this.objects
@@ -402,8 +427,17 @@ class Scripted_File extends _File {
         " found in file " +
         this.name;
       logger.log("Scripted_File#get_object " + msg);
-      return json;
+
+      if (json || !request_environment) {
+        return json;
+      }
     }
+
+    //
+    // Request environment
+    const msg = "Requesting environment";
+    logger.log("Scripted_File#get_object " + msg);
+    return this.request_object(name);
   }
 }
 
