@@ -396,25 +396,25 @@ class Environment_Scripted_Files {
         // Fetch str's variables
         {
             let start_extract_idx = 0;
-            let parenthesis_idx, end_brack_idx;
-            while((parenthesis_idx = str.find("(", start_extract_idx))>=0){
+            let brace_idx, end_brack_idx;
+            while((brace_idx = str.find("{", start_extract_idx))>=0){
                 //
-                // Extract part before opening parenthesis
+                // Extract part before opening brace
                 {
-                    if(parenthesis_idx>start_extract_idx){
+                    if(brace_idx>start_extract_idx){
                         str_parts.push(str.substring(start_extract_idx, 
-                                                    parenthesis_idx));
+                                                    brace_idx));
                     }
                 }
 
                 //
                 // Extract variable
                 {
-                    end_brack_idx = str.find(")", search_idx);
+                    end_brack_idx = str.find("}", search_idx);
                     //
-                    // No end parenthesis
-                    if(end_parenthesis_idx<0){
-                        const msg = "Opening parenthesis at index "+parenthesis_idx+" has no closing parenthesis";
+                    // No end brace
+                    if(end_brace_idx<0){
+                        const msg = "Opening brace at index "+brace_idx+" has no closing brace";
                         logger.error("Environment_Scripted_Files#parse_string "+msg);
                         return null;
                     }
@@ -422,7 +422,7 @@ class Environment_Scripted_Files {
                     //
                     // Get variable value
                     const var_name = str.substring(start_extract_idx+1, 
-                        parenthesis_idx);
+                        brace_idx);
                     const obj = this.get_object(var_name);
                     if(obj == null){
                         const msg = "Variable "+var_name+" does not exist in environment";
