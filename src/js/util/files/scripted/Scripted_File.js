@@ -278,7 +278,9 @@ class Scripted_File extends _File {
 
   /**
    *
-   * @param {string} name Name can include multiple variables separated by dot
+   * @param {string} name Name can include :
+   *                        - multiple variables separated by dot
+   *                        - object member's idx (integer)
    *                      This name can ended by =<object_name_to_copy>
    *
    * @return {Object} Object containing :
@@ -452,7 +454,8 @@ class Scripted_File extends _File {
   // === GETTERS ===
   /**
    *
-   * @param {*} name
+   * @param {string} name Name can include multiple variables separated by dot
+   *                  Can also include object member's idx (integer)
    * @param {bool | optional} request_environment If must request parent when object
    *                                              is missing from this
    */
@@ -464,7 +467,41 @@ class Scripted_File extends _File {
       let json = this.objects;
       for (let i = 0; i < name_parts.length; i++) {
         const sub_name = name_parts[i];
-        if (!json[sub_name]) {
+
+        //
+        // Fetch json[sub_name] into json
+        // with sub_name as an integer idx or string key
+        {
+          const member_idx = Number.parseInt(sub_name);
+          if (!isNaN(member_idx)) {
+            // iterate members to fetch the number member_idx
+            let i = 0;
+            for (const key in json) {
+              if (i === member_idx) {
+                json = json[key];
+                break;
+              }
+
+              i++;
+            }
+
+            //
+            // Member number sub_name not found
+            if (i !== member_idx) {
+              not_found_msg();
+              return undefined;
+            }
+          } else {
+            json = json[sub_name];
+          }
+        }
+
+        if (!json) {
+          not_found_msg();
+          return undefined;
+        }
+
+        function not_found_msg() {
           let msg = "Value " + sub_name + " is not ";
           if (i === 0) {
             msg += "in environment";
@@ -473,10 +510,7 @@ class Scripted_File extends _File {
           }
           msg += " (from " + name + ")";
           logger.warn("Scripted_File#get_object " + msg);
-          return undefined;
         }
-
-        json = json[sub_name];
       }
 
       const msg =
