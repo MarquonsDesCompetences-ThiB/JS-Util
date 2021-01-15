@@ -10,6 +10,7 @@ class Environment_Scripted_Files  extends util.Obj{
         "values"
     ];
 
+
   constructor() {
       /**
       * Object types usable by values
@@ -553,6 +554,12 @@ class Environment_Scripted_Files  extends util.Obj{
     //
     // === GETTERS ===
     get_object(name){
+        //
+        // Remove enclosing brackets if any in name
+        {
+            name = Scripted_File.get_variable_name(name);
+        }
+
         const name_parts = name.split(".");
         //
         // 1 part only

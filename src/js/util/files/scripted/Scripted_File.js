@@ -11,6 +11,67 @@ const Csv_File = require("../Csv_File");
  *  1 : Objects names
  */
 class Scripted_File extends Csv_File {
+  /**
+   * The name a variable can match (including dots)
+   * with no braces
+   */
+  static variable_name_regex = "\\s*((w|_)+(\\.(\\w|_)+)*)\\s*";
+  /**
+   * The name a variable can match (including dots)
+   * with enclosing braces
+   *
+   *   Enclosing brackets with inside :
+   *     At least 1 letter/digit/_
+   *     Can have a following dot followed by at least 1 letter/digit/_
+   *
+   *   Brackets can be surrounded by whitespaces
+   */
+  static variable_name_braces_regex =
+    "\\s*{" + Scripted_File.variable_name_regex + "}\\s*";
+
+  /**
+   * If any, remove enclosing brackets from name
+   * @param {*} name
+   */
+  static get_variable_name(name) {
+    if (!Scripted_File.is_variable(name)) {
+      return name;
+    }
+
+    let formatted = "" + name; //clone name
+    const reg = new RegExp(
+      "/^" + Scripted_File.variable_name_braces_regex + "$/"
+    );
+    formatted.replace(reg, "$1");
+    return formatted;
+  }
+  /*
+      Enclosing brackets with nothing inside or at least one semi-colon
+  */
+  static is_json(str) {
+    return (
+      // starting bracket
+      /^\s*\{\s*/.test(str) &&
+      //ending bracket
+      /\s*\}\s*$/.test(str) &&
+      // at least one key/parameter inside
+      (/:/.test(str) ||
+        // nothing inside
+        /^\s*\{\s*\}\s*$/.test(str))
+    );
+  }
+
+  /**
+   * A variable is between braces and can be formed with :
+   *  letters, digits, ., _
+   * @param {sring} str
+   */
+  static is_variable(str) {
+    return new RegExp(
+      "/^" + Scripted_File.variable_name_braces_regex + "$/"
+    ).test(str);
+  }
+
   static owned_members = [
     //
     // string
@@ -69,6 +130,7 @@ class Scripted_File extends Csv_File {
       }
       on_read();
     });
+    return true;
 
     function on_read() {
       if (!(that.content instanceof Array)) {
@@ -487,6 +549,12 @@ class Scripted_File extends Csv_File {
    *                                              is missing from this
    */
   get_object(name, request_environment = false) {
+    //
+    // Remove enclosing brackets if any in name
+    {
+      name = Scripted_File.get_variable_name(name);
+    }
+
     const name_parts = name.split(".");
     //
     // Looking for in this.objects
