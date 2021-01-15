@@ -346,6 +346,8 @@ class Scripted_File extends _File {
    * @param {integer} col_id
    * @param {string} value Can be a string containing :
    *                    - array of values
+   *                    - listed values (separated by comma)
+   *                        to be used as parameters in type's constructor call
    *                    - value : variable | raw value
    */
   parse_column_value(col_id, value) {
@@ -420,10 +422,35 @@ class Scripted_File extends _File {
       }
 
       //
-      // Value is a parameter
-      let constructor;
+      // Value is one or more parameters for a constructor
+      let params;
+      {
+        params = value.split(",");
+        //
+        // Fetch params' variables
+        for (let i = 0; i < params.length; i++) {
+          const str = params[i];
+          if (str[0] === "{") {
+            if (str[str.length - 1] !== "}") {
+              const msg =
+                "The parameter " +
+                str +
+                " from column " +
+                col_id +
+                " has no ending brace";
+              logger.warn("Scripted_File#parse_column_value " + msg);
+              continue;
+            }
+
+            // get object pointed by variable params[i] (str)
+            params[i] = this.get_object(str.substring(1, str.length - 1));
+          }
+        }
+      }
+
       //
       // Fetch constructor
+      let constructor;
       {
         let type_name = this.cols_types[col_id];
         if (!type_name) {
@@ -441,7 +468,7 @@ class Scripted_File extends _File {
           continue;
         }
       }
-      arr_objects.push(constructor(value));
+      arr_objects.push(constructor(...params));
     }
 
     if (is_array) {
