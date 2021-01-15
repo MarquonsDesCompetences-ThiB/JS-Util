@@ -43,9 +43,12 @@ class Environment_Scripted_Files {
   init_types_objects(){
     this.types.objects = {
         "Array" : Array,
+        "Date" : Date,
         "Number" : Number,
         "Object" : Object,
         "String" : String,
+        "null": null,
+        "undefined": undefined,
     };
   }
 
@@ -393,14 +396,14 @@ class Environment_Scripted_Files {
         // Fetch str's variables
         {
             let start_extract_idx = 0;
-            let bracket_idx, end_brack_idx;
-            while((bracket_idx = str.find("{", start_extract_idx))>=0){
+            let brace_idx, end_brack_idx;
+            while((brace_idx = str.find("{", start_extract_idx))>=0){
                 //
-                // Extract part before opening bracket
+                // Extract part before opening brace
                 {
-                    if(bracket_idx>start_extract_idx){
+                    if(brace_idx>start_extract_idx){
                         str_parts.push(str.substring(start_extract_idx, 
-                                                    bracket_idx));
+                                                    brace_idx));
                     }
                 }
 
@@ -409,9 +412,9 @@ class Environment_Scripted_Files {
                 {
                     end_brack_idx = str.find("}", search_idx);
                     //
-                    // No end bracket
-                    if(end_bracket_idx<0){
-                        const msg = "Opening bracket at index "+bracket_idx+" has no closing bracket";
+                    // No end brace
+                    if(end_brace_idx<0){
+                        const msg = "Opening brace at index "+brace_idx+" has no closing brace";
                         logger.error("Environment_Scripted_Files#parse_string "+msg);
                         return null;
                     }
@@ -419,7 +422,7 @@ class Environment_Scripted_Files {
                     //
                     // Get variable value
                     const var_name = str.substring(start_extract_idx+1, 
-                        bracket_idx);
+                        brace_idx);
                     const obj = this.get_object(var_name);
                     if(obj == null){
                         const msg = "Variable "+var_name+" does not exist in environment";
