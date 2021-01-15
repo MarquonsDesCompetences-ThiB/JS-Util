@@ -1,24 +1,42 @@
 "use strict";
 
+const Csv_File = require(process.env.SRC_ROOT + "js/util/files/Csv_File");
 const Scripted_File = require(process.env.SRC_ROOT +
   "js/util/files/scripted/Scripted_File");
 
-class Fixtures_Scripted_File extends Scripted_File {
+class Fixtures_Scripted_File extends Csv_File {
   static owned_members = [
     /**
-     * Object[]
-     *  Members :
-     *      - defined
-     *      - type
-     *      - value
+     * {Environment_Scripted_File}
      */
-    "expected",
+    "env",
+
+    /**
+     * Object associating column's name to column's idx
+     */
+    "data_cols",
+
+    /**
+     * Integer[][] whose keys are :
+     *  - name of variable to assert
+     *      - method name from Fixtures_Scripted_File.asserts
+     *          - column index
+     */
+    "expecteds",
+
+    /**
+     * integer[]
+     * The last asserted expected field id
+     * rows_asserts_progress.length <= content.length
+     * rows_asserts_progress[i] < expecteds.length
+     */
+    "rows_asserts_progress",
   ];
 
   /**
    * Function names from https://jestjs.io/docs/en/expect
    */
-  static expecteds = [
+  static asserts = [
     "value",
     "extend",
 
@@ -103,6 +121,56 @@ class Fixtures_Scripted_File extends Scripted_File {
     "toThrowErrorMatchingInlineSnapshot",
   ];
 
+  static asserts_regex = "(" + Fixtures_Scripted_File.asserts.join("|") + ")";
+  /**
+   * The name an assert column can match
+   */
+  static expect_regex =
+    // | Expect :
+    "(\\s*\\|\\s*)?(Expect\\s*\\:)" +
+    // variable name
+    Scripted_File.variable_name_regex +
+    // Assert method name
+    "\\s+(" +
+    Fixtures_Scripted_File.asserts_regex +
+    "){1}\\s*";
+
+  /**
+   * Names that cannot be used as column name
+   */
+  static reserved_names = ["Expected", "id"];
+
+  static is_assert_column_name(name) {
+    return new RegExp("/^" + Fixtures_Scripted_File.expect_regex + "$/").test(
+      name
+    );
+  }
+
+  /**
+   * Extract variable name and assert method
+   * from the specified assert column name
+   *
+   * @param {string} name
+   *
+   * @return{string[2]} variable_name and assert_method
+   */
+  static extract_assert_column_name_values(name) {
+    let name_clone = "" + name;
+
+    /*
+        Extract variable and method
+        concatenating them into a string,
+        separated by an hyphen '-'
+        <variable>-<method>
+    */
+    {
+      const reg = new RegExp("/^" + Fixtures_Scripted_File.expect_regex + "$/");
+      name_clone.replace(reg, "$3-$4");
+    }
+
+    return name_clone.split("-");
+  }
+
   constructor(obj = undefined, child_owned_members = []) {
     super(Fixtures_Scripted_File.owned_members.concat(child_owned_members));
 
@@ -110,94 +178,357 @@ class Fixtures_Scripted_File extends Scripted_File {
   }
 
   parse(cbk) {
-    let that = this;
-    super.parse(on_parsed);
+    this.data_cols;
+    this.expecteds = [];
+    this.reset_rows_asserts_progress();
 
-    function on_parsed(err) {
+    let that = this;
+    if (this.content) {
+      on_read();
+      return true;
+    }
+    logger.log(
+      "Fixtures_Scripted_File#parse Reading file " + this.name + "..."
+    );
+    this.read(function (err) {
       if (err) {
-        const msg = "Error(s) parsing file : " + err;
-        logger.error("Fixtures_Scripted_File#parse " + msg);
+        const msg = "Error reading file " + this.name + " : " + err;
+        logger.error("Fixtures_Scripted_File#parse::read " + msg);
         return cbk(msg);
       }
+      on_read();
+    });
+    return true;
 
-      that.parse_expected_columns(cbk);
-    }
-  }
+    function on_read() {
+      if (!(that.content instanceof Array)) {
+        that.to_csv_array();
+      }
 
-  /**
-   * Parse expected_* columns
-   * Each one can appear multiple times
-   */
-  parse_expected_columns(cbk) {
-    let expecteds_fields = []; //Object[] -> {name, cols_idxs[]}
-    //
-    // Fetch expected_* columns idx
-    {
-      let idx;
-      for (let i = 0; i < Fixtures_Scripted_File.expecteds_fields.length; i++) {
-        const exp_name = Fixtures_Scripted_File.expecteds_fields[i];
-        if (this.cols_names.includes(exp_name)) {
-          let expected = {
-            name: exp_name,
-            cols_idxs: [],
-          };
+      const row = that.content[0];
+      //
+      // Check there is an headings row
+      {
+        if (!row) {
+          const msg = "File " + that.name + " has no headings row";
+          logger.warn("Fixtures_Scripted_File#parse::read " + msg);
+          return cbk(msg);
+        }
+      }
 
+      //
+      // Fetch columns data_cols fom 1st row
+      {
+        for (let col_idx = 0; col_idx < row.length; col_idx++) {
+          const col_name = row[col_idx];
           //
-          // Fetch expected's columns indexes from this.cols_names
-          idx = -1;
-          while ((idx = this.cols_names.indexOf(exp_name, idx++)) >= 0) {
-            expected.cols_idxs.push(idx);
-          }
+          // Column's name is an assert name :
+          // is wrthing Expected_* name eventually starting with |
+          // If starts with |, it concerns a new expected field
+          if (Fixtures_Scripted_File.is_assert_column_name(col_name)) {
+            //
+            // If new expected field
+            {
+              const has_vertical_bar = /^\s*\|{1}\s*/.test(col_name);
+              if (has_vertical_bar || that.expecteds.length === 0) {
+                that.expecteds.push({});
+              }
+            }
 
-          expecteds_fields.push(expected);
+            //
+            // Add the expected checks
+            {
+              let last_expected = that.expecteds[that.expecteds.length - 1];
+              const expect_checks = extract_assert_column_name_values();
+              //
+              // Add variable name to check
+              const exp_var = expect_checks[0];
+              if (!last_expected[exp_var]) {
+                last_expected[exp_var] = {};
+              }
+
+              const exp_method = expect_checks[1];
+              //
+              // Warn if assert method already exists for this variable
+              if (last_expected[exp_var][exp_method]) {
+                const msg =
+                  "Expected column " +
+                  col_name +
+                  " (" +
+                  col_idx +
+                  ") already exists and will be removed";
+                logger.error("Fixtures_Scripted_File#parse " + msg);
+              }
+
+              last_expected[exp_var][exp_method] = col_idx;
+            }
+          }
+          //
+          // Column's name is a data name
+          else {
+            if (Fixtures_Scripted_File.reserved_names.includes(col_name)) {
+              const msg =
+                "Data column cannot be called '" +
+                col_name +
+                "' : this is a reserved word by this class";
+              logger.error("Fixtures_Scripted_File#parse " + msg);
+              continue;
+            }
+
+            if (that.data_cols[col_name]) {
+              const msg =
+                "Data column " +
+                col_name +
+                " already exists and will be removed";
+              logger.error("Fixtures_Scripted_File#parse " + msg);
+            }
+
+            that.data_cols[col_name] = col_idx;
+          }
         }
       }
     }
+  }
 
+  //
+  // === TESTING ===
+  /**
+   * Iterate rows in files giving values as Object associating
+   * column's name -> cell value
+   * fn is called rows.length-1 times
+   *
+   * @param {function} fn Function called for every row
+   *                        with its data as Object argument
+   * @param {integer} start_row Index of the row to start from
+   */
+  async iterate_fixtures(fn, start_row = 1) {
+    //
+    // Check preconds
     {
+      if (!this.env) {
+        const msg =
+          "this.env is missing ; an Environment_Scripted_File is required to evaluate rows";
+        logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+        return false;
+      }
+
+      if (!this.data_cols) {
+        const msg = "No data names parsed ; did you call this.parse(cbk) ?";
+        logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+        return false;
+      }
+    }
+
+    for (let row_id = start_row; row_id < this.content.length; row_id++) {
+      const row = this.content[row_id];
+      let row_vals = {
+        id: row_id,
+        expected: [],
+      };
+
       //
-      // Iterate rows skippging 2 firsts ones
-      const rows = this.content;
-      for (let row_id = 2; i < rows.length; row_id++) {
-        const obj_name = rows[row_id[0]];
+      // Fetch datas
+      {
+        for (const data_name in this.data_cols) {
+          const col_id = this.data_cols[data_name];
+          //
+          // column's missing in row
+          if (col_id >= row.length) {
+            const msg =
+              "No column " +
+              data_name +
+              " (" +
+              col_id +
+              ") in row " +
+              row_id +
+              " of file " +
+              this.name;
+            logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+            continue;
+          }
 
-        if (this.objects[obj_name]) {
-          this.objects[obj_name].expecteds = [];
-          let obj_expecteds = this.objects[obj_name].expecteds;
+          //
+          // warn if already exists and now removed
+          if (row_vals[data_name]) {
+            const msg =
+              "Data " + col_name + " already exists and will be removed";
+            logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+          }
 
+          row_vals[data_name] = row[col_id];
+          //
+          // Cell value is a variable => fetch it
           {
-            //
-            // Iterate expecteds_fields
-            for (
-              let field_idx = 0;
-              field_idx < expecteds_fields.length;
-              field_idx++
-            ) {
-              const exp_field = expecteds_fields[field_idx];
+            if (Scripted_File.is_variable(row_vals[data_name])) {
+              row_vals[data_name] = this.env.get_object(row_vals[data_name]);
 
-              //
-              // Iterate expected_field's columns
-              for (
-                let field_col_idx = 0;
-                field_col_idx < exp_field.cols_idxs.length;
-                field_col_idx++
-              ) {
-                // object's expected value
-                while (!obj_expecteds[field_col_idx]) {
-                  obj_expecteds.push({});
-                }
-                let exp_obj = obj_expecteds[field_col_idx];
-
-                const exp_val = rows[exp_field.cols_idx[field_col_idx]];
-                exp_obj[exp_field.name] = exp_val;
+              if (!row_vals[data_name]) {
+                const msg =
+                  "Variable " +
+                  row[col_id] +
+                  " not found for column " +
+                  col_name +
+                  "(" +
+                  col_id +
+                  ") in file " +
+                  this.name;
+                logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
               }
             }
           }
         }
       }
+
+      //
+      // Send row_vals to function
+      fn(row_vals);
     }
 
-    cbk();
+    return true;
+  }
+
+  //
+  // === ASSSERTS ===
+  assert_row(row_id, values) {
+    //
+    // Check arguments
+    {
+      if (row_id >= this.content.length) {
+        const msg = "Unexisting row " + row_id + " in " + this.name;
+        logger.error("Fixtures_Scripted_File#assert_row " + msg);
+        return 0;
+      }
+
+      if (!values) {
+        const msg = "Missing values arguments to assert row " + row_id;
+        logger.error("Fixtures_Scripted_File#assert_row " + msg);
+        return 0;
+      }
+    }
+
+    const row = this.content[row_id];
+
+    //
+    // Init progress if row never asserted
+    {
+      while (!this.rows_asserts_progress[row_id]) {
+        this.rows_asserts_progress.push(-1);
+      }
+    }
+    {
+      if (this.rows_asserts_progress[row_id] >= this.expecteds.length) {
+        const msg =
+          "All asserts are already done (" +
+          this.rows_asserts_progress[row_id] +
+          ") for row " +
+          row_id;
+        logger.error("Fixtures_Scripted_File#assert_row " + msg);
+        return 0;
+      }
+    }
+
+    const exp_id = this.rows_asserts_progress[row_id]++;
+    const exp_obj = this.expecteds[exp_id];
+
+    //
+    // Iterate assertions to do
+    for (const var_name in exp_obj) {
+      for (const assert_meth_name in exp_obj[var_name]) {
+        const col_id = exp_obj[var_name][assert_meth_name];
+        //
+        // column's missing in row
+        if (col_id >= row.length) {
+          const msg =
+            "No column 'Expect : " +
+            var_name +
+            " " +
+            assert_meth_name +
+            " (" +
+            col_id +
+            ") in row " +
+            row_id +
+            " of file " +
+            this.name;
+          logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+          continue;
+        }
+
+        let expected_val = row[col_id];
+        //
+        // Expected value is a variable => fetch it
+        {
+          if (Scripted_File.is_variable(expected_val)) {
+            expected_val = this.env.get_object(expected_val);
+
+            if (!expected_val) {
+              const msg =
+                "Variable " +
+                row[col_id] +
+                " not found for column expecting " +
+                var_name +
+                " " +
+                assert_meth_name +
+                " (" +
+                col_id +
+                ") in file " +
+                this.name;
+              logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+              continue;
+            }
+          }
+        }
+
+        //
+        // Fetch variable to assert in values
+        let computed_val = values;
+        {
+          let err = false;
+          const var_name_parts = var_name.split(".");
+          for (let part_id = 0; part_id < var_name_parts.length; part_id++) {
+            const member_name = var_name_parts[part_id];
+            if (!computed_val[member_name]) {
+              const msg =
+                "Error asserting variable " +
+                var_name +
+                " (column " +
+                col_id +
+                ") : Member " +
+                member_name +
+                " from " +
+                var_name +
+                " not found in row " +
+                row_id +
+                " of file " +
+                this.name;
+              logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+              err = true;
+              break;
+            }
+            computed_val = computed_val[member_name];
+          }
+          if (err) {
+            continue;
+          }
+        }
+
+        //
+        // Jest assert
+        {
+          //
+          // If assert method use .not
+          if (assert_meth_name.includes("not")) {
+            const name_parts = assert_meth_name.split("_");
+            expect(computed_val)[name_parts[0]][name_parts[1]](expected_val);
+          } else {
+            expect(computed_val)[assert_meth_name](expected_val);
+          }
+        }
+      }
+    }
+  }
+
+  reset_rows_asserts_progress() {
+    this.rows_asserts_progress = [];
   }
 }
 
