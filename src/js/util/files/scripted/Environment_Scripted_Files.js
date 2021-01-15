@@ -1,10 +1,15 @@
 "use strict";
 
-const { callbackify } = require("util");
 const Csv_File = require("../Csv_File");
 const Scripted_File = require("./Scripted_File");
 
-class Environment_Scripted_Files {
+class Environment_Scripted_Files  extends util.Obj{
+    static owned_members = [
+        "files_path",
+        "types",
+        "values"
+    ];
+
   constructor() {
       /**
       * Object types usable by values
@@ -85,6 +90,7 @@ class Environment_Scripted_Files {
     }
 
     let file_obj = file;
+    file_obj.path = this.files_path+file_obj.path;
     if(!(file_obj instanceof Csv_File)){
         file_obj = new Csv_File(file_obj);
     }
@@ -498,6 +504,7 @@ class Environment_Scripted_Files {
     }
 
     let file_obj = file;
+    file_obj.path = this.files_path+file_obj.path;
     file_obj.request_object = this.get_object;
     if(!(file_obj instanceof Scripted_File)){
         file_obj = new Scripted_File(file_obj);
@@ -607,6 +614,59 @@ class Environment_Scripted_Files {
             return json;
         }
     }
+
+    //
+  // === DELETE ===
+  /**
+   *
+   * @param {string} name
+   */
+  delete_object(name) {
+    const name_parts = name.split(".");
+    //
+    // Object is in this.values.files
+    {
+        if(this.values.files[name_parts[0]]){
+            const after_dot_idx = name.indexOf(".")+1;
+            if(after_dot_idx<=0){
+                return false;
+            }
+
+            return this.values.files[name_parts[0]].delete_object(name.substring(after_dot_idx, name.length));
+        }
+    }
+    
+    //
+    // Object is in this.types.objects
+    {
+        let json = this.types.objects;
+        const parts_length = name_parts.length;
+        for(let i=0; i<parts_length; i++){
+            const sub_name = name_parts[i];
+            if(!json[sub_name]){
+                let msg = "Value "+sub_name+" is not ";
+                if(i===0){
+                    msg += "in environment";
+                }
+                else{
+                    msg += "a member of "+name_parts[i-1];
+                }
+                msg += " (from "+name+")";
+                logger.error("Environment_Scripted_Files#delete_object "+msg);
+                return undefined;
+            }
+
+            if(i<parts_length-1){ //not to fetch the last one
+                json = json[sub_name];
+            }
+        }
+
+        delete json[name_parts[parts_length-1]];
+        const msg = "Value "+name+" removed from environment";
+        logger.log("Environment_Scripted_Files#delete_object "+msg);
+        return true;
+    }
+  }
 }
 
 module.exports = Environment_Scripted_Files;

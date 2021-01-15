@@ -1,5 +1,5 @@
 "use strict";
-const _File = require("../File");
+const Csv_File = require("../Csv_File");
 
 /**
  * Rows :
@@ -10,7 +10,7 @@ const _File = require("../File");
  * Columns :
  *  1 : Objects names
  */
-class Scripted_File extends _File {
+class Scripted_File extends Csv_File {
   static owned_members = [
     //
     // string
@@ -603,7 +603,7 @@ class Scripted_File extends _File {
           // Member number sub_name not found
           if (j !== member_idx) {
             not_found_msg();
-            return undefined;
+            return false;
           }
         } else {
           json = json[sub_name];
@@ -612,7 +612,7 @@ class Scripted_File extends _File {
 
       if (!json) {
         not_found_msg();
-        return undefined;
+        return false;
       }
 
       function not_found_msg() {
@@ -631,6 +631,7 @@ class Scripted_File extends _File {
 
     const msg = "Variable " + name + " deleted from parsed file " + this.name;
     logger.log("Scripted_File#delete_object " + msg);
+    return true;
   }
 }
 
