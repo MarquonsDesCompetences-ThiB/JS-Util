@@ -401,11 +401,11 @@ class Scripted_File extends _File {
       //
       // Value is a variable
       {
-        if (value[0] === "{") {
+        if (value[0] === "(") {
           const last_char = value.length - 1;
-          if (value[last_char] !== "}") {
+          if (value[last_char] !== ")") {
             const msg =
-              "Variable in column " + col_id + " has no closing brace";
+              "Variable in column " + col_id + " has no closing parenthesis";
             logger.error("Scripted_File#parse_column_value " + msg);
             return undefined;
           }
@@ -430,14 +430,14 @@ class Scripted_File extends _File {
         // Fetch params' variables
         for (let i = 0; i < params.length; i++) {
           const str = params[i];
-          if (str[0] === "{") {
-            if (str[str.length - 1] !== "}") {
+          if (str[0] === "(") {
+            if (str[str.length - 1] !== ")") {
               const msg =
                 "The parameter " +
                 str +
                 " from column " +
                 col_id +
-                " has no ending brace";
+                " has no ending parenthesis";
               logger.warn("Scripted_File#parse_column_value " + msg);
               continue;
             }
