@@ -15,6 +15,94 @@ class Fixtures_Scripted_File extends Scripted_File {
     "expected",
   ];
 
+  /**
+   * Function names from https://jestjs.io/docs/en/expect
+   */
+  static expecteds = [
+    "value",
+    "extend",
+
+    "addSnapshotSerializer",
+    "anything",
+    "any",
+    "arrayContaining",
+
+    "assertions",
+    "hasAssertions",
+
+    "objectContaining",
+
+    //
+    // Not
+    "not",
+    "not_arrayContaining",
+    "not_objectContaining",
+    "not_stringContaining",
+    "not_stringMatching",
+
+    "resolves",
+    "rejects",
+
+    //
+    // String
+    "stringContaining",
+    "stringMatching",
+
+    //
+    // To Be
+    "toBe",
+    "toBeDefined",
+    "toBeFalsy",
+    "toBeInstanceOf",
+    "toBeNull",
+    "toBeTruthy",
+    "toBeUndefined",
+    "toBeNaN",
+
+    //
+    // To Be : Number comparison
+    "toBeGreaterThan",
+    "toBeGreaterThanOrEqual",
+    "toBeLessThan",
+    "toBeLessThanOrEqual",
+    "toEqual",
+    "toStrictEqual",
+
+    //
+    // To Contain
+    "toContain",
+    "toContainEqual",
+
+    //
+    // To have : Been called
+    "toHaveBeenCalled",
+    "toHaveBeenCalledWith",
+
+    "toHaveLength",
+    "toHaveProperty",
+
+    //
+    // To have : Returned
+    "toHaveReturned",
+    "toHaveReturnedTimes",
+    "toHaveReturnedWith",
+    "toHaveLastReturnedWith",
+    "toHaveNthReturnedWith",
+
+    //
+    // To Match
+    "toMatch",
+    "toMatchObject",
+    "toMatchSnapshot",
+    "toMatchInlineSnapshot",
+
+    //
+    // To Throw
+    "toThrow",
+    "toThrowErrorMatchingSnapshot",
+    "toThrowErrorMatchingInlineSnapshot",
+  ];
+
   constructor(obj = undefined, child_owned_members = []) {
     super(Fixtures_Scripted_File.owned_members.concat(child_owned_members));
 
@@ -41,78 +129,69 @@ class Fixtures_Scripted_File extends Scripted_File {
    * Each one can appear multiple times
    */
   parse_expected_columns(cbk) {
-    let idx;
+    let expecteds_fields = []; //Object[] -> {name, cols_idxs[]}
     //
     // Fetch expected_* columns idx
     {
-      // expected_defined
-      const exp_defined_name = "expected_defined";
-      let exp_defined_cols_idx = [];
-      idx = -1;
-      while ((idx = this.cols_names.indexOf(exp_defined_name, idx++)) >= 0) {
-        exp_defined_cols_idx.push(idx);
-      }
+      let idx;
+      for (let i = 0; i < Fixtures_Scripted_File.expecteds_fields.length; i++) {
+        const exp_name = Fixtures_Scripted_File.expecteds_fields[i];
+        if (this.cols_names.includes(exp_name)) {
+          let expected = {
+            name: exp_name,
+            cols_idxs: [],
+          };
 
-      // expected_type
-      const exp_type_name = "expected_type";
-      let exp_type_cols_idx = [];
-      idx = -1;
-      while ((idx = this.cols_names.indexOf(exp_type_name, idx++)) >= 0) {
-        exp_type_cols_idx.push(idx);
-      }
+          //
+          // Fetch expected's columns indexes from this.cols_names
+          idx = -1;
+          while ((idx = this.cols_names.indexOf(exp_name, idx++)) >= 0) {
+            expected.cols_idxs.push(idx);
+          }
 
-      // expected_value
-      const exp_value_name = "expected_value";
-      const exp_value_cols_idx = [];
-      idx = -1;
-      while ((idx = this.cols_names.indexOf(exp_value_name, idx++)) >= 0) {
-        exp_value_cols_idx.push(idx);
+          expecteds_fields.push(expected);
+        }
       }
     }
 
-    //
-    // Iterate rows skippging 2 firsts ones
     {
+      //
+      // Iterate rows skippging 2 firsts ones
       const rows = this.content;
       for (let row_id = 2; i < rows.length; row_id++) {
         const obj_name = rows[row_id[0]];
 
         if (this.objects[obj_name]) {
           this.objects[obj_name].expecteds = [];
-          let expecteds = this.objects[obj_name].expecteds;
+          let obj_expecteds = this.objects[obj_name].expecteds;
 
-          //
-          // expected_defined
-          for (let i = 0; i < exp_defined_cols_idx.length; i++) {
-            expecteds.push({});
-            let exp_obj = expecteds[i];
+          {
+            //
+            // Iterate expecteds_fields
+            for (
+              let field_idx = 0;
+              field_idx < expecteds_fields.length;
+              field_idx++
+            ) {
+              const exp_field = expecteds_fields[field_idx];
 
-            const exp_val = rows[exp_defined_cols_idx[i]];
-            exp_obj[exp_defined_name] = exp_val;
-          }
+              //
+              // Iterate expected_field's columns
+              for (
+                let field_col_idx = 0;
+                field_col_idx < exp_field.cols_idxs.length;
+                field_col_idx++
+              ) {
+                // object's expected value
+                while (!obj_expecteds[field_col_idx]) {
+                  obj_expecteds.push({});
+                }
+                let exp_obj = obj_expecteds[field_col_idx];
 
-          //
-          // expected_type
-          for (let i = 0; i < exp_defined_cols_idx.length; i++) {
-            if (!expecteds[i]) {
-              expecteds.push({});
+                const exp_val = rows[exp_field.cols_idx[field_col_idx]];
+                exp_obj[exp_field.name] = exp_val;
+              }
             }
-            let exp_obj = expecteds[i];
-
-            const exp_val = rows[exp_type_cols_idx[i]];
-            exp_obj[exp_type_name] = exp_val;
-          }
-
-          //
-          // expected_value
-          for (let i = 0; i < exp_value_cols_idx.length; i++) {
-            if (!expecteds[i]) {
-              expecteds.push({});
-            }
-            let exp_obj = expecteds[i];
-
-            const exp_val = rows[exp_value_cols_idx[i]];
-            exp_obj[exp_value_name] = exp_val;
           }
         }
       }
