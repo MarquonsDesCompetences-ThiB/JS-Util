@@ -502,19 +502,19 @@ class Scripted_File extends _File {
           const member_idx = Number.parseInt(sub_name);
           if (!isNaN(member_idx)) {
             // iterate members to fetch the number member_idx
-            let i = 0;
+            let j = 0;
             for (const key in json) {
-              if (i === member_idx) {
+              if (j === member_idx) {
                 json = json[key];
                 break;
               }
 
-              i++;
+              j++;
             }
 
             //
             // Member number sub_name not found
-            if (i !== member_idx) {
+            if (j !== member_idx) {
               not_found_msg();
               return undefined;
             }
@@ -559,6 +559,78 @@ class Scripted_File extends _File {
     const msg = "Requesting environment";
     logger.log("Scripted_File#get_object " + msg);
     return this.request_object(name);
+  }
+
+  //
+  // === DELETE ===
+  /**
+   *
+   * @param {string} name
+   */
+  delete_object(name) {
+    let name_parts = name.split(".");
+    let json = this.objects;
+    const parts_length = name_parts.length;
+    for (let i = 0; i < parts_length; i++) {
+      const sub_name = name_parts[i];
+
+      //
+      // Fetch json[sub_name] into json
+      // with sub_name as an integer idx or string key
+      {
+        const member_idx = Number.parseInt(sub_name);
+        if (!isNaN(member_idx)) {
+          // iterate members to fetch the number member_idx
+          // for delete instruction later
+          let j = 0;
+          for (const key in json) {
+            if (j === member_idx) {
+              //convert name_parts[j]'s integer to member name
+              name_parts[j] = key;
+
+              //
+              //if not the last name part
+              if (i < parts_length - 1) {
+                json = json[key];
+              }
+              break;
+            }
+
+            j++;
+          }
+
+          //
+          // Member number sub_name not found
+          if (j !== member_idx) {
+            not_found_msg();
+            return undefined;
+          }
+        } else {
+          json = json[sub_name];
+        }
+      }
+
+      if (!json) {
+        not_found_msg();
+        return undefined;
+      }
+
+      function not_found_msg() {
+        let msg = "Value " + sub_name + " is not ";
+        if (i === 0) {
+          msg += "in environment";
+        } else {
+          msg += "a member of " + name_parts[i - 1];
+        }
+        msg += " (from " + name + ")";
+        logger.warn("Scripted_File#delete_object " + msg);
+      }
+    }
+
+    delete json[name_parts[parts_length - 1]];
+
+    const msg = "Variable " + name + " deleted from parsed file " + this.name;
+    logger.log("Scripted_File#delete_object " + msg);
   }
 }
 
