@@ -6,24 +6,64 @@
 class Regex {
   constructor() {}
 
+  static zip_code = {
+    fr: "\\d{5}",
+  };
+  static website =
+    "((https?):\\/\\/)?(www.)?[a-z0-9]+\\.[a-z]+(\\/[a-zA-Z0-9#]+\\/?)*";
+
   static has_value(val) {
     return val !== undefined && val != "";
   }
 
-  static has_only_numbers(str) {
-    return /[0-9]/.test(str);
+  /**
+   *
+   * @param {string} str
+   * @param {bool | optional} only If must have only numbers or just contain numbers
+   */
+  static has_numbers(str, only = false) {
+    if (only) {
+      return /^\d+$/.test(str);
+    }
+    return /\d+/.test(str);
   }
 
+  /**
+   *
+   * @param {number | string} val
+   */
   static is_number(val) {
-    return typeof val === "number" || val instanceof Number;
+    //
+    // Check val as a string
+    if (util.text.String.is_string(val)) {
+      return Regex.has_numbers(val, true);
+    }
+
+    return util.number.Number.is_number(val);
   }
 
-  static has_lower_case(str) {
-    return /[a-z]/.test(str);
+  /**
+   *
+   * @param {string} str
+   * @param {bool | optional} only If must have only lowercases or just contain numbers
+   */
+  static has_lower_case(str, only = false) {
+    if (only) {
+      return /^[a-z]+$/.test(str);
+    }
+    return /[a-z]+/.test(str);
   }
 
-  static has_upper_case(str) {
-    return /[A-Z]/.test(str);
+  /**
+   *
+   * @param {string} str
+   * @param {bool | optional} only If must have only uppercases or just contain numbers
+   */
+  static has_upper_case(str, only = false) {
+    if (only) {
+      return /^[A-Z]+$/.test(str);
+    }
+    return /[A-Z]+/.test(str);
   }
 
   static is_email_address(emailAddress) {
@@ -36,13 +76,11 @@ class Regex {
   }
 
   static is_website(url) {
-    return /^((https?):\/\/)?(www.)?[a-z0-9]+\.[a-z]+(\/[a-zA-Z0-9#]+\/?)*$/.test(
-      url
-    );
+    return new RegExp("/^" + Regex.website + "$/").test(url);
   }
 
   static is_zip_code(no) {
-    return /^\d{5}$/.test(no);
+    return new RegExp("/^" + Regex.zip_code.fr + "$/").test(no);
   }
 }
 
