@@ -4,6 +4,13 @@ const Csv_File = require(process.env.SRC_ROOT + "js/util/files/Csv_File");
 const Scripted_File = require(process.env.SRC_ROOT +
   "js/util/files/scripted/Scripted_File");
 
+const UI_Fixtures_Scripted = require(process.env.SRC_ROOT +
+  "js/util/files/scripted/UI_Fixtures_Scripted");
+
+/**
+ * Column containing row names must be
+ * called either Name or Id (case sensitive)
+ */
 class Fixtures_Scripted_File extends Csv_File {
   static owned_members = [
     /**
@@ -15,6 +22,13 @@ class Fixtures_Scripted_File extends Csv_File {
      * Object associating column's name to column's idx
      */
     "data_cols",
+
+    /**
+     * Object associating row's Id to :
+     *    - id {integer} row's idx
+     *    - template {string[] | optional}
+     */
+    "data_rows",
 
     /**
      * Integer[][] whose keys are :
@@ -33,6 +47,22 @@ class Fixtures_Scripted_File extends Csv_File {
     "rows_asserts_progress",
   ];
 
+  /**
+   * Names that cannot be used as column name
+   */
+  static reserved_names = ["Expected", "id"];
+
+  //
+  // === ROW NAME ===
+  /**
+   * Row name can be either an alphanumeric name (optionnal including any _)
+   * Can be templated by another row suffixing :
+   *  = other_row_name
+   */
+  static row_name_regex = "\\s*(\\w|_)*\\s*(={(\\w|_)+})?";
+
+  //
+  // === ASSERTS ===
   /**
    * Function names from https://jestjs.io/docs/en/expect
    */
@@ -121,6 +151,8 @@ class Fixtures_Scripted_File extends Csv_File {
     "toThrowErrorMatchingInlineSnapshot",
   ];
 
+  //
+  // === ASSERT COLUMNS NAMES ===
   static asserts_regex = "(" + Fixtures_Scripted_File.asserts.join("|") + ")";
   /**
    * The name an assert column can match
@@ -134,11 +166,6 @@ class Fixtures_Scripted_File extends Csv_File {
     "\\s+(" +
     Fixtures_Scripted_File.asserts_regex +
     "){1}\\s*";
-
-  /**
-   * Names that cannot be used as column name
-   */
-  static reserved_names = ["Expected", "id"];
 
   static is_assert_column_name(name) {
     return new RegExp("/^" + Fixtures_Scripted_File.expect_regex + "$/").test(
@@ -177,8 +204,15 @@ class Fixtures_Scripted_File extends Csv_File {
     this.set(obj);
   }
 
+  /**
+   *
+   * @param {function} cbk Callback with param :
+   *                          errs {string[] | undefined}
+   *
+   */
   parse(cbk) {
-    this.data_cols;
+    this.data_cols = {};
+    this.data_rows = {};
     this.expecteds = [];
     this.reset_rows_asserts_progress();
 
@@ -201,6 +235,7 @@ class Fixtures_Scripted_File extends Csv_File {
     return true;
 
     function on_read() {
+      let errs = [];
       if (!(that.content instanceof Array)) {
         that.to_csv_array();
       }
@@ -212,12 +247,13 @@ class Fixtures_Scripted_File extends Csv_File {
         if (!row) {
           const msg = "File " + that.name + " has no headings row";
           logger.warn("Fixtures_Scripted_File#parse::read " + msg);
-          return cbk(msg);
+          return cbk([msg]);
         }
       }
 
       //
-      // Fetch columns data_cols fom 1st row
+      // Fetch columns data fom 1st row
+      // => fill data_cols
       {
         for (let col_idx = 0; col_idx < row.length; col_idx++) {
           const col_name = row[col_idx];
@@ -258,6 +294,7 @@ class Fixtures_Scripted_File extends Csv_File {
                   col_idx +
                   ") already exists and will be removed";
                 logger.error("Fixtures_Scripted_File#parse " + msg);
+                errs.push(msg);
               }
 
               last_expected[exp_var][exp_method] = col_idx;
@@ -272,6 +309,7 @@ class Fixtures_Scripted_File extends Csv_File {
                 col_name +
                 "' : this is a reserved word by this class";
               logger.error("Fixtures_Scripted_File#parse " + msg);
+              errs.push(msg);
               continue;
             }
 
@@ -281,12 +319,93 @@ class Fixtures_Scripted_File extends Csv_File {
                 col_name +
                 " already exists and will be removed";
               logger.error("Fixtures_Scripted_File#parse " + msg);
+              errs.push(msg);
             }
 
             that.data_cols[col_name] = col_idx;
           }
         }
       }
+
+      //
+      // Fetch rows dependencies from 1st column
+      // => fill data_rows
+      {
+        const name_col_id = that.data_cols["Id"];
+        if (!name_col_id) {
+          const msg =
+            "No column owns rows' Id (case sensitive). Could not parse rows.";
+          logger.error("Fixtures_Scripted_File#parse " + msg);
+          errs.push(msg);
+          return cbk(errs);
+        }
+
+        //
+        // Iterate rows skipping 1st one (headings)
+        const content = that.content;
+        for (let row_id = 1; row_id < content.length; row_id++) {
+          const row_name = row[name_col_id];
+          const name_regex = new RegExp(
+            "/^" + Fixtures_Scripted_File.row_name_regex + "$/"
+          );
+          if (!name_regex.test(row_name)) {
+            const msg =
+              "Row name " +
+              row_name +
+              " from row " +
+              row_id +
+              " does not match expected names {alphanumeric|_} [=<other_var_name] (regex : " +
+              Fixtures_Scripted_File.row_name_regex +
+              ")";
+            errs.push(msg);
+            continue;
+          }
+
+          //
+          // extract name parts
+          // => name_parts {string[1-2]}
+          let name_parts = "" + row_name;
+          {
+            name_parts.replace(name_regex, "$1|$3");
+            name_parts = name_parts.split("|");
+          }
+
+          //
+          // Fetch optional row template
+          let template;
+          {
+            if (name_parts[1]) {
+              //remove eventual variable's encoling braces
+              name_parts[1] = Scripted_File.get_variable_name(name_parts[1]);
+
+              // fetch row
+              const templ_row_data = that.data_rows[name_parts[1]];
+              if (templ_row_data) {
+                // point template to templated row
+                template = content[templ_row_data.id];
+              } else {
+                const msg =
+                  "Unknown row " +
+                  name_parts[1] +
+                  " templated by row " +
+                  name_parts[0] +
+                  " (" +
+                  row_id +
+                  ")";
+                logger.error("Fixtures_Scripted_File#parse " + msg);
+                errs.push(msg);
+              }
+            }
+          }
+
+          that.data_rows[name_parts[0]] = {
+            id: row_id,
+            template: template,
+          };
+        }
+      }
+
+      cbk(errs.length > 0 ? errs : undefined);
     }
   }
 
@@ -295,13 +414,20 @@ class Fixtures_Scripted_File extends Csv_File {
   /**
    * Iterate rows in files giving values as Object associating
    * column's name -> cell value
+   * Templated rows get their template value when row's cell is empty
+   *
    * fn is called rows.length-1 times
    *
    * @param {function} fn Function called for every row
-   *                        with its data as Object argument
+   *                        Params :
+   *                          errs {string[] | undefined}
+   *                          row_datas {object}
    * @param {integer} start_row Index of the row to start from
+   *
+   * @return {integer} Number of iterated rows, including ones with errors
    */
   async iterate_fixtures(fn, start_row = 1) {
+    let nb_rows_processed = 0;
     //
     // Check preconds
     {
@@ -309,17 +435,33 @@ class Fixtures_Scripted_File extends Csv_File {
         const msg =
           "this.env is missing ; an Environment_Scripted_File is required to evaluate rows";
         logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
-        return false;
+        return nb_rows_processed;
       }
 
       if (!this.data_cols) {
         const msg = "No data names parsed ; did you call this.parse(cbk) ?";
         logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
-        return false;
+        return nb_rows_processed;
       }
     }
 
-    for (let row_id = start_row; row_id < this.content.length; row_id++) {
+    for (const row_name in this.data_rows) {
+      nb_rows_processed++;
+      const row_id = this.data_rows[row_name].id;
+      if (!row_id || row_id < start_row) {
+        const msg =
+          "Skipping row " +
+          row_name +
+          " (id : " +
+          row_id +
+          " - start_row : " +
+          start_row +
+          ")";
+        logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+        continue;
+      }
+
+      let errs = [];
       const row = this.content[row_id];
       let row_vals = {
         id: row_id,
@@ -329,6 +471,8 @@ class Fixtures_Scripted_File extends Csv_File {
       //
       // Fetch datas
       {
+        const row_template = this.data_rows[row_id].template;
+
         for (const data_name in this.data_cols) {
           const col_id = this.data_cols[data_name];
           //
@@ -344,6 +488,7 @@ class Fixtures_Scripted_File extends Csv_File {
               " of file " +
               this.name;
             logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+            errs.push(msg);
             continue;
           }
 
@@ -353,9 +498,22 @@ class Fixtures_Scripted_File extends Csv_File {
             const msg =
               "Data " + col_name + " already exists and will be removed";
             logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+            errs.push(msg);
           }
 
-          row_vals[data_name] = row[col_id];
+          //
+          // Fetch cell value from row or template
+          {
+            // template's value
+            if (row_template && row[col_id].length === 0) {
+              row_vals[data_name] = row_template[col_id];
+            }
+            //row's value
+            else {
+              row_vals[data_name] = row[col_id];
+            }
+          }
+
           //
           // Cell value is a variable => fetch it
           {
@@ -373,6 +531,7 @@ class Fixtures_Scripted_File extends Csv_File {
                   ") in file " +
                   this.name;
                 logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+                errs.push(msg);
               }
             }
           }
@@ -381,10 +540,10 @@ class Fixtures_Scripted_File extends Csv_File {
 
       //
       // Send row_vals to function
-      fn(row_vals);
+      fn(errs.length > 0 ? errs : undefined, row_vals);
     }
 
-    return true;
+    return nb_rows_processed;
   }
 
   //
