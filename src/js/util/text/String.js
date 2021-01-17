@@ -5,7 +5,7 @@ class String {
   constructor() {}
 
   static has_special_characters(str) {
-    return /[$-/:-?{-~!"^_`\[\]]/.test(str);
+    return /[$-/\\:-?{}-~!"^_`\[\]]/.test(str);
   }
 
   static is_string(val) {
