@@ -404,6 +404,90 @@ class Obj {
     return set_res;
   }
 
+  /**
+   * To get multiple asynchronous get values
+   *
+   * @param {Promise[]} get_promises All getter promises then method
+   *                                  to call when alls are got
+   *                                  This method takes as many arguments
+   *                                  as array length :
+   *                                  - every requested property value
+   *                                  - errs {object[get_promises.length-1]}
+   *                                  In the same order as requested properties ,
+   *                                  eventual errors
+   *                                  (eg. errs[0] can be undefined when errs[1]
+   *                                    is not.
+   *                                    If 3 properties are requested
+   *                                    (get_promises.length = 4)
+   *                                     and arg2 === undefined
+   *                                      => errs[2] is probably defined)
+   *
+   * @throws - If argument is not an array
+   *          - If last array's element is not a function
+   */
+  set multi(get_promises) {
+    if (!(get_promises instanceof Array)) {
+      const msg = "Argument should be an Array of Promise";
+      logger.error("Obj#set multi " + msg);
+      throw msg;
+    }
+
+    let resps = [];
+    let errs = [];
+    let nb_got = 0;
+    for (let i = 0; i < get_promises.length - 1; i++) {
+      const prom_idx = i;
+      let prom = get_promises[prom_idx];
+      {
+        if (!(prom instanceof Promise)) {
+          const msg = "Array's element " + prom_idx + " is not a Promise";
+          logger.error("Obj#set multi " + msg);
+
+          if (prom_idx >= errs.length) {
+            errs.length = prom_idx + 1;
+          }
+          errs[prom_idx] = err;
+          continue;
+        }
+      }
+
+      prom.then(
+        function (value) {
+          if (prom_idx >= resps.length) {
+            resps.length = prom_idx + 1;
+          }
+          resps[prom_idx] = value;
+          on_got();
+        },
+        function (err) {
+          if (prom_idx >= errs.length) {
+            errs.length = prom_idx + 1;
+          }
+          errs[prom_idx] = err;
+          on_got();
+        }
+      );
+    }
+
+    function on_got() {
+      nb_got++;
+      if (nb_got === get_promises.length - 1) {
+        let cbk = get_promises[get_promises.length - 1];
+        //
+        // Check preconds
+        {
+          if (typeof cbk !== "function") {
+            const msg = "Last array's element is not a method";
+            logger.error("Obj#set multi " + msg);
+            throw msg;
+          }
+        }
+
+        cbk(...resps, errs);
+      }
+    }
+  }
+
   //
   // === DB SYNCHRONIZATION ===
   /**
