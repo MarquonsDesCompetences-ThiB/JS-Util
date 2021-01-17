@@ -11,6 +11,8 @@ if (typeof process !== "undefined") {
 class Json {
   constructor() {}
 
+  //
+  // === CLONE ===
   /**
    * Clone the specified value if it's not a function
    * @param {*} val
@@ -26,11 +28,11 @@ class Json {
       return null;
     }
 
-    if (type === "number") {
+    if (type === "number" || val instanceof Number) {
       return val + 0;
     }
 
-    if (type === "string") {
+    if (type === "string" || val instanceof String) {
       return val + "";
     }
 
@@ -43,14 +45,6 @@ class Json {
         }
 
         return ret;
-      }
-
-      if (val instanceof Number) {
-        return val + 0;
-      }
-
-      if (val instanceof String) {
-        return val + "";
       }
 
       // Object with clone function
@@ -78,6 +72,173 @@ class Json {
     }
   }
 
+  //
+  // === ESCAPE ===
+  static escape_values(obj) {
+    //
+    // Iterate object's properties
+    for (const prop_name in obj) {
+      //
+      // Escape string
+      if (util.text.String.is_string(obj[prop_name])) {
+        obj[prop_name] = encodeURI(obj[prop_name]);
+      }
+      //
+      // Escape object property's values
+      else if (typeof obj[prop_name] === "object") {
+        Json.escape_values(obj[prop_name]);
+      }
+    }
+  }
+
+  //
+  // === FACTORIZED NAME ===
+  static factorize_property_names(obj) {
+    const voyels_specialChars_regex = /([aàâäeéèêëiïouùy$-/\\:-?{}-~!"^_.`\[\]])/i;
+
+    for (const prop_name in obj) {
+      let id = prop_name.substring(0, 4);
+      //
+      // Remove non desired characters starting at prop_name[4]
+      {
+        let id_end = prop_name.substring(4);
+        id_end.replace(voyels_specialChars_regex, "");
+        id += id_end;
+        id.toLowerCase();
+      }
+      //
+      // Increment id if needed (already exists in ids)
+      {
+        let id_nb = 0;
+        //not to append id_nb at every iteration
+        const id_prefix = "" + id;
+        while (obj[id]) {
+          id_nb++;
+          id = id_prefix + id_nb;
+        }
+      }
+
+      //
+      // Set new name
+      {
+        obj[id] = obj[prop_name];
+        delete obj[prop_name];
+      }
+
+      //
+      // Recursive call if property is itself an object
+      {
+        if (typeof obj[id] === "object") {
+          Json.factorize_property_names(obj[id]);
+        }
+      }
+    }
+
+    return obj;
+  }
+  static prefix_parent_property_names(obj, charac = "-", id_prefix = "") {
+    const prefix = id_prefix + charac;
+
+    for (const prop_name in obj) {
+      const new_name = prefix + prop_name;
+      obj[new_name] = obj[prop_name];
+      delete obj[prop_name];
+
+      //
+      // Recursive call if property is itself an object
+      if (typeof obj[new_name] === "object") {
+        Json.prefix_parent_property_names(obj[new_name], charac, new_name);
+      }
+    }
+
+    return obj;
+  }
+
+  //
+  // === IDS AS PROPERTY ===
+  /**
+   * For each property and subproperties in obj, set its id
+   * Id is the property name with
+   * its 4 first letters (to enable alphabetical order)
+   * then only consons and digits
+   *
+   * If removing id result in the same id of another property
+   * in the same obj, an incremental number is appended
+   *
+   * @param {object} obj
+   */
+  static set_ids(obj) {
+    let ids = []; //to check ids already set and avoid duplicates
+    const voyels_specialChars_regex = /([aàâäeéèêëiïouùy$-/\\:-?{}-~!"^_.`\[\]])/i;
+
+    for (const prop_name in obj) {
+      let id = prop_name.substring(0, 4);
+      //
+      // Remove non desired characters starting at prop_name[4]
+      {
+        let id_end = prop_name.substring(4);
+        id_end.replace(voyels_specialChars_regex, "");
+        id += id_end;
+        id.toLowerCase();
+      }
+      //
+      // Increment id if needed (already exists in ids)
+      {
+        let id_nb = 0;
+        //not to append id_nb at every iteration
+        const id_prefix = "" + id;
+        while (ids.includes(id)) {
+          id_nb++;
+          id = id_prefix + id_nb;
+        }
+      }
+
+      //
+      // Set id
+      {
+        ids.push(id);
+        obj[prop_name].id = id;
+      }
+
+      //
+      // Recursive call if property is itself an object
+      {
+        if (typeof obj[prop_name] === "object") {
+          Json.set_ids(obj[prop_name]);
+        }
+      }
+    }
+
+    return obj;
+  }
+
+  /**
+   * Prefix all properties' and subproperties' id in obj
+   * with their parent id
+   *
+   * You may want to call Json.set_ids first to set every property's id
+   *
+   * @param {object} obj
+   * @param {string} charac Character(s) between prefix and id
+   */
+  static prefix_parent_ids(obj, charac = "-", id_prefix = "") {
+    const prefix = id_prefix + charac;
+
+    for (const prop_name in obj) {
+      obj[prop_name].id = prefix + obj[prop_name].id;
+
+      //
+      // Recursive call if property is itself an object
+      if (typeof obj[prop_name] === "object") {
+        Json.prefix_parent_ids(obj[prop_name], charac, obj[prop_name].id);
+      }
+    }
+
+    return obj;
+  }
+
+  //
+  // === PROPERTIES ===
   static get_nb_properties(obj) {
     if (!obj || !(obj instanceof Object)) {
       return 0;
@@ -143,7 +304,7 @@ class Json {
    * Convert val to a Json storable property value
    * @param {*} val
    */
-  static to_json_value(val, only_owned_members = false) {
+  static to_json_value(val) {
     //if val does not exist, is not an empty string
     if (!val && !util.string.is_string(val)) {
       return undefined;
@@ -159,14 +320,14 @@ class Json {
       if (val instanceof Array) {
         let ret = [];
         for (let i = 0; i < val.length; i++) {
-          ret.push(Json.to_json_value(val[i], only_owned_members));
+          ret.push(Json.to_json_value(val[i]));
         }
 
         return ret;
       }
-      // Object with get_JSON function
-      else if (typeof val.get_JSON === "function") {
-        return val.get_JSON(only_owned_members);
+      // Object with toJSON function
+      else if (typeof val.toJSON === "function") {
+        return val.toJSON(only_owned_members);
       }
       // Date
       else if (val instanceof Date) {
