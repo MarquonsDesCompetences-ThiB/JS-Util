@@ -4,24 +4,14 @@ if (typeof process !== "undefined") {
   global.Json = require(process.env.SRC_ROOT + "dist/js/util/Json");
 }
 
+/**
+ * Every children should have one listing their not enumerable properties to :
+ *  - avoid cyclic references (for ex. with toJSON)
+ *  - enable to set through Obj.set(...)
+ */
+const not_enumerable_props = [];
+
 class Obj {
-  /**
-   *
-   * @param {string[]} owned_members Names of members in this
-   *                                              which are owned by this
-   *                                              => they never raise a cyclic
-   *                                              reference error
-   */
-  constructor(owned_members = []) {
-    this.owned_members = owned_members;
-
-    /*
-      Members updated that need to be stored in DB
-      string[] : members name
-    */
-    this.updated_members = [];
-  }
-
   static clone(obj) {
     switch (typeof obj) {
       case "boolean":
@@ -56,35 +46,143 @@ class Obj {
     return undefined;
   }
 
+  static get_property_values_errors(constructor, values) {
+    let errs = {};
+
+    //
+    // Process enumerable properties
+    {
+      for (let key in values) {
+        try {
+          new constructor({
+            key: values[key],
+          });
+        } catch (ex) {
+          logger.warn(
+            "Obj#get_property_values_errors Error setting " +
+              key +
+              "=" +
+              values[key] +
+              " to " +
+              constructor +
+              ": " +
+              ex
+          );
+
+          errs[key] = ex;
+        }
+      }
+    }
+
+    //
+    // Process not enumerable properties
+    {
+      for (let key in this.not_enumerable_props) {
+        if (!values[key]) {
+          continue;
+        }
+        //
+        // else try setting the value
+        try {
+          new constructor({
+            key: values[key],
+          });
+        } catch (ex) {
+          logger.warn(
+            "Obj#get_property_values_errors Error setting " +
+              key +
+              "=" +
+              values[key] +
+              " to " +
+              constructor +
+              ": " +
+              ex
+          );
+
+          errs[key] = ex;
+        }
+      }
+    }
+
+    return errs;
+  }
+
+  /**
+   * @throws {Object { <prop_name : <err> }} If this.set raises error(s)
+   */
+  constructor(values = undefined, update_members = false) {
+    if (!this.not_enumerable_props) {
+      this.not_enumerable_props = not_enumerable_props;
+    }
+
+    /*
+      Members updated that need to be stored in DB
+      string[] : members name
+    */
+    this.updated_members = [];
+
+    const res = this.set(values, update_members);
+    //
+    // If at least one set error defined => throw errs
+    for (const key in res.errs) {
+      throw res;
+    }
+  }
+
+  set not_enumerable_props(not_enumerable_props = []) {
+    Object.defineProperty(this, "not_enumerable_props", {
+      value: not_enumerable_props,
+      enumerable: false,
+      writable: false,
+      configurable: false,
+    });
+  }
+
   clone() {
     return new Obj(this.get_cloned_JSON());
   }
 
-  equals(obj) {
+  equals(obj, include_not_enumerable_props = true) {
     if (typeof obj === "undefined" || !(obj instanceof Obj)) {
       return false;
     }
 
-    for (let key in this) {
-      //
-      //process cyclic reference
-      if (!this.owned_members.includes(key)) {
-        if (this[key] != obj[key]) {
+    //
+    // Process enumerable properties
+    {
+      for (let key in this) {
+        if (!Json.value_equals(this[key], obj[key])) {
+          logger.log(
+            "Obj#equals members " +
+              key +
+              " are different : " +
+              this[key] +
+              " !== " +
+              obj[key]
+          );
           return false;
         }
       }
-      //
-      // other value
-      else if (!Json.value_equals(this[key], obj[key])) {
-        logger.log(
-          "Obj#equals members " +
-            key +
-            " are different : " +
-            this[key] +
-            " !== " +
-            obj[key]
-        );
-        return false;
+    }
+
+    //
+    // Process not enumerable properties
+    {
+      if (include_not_enumerable_props) {
+        for (let i = 0; i < this.not_enumerable_props.length; i++) {
+          const prop_name = this.not_enumerable_props[i];
+          if (this[prop_name] !== obj[prop_name]) {
+            logger.log(
+              "Obj#equals Not enumerable members " +
+                prop_name +
+                " are different : " +
+                this[prop_name] +
+                " !== " +
+                obj[prop_name]
+            );
+            return false;
+          }
+        }
       }
     }
 
@@ -95,61 +193,83 @@ class Obj {
   // === GETTERS / SETTERS ===
   /**
    *
-   * @param {bool} only_owned_members If true,
-   *                                key members in this.cycle_reference_members
-   *                                aren't converted to simple Json object
-   *                                => they're returned as is
+   *
+   * @param {bool} include_not_enumerable_props Properties to also return and which are not enumerables
    * @param {bool} as_string  If true, everything is processed by
    *                          this.get_JSON_as_string
    *                          => numbers are converted to string
    */
-  get_JSON(only_owned_members = false, as_string = false) {
+  toJSON(include_not_enumerable_props = false, as_string = false) {
     if (as_string) {
-      return this.get_JSON_as_string(only_owned_members);
+      return this.toJSON_as_strings(include_not_enumerable_props);
     }
 
     let ret = {};
 
-    for (let key in this) {
-      //if is undefined or null
-      if (this[key] == null) {
-        continue;
+    //
+    // Fetch enumerable properties
+    {
+      for (const prop_name in this) {
+        ret[prop_name] = Json.to_json_value(this[prop_name]);
       }
+    }
 
-      if (this.owned_members.includes(key)) {
-        ret[key] = Json.to_json_value(this[key], only_owned_members);
-
-        continue;
-      }
-      //else : cycle member
-      if (!only_owned_members) {
-        ret[key] = this[key];
+    //
+    // Fetch not enumerable properties
+    {
+      if (include_not_enumerable_props) {
+        for (let i = 0; i < this.not_enumerable_props.length; i++) {
+          const prop_name = this.not_enumerable_props[i];
+          ret[prop_name] = Json.to_json_value(this[prop_name]);
+        }
       }
     }
 
     return ret;
   }
 
-  get_JSON_as_string(only_owned_members = false) {
+  toJSON_as_strings(include_not_enumerable_props = false) {
     let ret = {};
 
-    for (let key in this) {
-      //if is undefined or null
-      if (this[key] == null) {
-        continue;
-      }
+    //
+    // Fetch enumerable properties
+    {
+      for (let key in this) {
+        //if is undefined or null
+        if (this[key] == null) {
+          continue;
+        }
 
-      if (this.owned_members.includes(key)) {
-        ret[key] = Json.to_json_value(this[key], only_owned_members);
-      } else {
-        if (!only_owned_members) {
-          ret[key] = this[key];
+        ret[key] = Json.to_json_value(this[key]);
+
+        //to string conversion
+        if (typeof ret[key] === "number" || ret[key] instanceof Number) {
+          ret[key] = ret[key] + "";
         }
       }
+    }
 
-      //to string conversion
-      if (typeof ret[key] === "number" || ret[key] instanceof Number) {
-        ret[key] = ret[key] + "";
+    //
+    // Fetch not enumerable properties
+    {
+      if (include_not_enumerable_props) {
+        for (let i = 0; i < this.not_enumerable_props; i++) {
+          const prop_name = this.not_enumerable_props[i];
+          //if is undefined or null
+          if (this[prop_name] == null) {
+            continue;
+          }
+
+          ret[prop_name] = Json.to_json_value(this[prop_name]);
+
+          //to string conversion
+          if (
+            typeof ret[prop_name] === "number" ||
+            ret[prop_name] instanceof Number
+          ) {
+            ret[prop_name] = ret[prop_name] + "";
+          }
+        }
       }
     }
 
@@ -157,18 +277,19 @@ class Obj {
   }
 
   /**
-   * Clone every members in this but functions
-   * and keys in this.cycle_reference_members
+   * Clone every enumerable members in this but functions
    *
-   * Key members in this.cycle_reference_members
-   * aren't cloned => their reference is returned as is
+   * Not enumerable properties are not cloned
+   *  => their reference is returned as is
    * @return {json}
    */
-  get_cloned_JSON() {
+  get_cloned_JSON(include_not_enumerable_props = false) {
     let ret = {};
 
-    for (let key in this) {
-      if (this.owned_members.includes(key)) {
+    //
+    // Clone enumerable properties
+    {
+      for (let key in this) {
         ret[key] = Json.clone_value(this[key]);
 
         /*const type = typeof ret[key];
@@ -179,52 +300,108 @@ class Obj {
       else if (typeof this[key] !== "function") {
         ret.nb_not_cloned++;
       }*/
-      } else {
-        ret[key] = this[key];
       }
     }
+
+    //
+    // Reference not enumerable properties
+    {
+      if (include_not_enumerable_props) {
+        for (let i = 0; i < this.not_enumerable_props.length; i++) {
+          const prop_name = this.not_enumerable_props[i];
+          ret[prop_name] = this[prop_name];
+        }
+      }
+    }
+
     return ret;
   }
 
   /**
    * Set every members in obj but functions
+   * Children class should override it to concatenate their not_enumerable_props
    *
-   * @param {json|object} obj
+   * @param {json|object} values
+   * @param {object} set_res
    * @param {bool} update_members If true, specifies set m
    * mbers into update_members
    *
-   * @return number of set/not set members which are not a function
-   *          3 values : nb_set, nb_not_set, that
+   * @return {object} number of set/not set members which are not a function
+   *                    4 values :
+   *                                errs : { <prop_name> : <err> }
+   *                                nb_set,
+   *                                nb_nset,
+   *                                nb_nset_ro Not set because are read-only
    */
-  set(obj, update_members = false) {
-    let ret = {
-      nb_set: 0,
-      nb_not_set: 0,
-      that: this,
-    };
-
-    if (!obj) {
-      return ret;
-    }
-
-    for (const key in this) {
-      const this_type = typeof this[key];
-      if (
-        this_type !== undefined &&
-        this_type !== "function" &&
-        obj[key] !== undefined
-      ) {
-        this[key] = obj[key];
-        ret.nb_set++;
-        if (update_members) {
-          this.push_updated_member(key);
+  set(
+    values,
+    update_members = false,
+    set_res = { errs: {}, nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }
+  ) {
+    let that = this;
+    //
+    // Set enumerable properties
+    {
+      for (const prop_name in values) {
+        const type = typeof values[prop_name];
+        if (type !== "undefined" && type !== "function" && this[prop_name]) {
+          // prevent value to be set twice
+          if (!this.not_enumerable_props.includes(prop_name)) {
+            if (set(prop_name, values[prop_name]) && update_members) {
+              this.push_updated_member(prop_name);
+            }
+          }
         }
-      } else {
-        ret.nb_not_set++;
+        //
+        // Value is not an object's property
+        else {
+          set_res.nb_nset++;
+        }
       }
     }
 
-    return ret;
+    //
+    // Set non enumerable properties
+    {
+      for (let i = 0; i < this.not_enumerable_props.length; i++) {
+        const prop_name = this.not_enumerable_props[i];
+        if (values[prop_name]) {
+          if (set(prop_name, values[prop_name]) && update_members) {
+            this.push_updated_member(prop_name);
+          }
+        }
+      }
+    }
+
+    function set(prop_name, value) {
+      try {
+        this[prop_name] = values[prop_name];
+        set_res.nb_set++;
+        return true;
+      } catch (ex) {
+        if (ex instanceof TypeError) {
+          //
+          // Property is read-only
+          set_res.nb_nset_ro++;
+        } else {
+          set_res.errs[prop_name] = ex;
+        }
+
+        const msg =
+          "Could not set property " +
+          prop_name +
+          " to " +
+          value +
+          " : " +
+          ex +
+          " - Current value : " +
+          that[prop_name];
+        logger.warn("Obj#set " + msg);
+        return false;
+      }
+    }
+
+    return set_res;
   }
 
   //
