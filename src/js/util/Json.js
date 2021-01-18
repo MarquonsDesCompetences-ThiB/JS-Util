@@ -73,6 +73,42 @@ class Json {
   }
 
   //
+  // === PROPERTIES ACCESSORS ===
+  /**
+   * @return {Array} Array of strings and/or numbers
+   */
+  static accessor_to_property_names(prop_name) {
+    //
+    // Extract prop_name (if contains any dot and/or bracket)
+    // prop[2] => prop.2
+    // prop[2].subprop => prop.2.subprop
+
+    let prop_parts = "" + prop_name; //clone prop_name
+    //
+    // replace brackets
+    {
+      // [ -> .
+      prop_parts.replace(/(\[)/, ".");
+      // ] -> nothing
+      prop_parts.replace(/(\])/, "");
+    }
+    // split by dot
+    prop_parts = prop_parts.split(".");
+
+    for (let i = 0; i < prop_parts.length; i++) {
+      //
+      // prop name is an
+      // array index (only digits)
+      if (/^\d+$/.test(prop_parts[i])) {
+        prop_parts[i] = Number.parseInt(prop_parts[i]);
+      }
+      // else is a string -> nothing to do
+    }
+
+    return prop_parts;
+  }
+
+  //
   // === ESCAPE ===
   static escape_values(obj) {
     //
@@ -81,7 +117,7 @@ class Json {
       //
       // Escape string
       if (util.text.String.is_string(obj[prop_name])) {
-        obj[prop_name] = encodeURI(obj[prop_name]);
+        obj[prop_name] = encodeURIComponent(obj[prop_name]);
       }
       //
       // Escape object property's values
