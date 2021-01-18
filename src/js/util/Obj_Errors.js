@@ -1,6 +1,17 @@
 "use strict";
 
 class Obj_Errors {
+  //
+  // === LOGS ===
+  /**
+   *
+   * @param {integer} line_from
+   * @param {integer | optional} line_to Line included in result
+   */
+  static get_stack_trace(line_from, line_to = line_from) {
+    return new Error().stack.split("\n").slice(line_from, line_to + 1);
+  }
+
   /**
    *
    * @param {Obj | Object} obj Object whose errors have to be handled

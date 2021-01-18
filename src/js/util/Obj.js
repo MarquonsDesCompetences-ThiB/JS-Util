@@ -4,6 +4,7 @@ if (typeof process !== "undefined") {
   global.Json = require(process.env.SRC_ROOT + "dist/js/util/Json");
 }
 
+const { exception } = require("console");
 const Obj_Errors = require("./Obj_Errors");
 
 /**
@@ -326,13 +327,22 @@ class Obj {
 
   //
   // === LOGS ===
+
   /**
    * Log specified message as debug
    * Class name is prefixed to log
    */
   set debug(log_msg) {
-    const class_str = classOf(this);
-    logger.debug(class_str + "# " + log_msg);
+    // fetch 3rd stack trace's line
+    // (remove get_stack_trace and debu calls -> calling file)
+    const stack_trace = Obj_Errors.get_stack_trace(3);
+
+    const class_str = this.constructor.name;
+    const method_name = ("" + stack_trace).replace(
+      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
+      "$1"
+    );
+    logger.debug(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -340,8 +350,16 @@ class Obj {
    * Class name is prefixed to log
    */
   set error(log_msg) {
-    const class_str = classOf(this);
-    logger.error(class_str + "# " + log_msg);
+    // fetch 3rd stack trace's line
+    // (remove get_stack_trace and debu calls -> calling file)
+    const stack_trace = Obj_Errors.get_stack_trace(3);
+
+    const class_str = this.constructor.name;
+    const method_name = ("" + stack_trace).replace(
+      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
+      "$1"
+    );
+    logger.error(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -349,8 +367,16 @@ class Obj {
    * Class name is prefixed to log
    */
   set log(log_msg) {
-    const class_str = classOf(this);
-    logger.log(class_str + "# " + log_msg);
+    // fetch 3rd stack trace's line
+    // (remove get_stack_trace and debu calls -> calling file)
+    const stack_trace = Obj_Errors.get_stack_trace(3);
+
+    const class_str = this.constructor.name;
+    const method_name = ("" + stack_trace).replace(
+      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
+      "$1"
+    );
+    logger.log(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -358,8 +384,16 @@ class Obj {
    * Class name is prefixed to log
    */
   set trace(log_msg) {
-    const class_str = classOf(this);
-    logger.trace(class_str + "# " + log_msg);
+    // fetch 3rd stack trace's line
+    // (remove get_stack_trace and debu calls -> calling file)
+    const stack_trace = Obj_Errors.get_stack_trace(3);
+
+    const class_str = this.constructor.name;
+    const method_name = ("" + stack_trace).replace(
+      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
+      "$1"
+    );
+    logger.trace(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -367,8 +401,16 @@ class Obj {
    * Class name is prefixed to log
    */
   set warn(log_msg) {
-    const class_str = classOf(this);
-    logger.warn(class_str + "# " + log_msg);
+    // fetch 3rd stack trace's line
+    // (remove get_stack_trace and debu calls -> calling file)
+    const stack_trace = Obj_Errors.get_stack_trace(3);
+
+    const class_str = this.constructor.name;
+    const method_name = ("" + stack_trace).replace(
+      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
+      "$1"
+    );
+    logger.warn(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   //
