@@ -4,6 +4,8 @@ if (typeof process !== "undefined") {
   global.Json = require(process.env.SRC_ROOT + "dist/js/util/Json");
 }
 
+const Obj_Errors = require("./Obj_Errors");
+
 /**
  * Every children should have one listing their not enumerable properties to :
  *  - avoid cyclic references (for ex. with toJSON)
@@ -108,6 +110,7 @@ class Obj {
   }
 
   /**
+   * Children must call super after defining their enumerable properties
    * @throws {Object { <prop_name : <err> }} If this.set raises error(s)
    */
   constructor(values = undefined, update_members = false) {
@@ -115,17 +118,21 @@ class Obj {
       this.not_enumerable_props = not_enumerable_props;
     }
 
+    //
+    // To handle set errors
+    this.errs = new Obj_Errors(this);
+
     /*
       Members updated that need to be stored in DB
       string[] : members name
     */
     this.updated_members = [];
 
-    const res = this.set(values, update_members);
-    //
-    // If at least one set error defined => throw errs
-    for (const key in res.errs) {
-      throw res;
+    try {
+      this.set(values, update_members);
+    } catch (obj_errs) {
+      const msg = obj_errs.nb + " errors setting values";
+      logger.error("Obj() " + msg);
     }
   }
 
@@ -139,7 +146,7 @@ class Obj {
   }
 
   clone() {
-    return new Obj(this.get_cloned_JSON());
+    return new this.prototype.constructor(this.get_cloned_JSON());
   }
 
   equals(obj, include_not_enumerable_props = true) {
@@ -283,7 +290,7 @@ class Obj {
    *  => their reference is returned as is
    * @return {json}
    */
-  get_cloned_JSON(include_not_enumerable_props = false) {
+  get_cloned_JSON(include_not_enumerable_props = true) {
     let ret = {};
 
     //
@@ -317,6 +324,95 @@ class Obj {
     return ret;
   }
 
+  //
+  // === LOGS ===
+  /**
+   * Log specified message as debug
+   * Class name is prefixed to log
+   */
+  set debug(log_msg) {
+    const class_str = classOf(this);
+    logger.debug(class_str + "# " + log_msg);
+  }
+
+  /**
+   * Log specified message as error
+   * Class name is prefixed to log
+   */
+  set error(log_msg) {
+    const class_str = classOf(this);
+    logger.error(class_str + "# " + log_msg);
+  }
+
+  /**
+   * Log specified message
+   * Class name is prefixed to log
+   */
+  set log(log_msg) {
+    const class_str = classOf(this);
+    logger.log(class_str + "# " + log_msg);
+  }
+
+  /**
+   * Log specified message as trace
+   * Class name is prefixed to log
+   */
+  set trace(log_msg) {
+    const class_str = classOf(this);
+    logger.trace(class_str + "# " + log_msg);
+  }
+
+  /**
+   * Log specified message as warning
+   * Class name is prefixed to log
+   */
+  set warn(log_msg) {
+    const class_str = classOf(this);
+    logger.warn(class_str + "# " + log_msg);
+  }
+
+  //
+  // === ERRORS ===
+  /**
+   *
+   * @param {string} prop_name Property's name which raised the error
+   * @param {*} error Error raised
+   * @param {*} value_which_raised  Value which raised the error
+   */
+  add_error(prop_name, error, value_which_raised = undefined) {
+    this.errs[prop_name] = error;
+    this[prop_name + "_set"] = value_which_raised;
+  }
+
+  get nb_errs() {
+    return this.errs.nb;
+  }
+
+  /**
+   * Convert errors string set in this.errs to their localized translation
+   *
+   * @param {object} global_texts Must have 2 properties :
+   *                                - default
+   *                                    with an errors property
+   *                                - localized {optional}
+   *                                    with an errors property
+   * @param {object | optional} class_texts Must have 2 properties :
+   *                                - default
+   *                                    with an errors property
+   *                                - localized {optional}
+   *                                    with an errors property
+   *
+   * @return {object} set_res - nb_set {integer} Number of localized errors
+   *                           - nb_nset {integer} Number of not localized errors
+   *
+   * @throws {string} If global_texts is undefined or has no errors property
+   */
+  localize_errors(global_texts, class_texts = global_texts[classOf(this)]) {
+    return this.errs(global_texts, class_texts);
+  }
+
+  //
+  // === GETTERS / SETTERS ===
   /**
    * Set every members in obj but functions
    * Children class should override it to concatenate their not_enumerable_props
@@ -327,18 +423,22 @@ class Obj {
    * mbers into update_members
    *
    * @return {object} number of set/not set members which are not a function
-   *                    4 values :
-   *                                errs : { <prop_name> : <err> }
+   *                    3 values :
    *                                nb_set,
    *                                nb_nset,
    *                                nb_nset_ro Not set because are read-only
+   *
+   * @throws{Obj_Errors} - If setting a property raises an error. Setting all
+   *                        properties is attempted before throwing the error
    */
   set(
     values,
     update_members = false,
-    set_res = { errs: {}, nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }
+    set_res = { nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }
   ) {
     let that = this;
+    let nb_errs = 0;
+
     //
     // Set enumerable properties
     {
@@ -375,16 +475,23 @@ class Obj {
 
     function set(prop_name, value) {
       try {
-        this[prop_name] = values[prop_name];
+        that[prop_name] = values[prop_name];
         set_res.nb_set++;
         return true;
       } catch (ex) {
-        if (ex instanceof TypeError) {
-          //
-          // Property is read-only
-          set_res.nb_nset_ro++;
-        } else {
-          set_res.errs[prop_name] = ex;
+        nb_errs++;
+
+        //
+        // Store the error and value which raised it in that.errs
+        {
+          if (ex instanceof TypeError) {
+            //
+            // Property is read-only
+            set_res.nb_nset_ro++;
+            that.add_error(prop_name, "Read-only", value);
+          } else {
+            that.add_error(prop_name, ex, value);
+          }
         }
 
         const msg =
@@ -399,6 +506,10 @@ class Obj {
         logger.warn("Obj#set " + msg);
         return false;
       }
+    }
+
+    if (nb_errs > 0) {
+      throw this.errs;
     }
 
     return set_res;
