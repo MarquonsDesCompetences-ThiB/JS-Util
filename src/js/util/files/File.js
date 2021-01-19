@@ -1,7 +1,11 @@
 "use strict";
 
+// read jsons
 const file = require("jsonfile");
 const fs_extra = require("fs-extra");
+// read strings
+const file_string_reader = require("read-file-string");
+
 const Json = require(process.env.SRC_ROOT + "dist/js/util/Json");
 
 const parseXlsx = require("excel");
@@ -9,7 +13,7 @@ const parseXlsx = require("excel");
 /**
  * Supports .xlsx (Excel) files
  */
-class File extends Obj {
+class File extends util.Obj {
   static owned_members = ["path", "name", "ext", "content"];
 
   constructor(obj = undefined, child_owned_members = []) {
@@ -166,11 +170,16 @@ class File extends Obj {
   /**
    *
    * @param {function} cbk
-   * @param {integer | optional} sheet_id For xlsx files, the sheet to read
+   * @param {boolean | integer | optional} read_as_text|sheet_id
+   *                                        read_as_text :
+   *                                          If file must be read as string,
+   *                                          not as json
+   *                                        sheet_id :
+   *                                          For xlsx files, the sheet to read
    *
    * @return {bool} true if reading file could run
    */
-  read(cbk, sheet_id = 0) {
+  read(cbk, asText_or_sheetId = 0) {
     const full_path = this.get_full_path();
     if (typeof full_path === "undefined") {
       console.error(
@@ -192,21 +201,39 @@ class File extends Obj {
       // Excel file
       {
         if (this.ext === "xlsx") {
-          parseXlsx(full_path, Number.parseInt(sheet_id)).then((data) => {
-            that.content = data; //array of arrays
-            cbk(undefined, that.content);
+          parseXlsx(full_path, Number.parseInt(asText_or_sheetId)).then(
+            (data) => {
+              that.content = data; //array of arrays
+              cbk(undefined, that.content);
+            }
+          );
+          return true;
+        }
+      }
+
+      //
+      // String file
+      {
+        if (asText_or_sheetId) {
+          file_string_reader(full_path).then((result) => {
+            if (!result) {
+              const msg = "Error reading file " + full_path + " as text";
+              console.error("File#read " + msg);
+              that.content = "";
+              cbk(msg);
+            }
           });
           return true;
         }
       }
 
       //
-      // Text file
+      // Json file
       {
         file.readFile(full_path, function (err, obj) {
           if (err) {
             console.error(
-              "File#read Error reading file " + full_path + " : " + err
+              "File#read Error reading file " + full_path + " as json : " + err
             );
             that.content = {};
             cbk(err);
