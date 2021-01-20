@@ -1,6 +1,7 @@
 "use strict";
 
-const File_ = require(process.env.SRC_ROOT + "js/util/File");
+const fs_extra = require("fs-extra");
+//const File_ = require(process.env.SRC_ROOT + "dist/js/util/files/File");
 const output = require("output-manager");
 const os = require("os");
 
@@ -40,7 +41,7 @@ class Logger {
    */
   static get_caller_infos(stack_trace_line, include_file_infos = false) {
     // increment stack_trace_line to remove get_caller_infos call
-    const stack_trace = Obj_Errors.get_stack_trace(stack_trace_line + 1)[0];
+    const stack_trace = Logger.get_stack_trace(stack_trace_line + 1)[0];
 
     let res = {};
 
@@ -100,6 +101,7 @@ class Logger {
   static new_global_logger() {
     Logger.logger = new Logger();
 
+    /* Now use simple file_path string
     //
     // Override File_'s log functions to enable it writing logs
     {
@@ -107,11 +109,11 @@ class Logger {
       File_.error = Logger.logger.error;
       File_.log = Logger.logger.log;
       File_.warn = Logger.logger.warn;
-    }
+    }*/
 
     {
       if (global.logger !== undefined) {
-        logger.warn="Logger Overriding global.logger with Logger";
+        logger.warn = "Logger Overriding global.logger with Logger";
       }
       global.logger = Logger.logger;
     }
@@ -127,7 +129,7 @@ class Logger {
   static add_debug_infos(message, include_file_infos = true) {
     // with 4th stack trace's line
     // (remove debug calls -> to get calling file)
-    const caller = Obj_Errors.get_caller_infos(3, include_file_infos);
+    const caller = Logger.get_caller_infos(2, include_file_infos);
     return (
       caller.class_name +
       "#" +
@@ -142,30 +144,99 @@ class Logger {
   }
 
   constructor() {
-    this.logs = new output.Out();
-    this.logs_str = "";
+    {
+      this.logs = new output.Out();
+      this.logs.level_str = "DEBUG";
+      this.logs.level = output.LogLevel.DEBUG;
+    }
+
+    {
+      this.file_desc = undefined;
+      this.file_path =
+        process.env.SRC_ROOT +
+        "\\logs\\" +
+        this.logs.level_str +
+        "-" +
+        new Date().toLocaleTimeString() +
+        ".log";
+    }
 
     {
       let that = this;
       this.logs.output = (msg) => {
         /* do log to file */
-        that.logs_str += msg + os.EOL;
-        that.file.write_str(that.logs_str);
+        if (that.file_desc != null) {
+          const buffer = new Buffer.from(msg + os.EOL);
+          fs_extra.write(
+            that.file_desc,
+            buffer,
+            0,
+            buffer.length,
+            null,
+            function (err, writtenbytes) {
+              if (err) {
+                that.error = "Couldn't write log file : " + err;
+              }
+            }
+          );
+        }
       };
-      this.logs.level_str = "DEBUG";
-      this.logs.level = output.LogLevel.DEBUG;
-    }
 
-    this.file = new File_({
-      path: process.env.SRC_ROOT + "logs/",
-      name: this.logs.level_str + "-" + new Date().toLocaleTimeString(),
-      ext: "log",
-    });
-    this.logs.i("Log file set up with level : " + this.logs.level_str);
+      this.logs.i("Log file set up with level : " + this.logs.level_str);
+    }
+  }
+
+  //
+  // === FILE ===
+  get file_path() {
+    return this.f_p;
+  }
+
+  set file_path(file_path) {
+    {
+      if (!this.f_p) {
+        Object.defineProperty(this, "f_p", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+        });
+      }
+
+      //
+      // Remove forbidden characters from file_path
+      {
+        const formatted = file_path.match(/[^:\*\?"<>\|]/g).join("");
+        this.f_p = formatted;
+        console.log("Logger#set file_path Path set : " + formatted);
+      }
+    }
+    {
+      let that = this;
+      fs_extra.ensureFileSync(this.f_p);
+      fs_extra.open(
+        this.f_p,
+        "a", //append
+        function (err, fd) {
+          // If the output file does not exists
+          // an error is thrown else data in the
+          // buffer is written to the output file
+          if (err) {
+            return console.error(
+              "Logger#set file_path::open Can't open file " +
+                that.f_p +
+                " : " +
+                err
+            );
+          }
+
+          that.file_desc = fd;
+        }
+      );
+    }
   }
 
   logger(req, res, next) {
-    logger.log="mw logger : " + req.url;
+    logger.log = "mw logger : " + req.url;
     next();
   }
 
