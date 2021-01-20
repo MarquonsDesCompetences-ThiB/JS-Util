@@ -1,7 +1,5 @@
 "use strict";
 
-const { stringify } = require("querystring");
-
 class Obj_Errors {
   //
   // === LOGS ===
@@ -19,9 +17,17 @@ class Obj_Errors {
    * Returns info about the calling method from the specified stack traces line
    *
    * Stack trace examples :
-   *    at new child2 (C:\Users\web\obj\Obj\obj_init.test.js:82:5)
-   *    at Object.<anonymous> (C:\Users\web\obj\Obj\obj_init.test.js:107:7)
-   *    at child2.set properties [as properties] (C:\Users\web\obj\Obj.js:173:5)
+   *    Method inside a method
+   *       at set_value (C:\Users\taubh\GitProjects\web\WebApps\ClickAndCollect\src\dist\js\util\obj\Obj.js:736:9)
+   *
+   *    Constructor call
+   *       at new child2 (C:\Users\web\obj\Obj\obj_init.test.js:82:5)
+   *
+   *    Anonymous method
+   *      at Object.<anonymous> (C:\Users\web\obj\Obj\obj_init.test.js:107:7)
+   *
+   *    Class' setter
+   *      at child2.set properties [as properties] (C:\Users\web\obj\Obj.js:173:5)
    *
    * @return{object} {    class_name, method_name,
    *                    if include_file_infos = true :
@@ -48,28 +54,42 @@ class Obj_Errors {
         Either what follows 'new '
         Or what precedes '.'
       */
-      res.class_name = first_part.match(/((?<=\bnew\b\s).+|.+(?=\.))/)[0];
+      const class_name_match = first_part.match(
+        /((?<=\bnew\b\s)(.+)|(.+)(?=\.))/
+      );
+      res.class_name = class_name_match
+        ? class_name_match[0]
+        : // method is not from a class
+          "";
 
       /*
         Either 'new'
         Or what follows '.'
       */
-      res.method_name = first_part.match(/(\bnew\b|(?<=\.)(.+))/)[0];
+      res.method_name =
+        res.class_name.length === 0
+          ? //method not from a class => the entire first_part is the method name
+            first_part
+          : // name is 'new' or after a dot '.'
+            first_part.match(/(\bnew\b|(?<=\.)(.+))/)[0];
     }
 
     //
     // File infos
-    if (include_file_infos) {
-      /*
+    {
+      if (include_file_infos) {
+        /*
         What are in braces '(' ')'
       */
-      const second_part = stack_trace.match(/(?<=\()(.+)(?=\))/)[0];
-      // Most of characters preceding a '\'
-      res.file_path = second_part.match(/(.+)(?=\\)/)[0] + "\\";
-      // What is not a '\' between a '\' and ':'
-      res.file_name = second_part.match(/((?<=\\)([^\\:]+)(?=:))+/)[0];
-      // Digits preceding by a ':' and including a ':'
-      res.line = second_part.match(/(?<=:)(\d+:\d+)/)[0];
+        const second_part = stack_trace.match(/(?<=\()(.+)(?=\))/)[0];
+
+        // Most of characters preceding a '\'
+        res.file_path = second_part.match(/(.+)(?=\\)/)[0] + "\\";
+        // What is not a '\' between a '\' and ':'
+        res.file_name = second_part.match(/((?<=\\)([^\\:]+)(?=:))+/)[0];
+        // Digits preceding by a ':' and including a ':'
+        res.line = second_part.match(/(?<=:)(\d+:\d+)/)[0];
+      }
     }
 
     return res;
@@ -88,13 +108,12 @@ class Obj_Errors {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -111,13 +130,12 @@ class Obj_Errors {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -134,13 +152,12 @@ class Obj_Errors {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -157,13 +174,12 @@ class Obj_Errors {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -180,13 +196,12 @@ class Obj_Errors {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -195,33 +210,33 @@ class Obj_Errors {
    * @param {Obj | Object} obj Object whose errors have to be handled
    */
   constructor(obj) {
-    for (const prop_name in obj) {
+    {
+      //
+      // Init members
+      {
+        //
+        // Values user tried to set but failed
+        Object.defineProperty(this, "tried_sets", {
+          enumerable: true,
+          configurable: false,
+          writable: true,
+        });
+
+        //
+        // Raised errors
+        Object.defineProperty(this, "errs", {
+          enumerable: true,
+          configurable: false,
+          writable: true,
+        });
+      }
+
       /*
         Init obj::<property_name>_set getters
         They return the value set to object 
         even if an error have been throw
         */
-      {
-        //
-        // Init members
-        {
-          //
-          // Values user tried to set but failed
-          Object.defineProperty(this, "tried_sets", {
-            enumerable: true,
-            configurable: false,
-            writable: true,
-          });
-
-          //
-          // Raised errors
-          Object.defineProperty(this, "errs", {
-            enumerable: true,
-            configurable: false,
-            writable: true,
-          });
-        }
-
+      for (const prop_name in obj) {
         //
         // Init obj::<property_name>.set
         // pointing to value in this.tried_sets if an error occured
@@ -240,29 +255,14 @@ class Obj_Errors {
 
                 return obj[prop_name];
               },
-              set: function (value) {
-                that.tried_sets[prop_name] = value;
-              },
+
+              //set: use this.set_error(prop_name,
+              //                        error,
+              //                        value_which_raised = undefined)
             });
           }
         }
       }
-    }
-
-    {
-      //
-      // All errors as single string
-      Object.defineProperty(this, "str", {
-        enumerable: false,
-        configurable: false,
-        get: function () {
-          let errs = [];
-          for (const key in this.errs) {
-            errs.push((this.err_str = key));
-          }
-          return errs.join("\n");
-        },
-      });
     }
   }
 
@@ -279,7 +279,7 @@ class Obj_Errors {
   /**
    * Return all errors as a single string
    */
-  get strs() {
+  get str() {
     let errs = [];
     for (const key in this.errs) {
       errs.push((this.err_str = key));
@@ -293,7 +293,7 @@ class Obj_Errors {
    *
    * @return{str}
    */
-  set err_str(prop_name) {
+  get_str(prop_name, include_stack = false) {
     //
     // Check preconds
     {
@@ -309,7 +309,7 @@ class Obj_Errors {
       // Instance of error
       // https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Objets_globaux/Error
       if (err instanceof Error) {
-        return (
+        const str =
           err.name +
           " : " +
           err.message +
@@ -317,8 +317,11 @@ class Obj_Errors {
           err.fileName +
           " at " +
           err.lineNumber +
-          ")"
-        );
+          ")";
+        if (include_stack) {
+          return str + " " + err.stack;
+        }
+        return str;
       }
 
       //

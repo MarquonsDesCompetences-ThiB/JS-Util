@@ -152,6 +152,9 @@ class Obj {
   //
   // === PROPERTIES ===
   /**
+   * To set Object's properties
+   * To be called in child constructor
+   *
    * @param{object} props 2 properties : enums, not_enums
    */
   set properties(props) {
@@ -170,12 +173,6 @@ class Obj {
     //   -> to get calling file)
     const caller = util.obj.Errors.get_caller_infos(2);
 
-    this.log =
-      "Caller name : " +
-      caller.class_name +
-      " - Constructor : " +
-      this.constructor.name;
-
     if (caller.class_name !== this.constructor.name) {
       //
       // Not Enumerable Members
@@ -184,13 +181,17 @@ class Obj {
         // Store not_enum_props for later
         if (!this.nenums_props_tmp_) {
           Object.defineProperty(this, "nenums_props_tmp_", {
-            value: [],
+            value: new util.array.Set_Array(),
             enumerable: false,
             writable: true,
             configurable: true,
           });
         }
-        this.nenums_props_tmp_.concat(props.not_enums);
+        this.nenums_props_tmp_ = this.nenums_props_tmp_.concat(
+          props.not_enums instanceof util.array.Set_Array
+            ? props.not_enums
+            : new util.array.Set_Array(...props.not_enums)
+        );
       }
 
       return;
@@ -204,10 +205,15 @@ class Obj {
     */
     // Not Enumerable Members
     {
-      let arg_nenum = props.not_enums ? props.not_enums : [];
-      this.not_enumerable_props = this.nenums_props_tmp_
-        ? this.nenums_props_tmp_.concat(arg_nenum)
-        : arg_nenum;
+      let arg_nenum = props.not_enums
+        ? props.not_enums instanceof util.array.Set_Array
+          ? props.not_enums
+          : new util.array.Set_Array(...props.not_enums)
+        : new util.array.Set_Array();
+      if (this.nenums_props_tmp_) {
+        arg_nenum = this.nenums_props_tmp_.concat(arg_nenum);
+      }
+      this.not_enumerable_props = arg_nenum;
     }
 
     //
@@ -249,22 +255,41 @@ class Obj {
   /**
    * To be called by this.set properties
    */
-  set not_enumerable_props(not_enumerable_props = []) {
+  set not_enumerable_props(not_enumerable_props = new util.array.Set_Array()) {
     if (this.not_enum_props_) {
       this.error = "not_enumerable_props already set ; skipping this one";
       return;
     }
 
-    const props = !this.nenums_props_tmp_
-      ? not_enumerable_props
-      : this.nenums_props_tmp_.concat(not_enumerable_props);
+    if (this.nenums_props_tmp_) {
+      not_enumerable_props = not_enumerable_props.concat(
+        this.nenums_props_tmp_
+      );
+    }
 
-    Object.defineProperty(this, "not_enum_props_", {
-      value: props,
-      enumerable: false,
-      writable: false,
-      configurable: false,
-    });
+    //
+    // Define every not enumerable prop
+    {
+      let that = this;
+      not_enumerable_props.forEach((prop_name) => {
+        Object.defineProperty(that, prop_name, {
+          enumerable: false,
+          writable: true,
+          configurable: false,
+        });
+      });
+    }
+
+    //
+    // Define not_enum_props_ {string[]}
+    {
+      Object.defineProperty(this, "not_enum_props_", {
+        value: not_enumerable_props,
+        enumerable: false,
+        writable: false,
+        configurable: false,
+      });
+    }
 
     if (this.nenums_props_tmp_) {
       delete this.nenums_props_tmp_;
@@ -466,11 +491,12 @@ class Obj {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
-        caller.line +
-        ")"
+        " |in " +
+        caller.file_name +
+        " at " +
+        caller.line
     );
   }
 
@@ -487,11 +513,12 @@ class Obj {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
-        caller.line +
-        ")"
+        " |in " +
+        caller.file_name +
+        " at " +
+        caller.line
     );
   }
 
@@ -508,13 +535,12 @@ class Obj {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -531,13 +557,12 @@ class Obj {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -554,13 +579,12 @@ class Obj {
       caller.class_name +
         "#" +
         caller.method_name +
-        " " +
+        "| " +
         log_msg +
-        " (" +
+        " |in " +
         caller.file_name +
-        ", " +
-        caller.line +
-        ")"
+        " at " +
+        caller.line
     );
   }
 
@@ -581,7 +605,7 @@ class Obj {
    * @return{string}
    */
   get errs_str() {
-    return this.errs.strs;
+    return this.errs.str;
   }
 
   /**
@@ -589,12 +613,16 @@ class Obj {
    *
    * @return{str}
    */
-  set err_str(prop_name) {
-    return (this.err_str = prop_name);
+  get_err_str(prop_name, include_stack = false) {
+    return this.errs.get_str(prop_name, include_stack);
   }
 
   //
   // === SETTERS ===
+  /**
+   *
+   * @param {string} prop_name Property's name which raised the error
+   * 
   /**
    *
    * @param {string} prop_name Property's name which raised the error
@@ -653,7 +681,6 @@ class Obj {
     update_members = false,
     set_res = { nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }
   ) {
-    this.log = "Will set values";
     let that = this;
     let nb_errs = 0;
 
@@ -662,26 +689,14 @@ class Obj {
     {
       for (const prop_name in values) {
         const type = typeof values[prop_name];
-        this.log = "Enumerable : " + prop_name + " of type " + type;
 
         if (
           type !== "undefined" &&
           type !== "function" &&
           this.propertyIsEnumerable(prop_name) //property exists
         ) {
-          this.log =
-            "Setting enumerable " + prop_name + " = " + values[prop_name];
-
-          let set_ok = false;
-          try {
-            set_ok = set_value(prop_name, values[prop_name]);
-          } catch (ex) {
-            that.error = ex.message;
-          }
-          if (set_ok) {
-            if (update_members) {
-              this.push_updated_member(prop_name);
-            }
+          if (set_value(prop_name, values[prop_name]) && update_members) {
+            this.push_updated_member(prop_name);
           }
         }
         //
@@ -692,40 +707,25 @@ class Obj {
       }
     }
 
-    try {
-      //
-      // Set non enumerable properties
-      {
-        for (let i = 0; i < this.not_enumerable_props.length; i++) {
-          const prop_name = this.not_enumerable_props[i];
-          this.log = "Not enumerable " + prop_name;
-          if (this.hasOwnProperty(prop_name)) {
-            this.log =
-              "Setting not enumerable " + prop_name + " of type " + type;
-            if (set_value(prop_name, values[prop_name]) && update_members) {
-              this.push_updated_member(prop_name);
-            }
+    //
+    // Set non enumerable properties
+    {
+      this.not_enumerable_props.forEach((prop_name) => {
+        const type = typeof values[prop_name];
+        if (type !== "undefined" && type !== "function") {
+          if (set_value(prop_name, values[prop_name]) && update_members) {
+            that.push_updated_member(prop_name);
           }
         }
-      }
-    } catch (ex) {
-      that.error = ex.message;
+      });
     }
 
     function set_value(prop_name, value) {
-      that.log = "set_value(prop_name, value)";
       try {
-        that.log =
-          "set_value to : " +
-          prop_name +
-          " - " +
-          JSON.stringify(Object.getOwnPropertyDescriptor(that, prop_name));
-
         that[prop_name] = values[prop_name];
         set_res.nb_set++;
         return true;
       } catch (ex) {
-        that.log = "catched : " + ex.constructor.name;
         nb_errs++;
 
         //
