@@ -21,12 +21,14 @@ const File = (function () {
     static get enumerable() {
       util.obj.Properties.init = properties;
       return {
+        /*
+        //has a setter/getter
         path: {
           value: undefined,
           enumerable: true,
           writable: true,
           configurable: false,
-        },
+        },*/
 
         name: {
           value: undefined,
@@ -84,7 +86,7 @@ const File = (function () {
             if (err) {
               const msg =
                 "Error reading this file : " + err + " ; abort merging";
-              logger.error="File#merge_file " + msg;
+              logger.error = "File#merge_file " + msg;
               return cbk(msg);
             }
 
@@ -101,7 +103,7 @@ const File = (function () {
             if (err) {
               const msg =
                 "Error reading other file : " + err + " ; abort merging";
-              logger.error="File#merge_file " + msg;
+              logger.error = "File#merge_file " + msg;
               return cbk(msg);
             }
 
@@ -168,12 +170,84 @@ const File = (function () {
       return this;
     }
 
-    get_full_name() {
+    //
+    // === GETTERS/SETTERS ===
+
+    //
+    // === PATH ===
+    get ext() {
+      return this._e;
+    }
+
+    set ext(ext) {
+      if (!this._e) {
+        Object.defineProperty(this, "_n", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+        });
+      }
+
+      //
+      // Remove forbidden characters from name and set
+      {
+        const formatted = ext.match(/[^:\*\?"<>\|]/g).join("");
+        // remove eventual starting dot
+        this._e = formatted.replace(/^\./, "");
+        logger.log = "Name set : " + this._e;
+      }
+    }
+
+    get name() {
+      return this._n;
+    }
+
+    set name(name) {
+      if (!this._n) {
+        Object.defineProperty(this, "_n", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+        });
+      }
+
+      //
+      // Remove forbidden characters from name and set
+      {
+        const formatted = name.match(/[^:\*\?"<>\|]/g).join("");
+        this._n = formatted;
+        logger.log = "Name set : " + formatted;
+      }
+    }
+
+    get path() {
+      return this._p;
+    }
+
+    set path(path) {
+      if (!this._p) {
+        Object.defineProperty(this, "_p", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+        });
+      }
+
+      //
+      // Remove forbidden characters from path and set
+      {
+        const formatted = path.match(/[^:\*\?"<>\|]/g).join("");
+        this._p = formatted;
+        logger.log = "Path set : " + formatted;
+      }
+    }
+
+    get full_name() {
       return this.name + (this.ext != null) ? "." + this.ext : "";
     }
 
-    get_full_path() {
-      return this.path + this.get_full_name();
+    get full_path() {
+      return this.path + this.full_name;
     }
 
     merge(other_file) {
@@ -185,7 +259,7 @@ const File = (function () {
       function on_read_file1(err) {
         if (err) {
           const msg = "Error reading this file to be merged : " + err;
-          logger.error="File#merge::on_read_file1 " + msg;
+          logger.error = "File#merge::on_read_file1 " + msg;
           return cbk(msg);
         }
 
@@ -198,7 +272,7 @@ const File = (function () {
       function on_read_file2(err) {
         if (err) {
           const msg = "Error reading other file to merge : " + err;
-          logger.error="File#merge::on_read_file2 " + msg;
+          logger.error = "File#merge::on_read_file2 " + msg;
           return cbk(msg);
         }
 
@@ -207,13 +281,12 @@ const File = (function () {
         this.write(function (err) {
           if (err) {
             const msg = "Error writing merged files : " + err;
-            logger.error="File#merge::on_read_file2::write " + msg;
+            logger.error = "File#merge::on_read_file2::write " + msg;
             return cbk(msg);
           }
-          logger.log=
+          logger.log =
             "File#merge::on_read_file2::write Merged files writtent to " +
-              that.get_full_path()
-          ;
+            that.get_full_path();
           cbk();
         });
       }
@@ -234,12 +307,11 @@ const File = (function () {
     read(cbk, asText_or_sheetId = 0) {
       const full_path = this.get_full_path();
       if (typeof full_path === "undefined") {
-        console.error(
+        logger.error =
           "File#read Undefined full path ; path : " +
-            this.path +
-            " name : " +
-            this.name
-        );
+          this.path +
+          " name : " +
+          this.name;
         return false;
       }
 
@@ -270,7 +342,7 @@ const File = (function () {
             file_string_reader(full_path).then((result) => {
               if (!result) {
                 const msg = "Error reading file " + full_path + " as text";
-                console.error("File#read " + msg);
+                logger.error = "File#read " + msg;
                 that.content = "";
                 cbk(msg);
               }
@@ -284,18 +356,17 @@ const File = (function () {
         {
           file.readFile(full_path, function (err, obj) {
             if (err) {
-              console.error(
+              logger.error =
                 "File#read Error reading file " +
-                  full_path +
-                  " as json : " +
-                  err
-              );
+                full_path +
+                " as json : " +
+                err;
               that.content = {};
               cbk(err);
               return;
             }
 
-            console.log("File#read file " + full_path + " is read");
+            logger.log = "File#read file " + full_path + " is read";
             that.content = obj;
             cbk(undefined, that.content);
           });
@@ -307,12 +378,11 @@ const File = (function () {
     write(cbk) {
       const full_path = this.get_full_path();
       if (typeof full_path === "undefined") {
-        console.error(
+        logger.error =
           "File#write Undefined full path ; path : " +
-            this.path +
-            " name : " +
-            this.name
-        );
+          this.path +
+          " name : " +
+          this.name;
         return undefined;
       }
 
@@ -321,14 +391,13 @@ const File = (function () {
       let that = this;
       file.writeFile(full_path, this.content, function (err) {
         if (err) {
-          console.error(
-            "File#write Error writing file " + full_path + " : " + err
-          );
+          logger.error =
+            "File#write Error writing file " + full_path + " : " + err;
           cbk(err);
           return;
         }
 
-        console.log("File#write file " + full_path + " is written");
+        logger.log = "File#write file " + full_path + " is written";
         cbk(undefined);
       });
     }
