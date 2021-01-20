@@ -1,7 +1,5 @@
 "use strict";
 
-const Util = require("../Date");
-
 /**
  * An array which guarantees elements unicity
  * Set does not allow to add another set to it

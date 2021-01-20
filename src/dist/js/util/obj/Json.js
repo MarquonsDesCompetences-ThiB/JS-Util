@@ -165,7 +165,12 @@ class Json {
       // Recursive call if property is itself an object
       {
         if (typeof obj[id] === "object") {
-          Json.factorize_property_names(obj[id]);
+          try {
+            Json.factorize_property_names(obj[id]);
+          } catch (ex) {
+            const msg = "Could not factorize_property_names of " + id;
+            logger.warn("Json#factorize_property_names " + msg);
+          }
         }
       }
     }
@@ -198,49 +203,56 @@ class Json {
    * its 4 first letters (to enable alphabetical order)
    * then only consons and digits
    *
-   * If removing id result in the same id of another property
-   * in the same obj, an incremental number is appended
    *
    * @param {object} obj
    */
   static set_ids(obj) {
-    let ids = []; //to check ids already set and avoid duplicates
+    //let ids = []; //to check ids already set and avoid duplicates
     const voyels_specialChars_regex = /([aàâäeéèêëiïouùy$-/\\:-?{}-~!"^_.`\[\]])/i;
 
     for (const prop_name in obj) {
-      let id = prop_name.substring(0, 4);
       //
-      // Remove non desired characters starting at prop_name[4]
+      // Set
       {
-        let id_end = prop_name.substring(4);
-        id_end.replace(voyels_specialChars_regex, "");
-        id += id_end;
-        id.toLowerCase();
-      }
-      //
-      // Increment id if needed (already exists in ids)
-      {
-        let id_nb = 0;
-        //not to append id_nb at every iteration
-        const id_prefix = "" + id;
-        while (ids.includes(id)) {
-          id_nb++;
-          id = id_prefix + id_nb;
+        let id = prop_name.substring(0, 4);
+        //
+        // Remove non desired characters starting at prop_name[4]
+        {
+          let id_end = prop_name.substring(4);
+          id_end.replace(voyels_specialChars_regex, "");
+          id += id_end;
+          id.toLowerCase();
+        }
+        //
+        // Increment id if needed (already exists in ids)
+        /*{
+            let id_nb = 0;
+            //not to append id_nb at every iteration
+            const id_prefix = "" + id;
+            while (ids.includes(id)) {
+              id_nb++;
+              id = id_prefix + id_nb;
+            }
+          }*/
+
+        //
+        // Set id
+        {
+          //ids.push(id);
+          obj.id = id;
         }
       }
 
       //
-      // Set id
-      {
-        ids.push(id);
-        obj[prop_name].id = id;
-      }
-
-      //
-      // Recursive call if property is itself an object
+      // Recursive call if property is itself an object with name propeprty
       {
         if (typeof obj[prop_name] === "object") {
-          Json.set_ids(obj[prop_name]);
+          try {
+            Json.set_ids(obj[prop_name]);
+          } catch (ex) {
+            const msg = "Could not set_ids of " + prop_name;
+            logger.warn("Json#set_ids " + msg);
+          }
         }
       }
     }
@@ -261,8 +273,19 @@ class Json {
     const prefix = id_prefix + charac;
 
     for (const prop_name in obj) {
-      obj[prop_name].id = prefix + obj[prop_name].id;
-
+      try {
+        obj[prop_name].id = prefix + obj[prop_name].id;
+      } catch (ex) {
+        const msg =
+          "Could not prefix parent id (" +
+          obj[prop_name].id +
+          ") of " +
+          prop_name +
+          " to " +
+          prefix +
+          obj[prop_name].id;
+        Obj_Errors.warn("Json#prefix_parent_ids " + msg);
+      }
       //
       // Recursive call if property is itself an object
       if (typeof obj[prop_name] === "object") {
@@ -342,7 +365,7 @@ class Json {
    */
   static to_json_value(val) {
     //if val does not exist, is not an empty string
-    if (!val && !util.string.is_string(val)) {
+    if (!val && !util.text.String.is_string(val)) {
       return undefined;
     }
 

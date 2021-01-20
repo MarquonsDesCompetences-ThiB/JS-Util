@@ -61,7 +61,7 @@ class Price extends Obj {
     if (obj.unit) {
       //
       // Convert to Price.unit's index number
-      if (util.String.is_string(obj.unit)) {
+      if (util.text.String.is_string(obj.unit)) {
         const unit_idx = Price.units.indexOf(obj.unit);
         //string should be a number
         if (unit_idx < 0) {
