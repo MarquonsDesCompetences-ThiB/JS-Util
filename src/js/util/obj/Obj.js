@@ -1,18 +1,15 @@
 "use strict";
-
-if (typeof process !== "undefined") {
-  global.Json = require(process.env.SRC_ROOT + "dist/js/util/Json");
-}
-
-const { exception } = require("console");
-const Obj_Errors = require("./Obj_Errors");
-
+/**
+ * Preconds
+ *  util.obj.Errors = Obj_Errors
+ *  util.obj.Json = Json
+ */
 /**
  * Every children should have one listing their not enumerable properties to :
  *  - avoid cyclic references (for ex. with toJSON)
  *  - enable to set through Obj.set(...)
  */
-const not_enumerable_props = [];
+//const not_enumerable_props = [];
 
 class Obj {
   static clone(obj) {
@@ -115,13 +112,17 @@ class Obj {
    * @throws {Object { <prop_name : <err> }} If this.set raises error(s)
    */
   constructor(values = undefined, update_members = false) {
-    if (!this.not_enumerable_props) {
-      this.not_enumerable_props = not_enumerable_props;
-    }
+    /*
+      TEMPLATE of what should be in overrding child(ren)
+      super(values, update_members);
+
+      // also calls this.set(values)
+      this.properties = properties.props;
+    }*/
 
     //
     // To handle set errors
-    this.errs = new Obj_Errors(this);
+    this.errs = new util.obj.Errors(this);
 
     /*
       Members updated that need to be stored in DB
@@ -129,21 +130,145 @@ class Obj {
     */
     this.updated_members = [];
 
-    try {
-      this.set(values, update_members);
-    } catch (obj_errs) {
-      const msg = obj_errs.nb + " errors setting values";
-      logger.error("Obj() " + msg);
+    //
+    // Temporary var
+    // To set values with setter properties
+    {
+      Object.defineProperty(this, "vals_", {
+        value: values,
+        configurable: true,
+        enumerable: false,
+        writable: true,
+      });
+      Object.defineProperty(this, "upd_membrs_", {
+        value: update_members,
+        configurable: true,
+        enumerable: false,
+        writable: true,
+      });
     }
   }
 
+  //
+  // === PROPERTIES ===
+  /**
+   * @param{object} props 2 properties : enums, not_enums
+   */
+  set properties(props) {
+    //
+    // Enumerable Members
+    if (props.enums) {
+      Object.defineProperties(this, props.enums);
+    }
+
+    /*
+     If calling class is not final child => concat to existing
+     for later final set
+    */
+    // With 4th stack trace's line
+    // (remove c and not_enumerable_props calls
+    //   -> to get calling file)
+    const caller = util.obj.Errors.get_caller_infos(2);
+
+    this.log =
+      "Caller name : " +
+      caller.class_name +
+      " - Constructor : " +
+      this.constructor.name;
+
+    if (caller.class_name !== this.constructor.name) {
+      //
+      // Not Enumerable Members
+      if (props.not_enums) {
+        //
+        // Store not_enum_props for later
+        if (!this.nenums_props_tmp_) {
+          Object.defineProperty(this, "nenums_props_tmp_", {
+            value: [],
+            enumerable: false,
+            writable: true,
+            configurable: true,
+          });
+        }
+        this.nenums_props_tmp_.concat(props.not_enums);
+      }
+
+      return;
+    }
+    //
+    //else
+    /* 
+      Calling class is the final one 
+        => set not_enum_props_
+        => set values
+    */
+    // Not Enumerable Members
+    {
+      let arg_nenum = props.not_enums ? props.not_enums : [];
+      this.not_enumerable_props = this.nenums_props_tmp_
+        ? this.nenums_props_tmp_.concat(arg_nenum)
+        : arg_nenum;
+    }
+
+    //
+    // Set values
+    {
+      if (this.vals_) {
+        try {
+          this.set(this.vals_, this.upd_membrs_);
+        } catch (obj_errs) {
+          this.error =
+            obj_errs.nb +
+            " errors setting values (" +
+            typeof obj_errs +
+            " " +
+            obj_errs.constructor.name +
+            " : " +
+            obj_errs.message +
+            ")";
+        }
+
+        //
+        // Remove temporary variables vals_/upd_membrs_
+        {
+          delete this.vals_;
+          if (this.upd_membrs_ != null) {
+            delete this.upd_membrs_;
+          }
+        }
+      }
+    }
+  }
+
+  //
+  // === NOT_ENUMARABLE_PROPS ==
+  get not_enumerable_props() {
+    return this.not_enum_props_;
+  }
+
+  /**
+   * To be called by this.set properties
+   */
   set not_enumerable_props(not_enumerable_props = []) {
-    Object.defineProperty(this, "not_enumerable_props", {
-      value: not_enumerable_props,
+    if (this.not_enum_props_) {
+      this.error = "not_enumerable_props already set ; skipping this one";
+      return;
+    }
+
+    const props = !this.nenums_props_tmp_
+      ? not_enumerable_props
+      : this.nenums_props_tmp_.concat(not_enumerable_props);
+
+    Object.defineProperty(this, "not_enum_props_", {
+      value: props,
       enumerable: false,
       writable: false,
       configurable: false,
     });
+
+    if (this.nenums_props_tmp_) {
+      delete this.nenums_props_tmp_;
+    }
   }
 
   clone() {
@@ -159,7 +284,7 @@ class Obj {
     // Process enumerable properties
     {
       for (let key in this) {
-        if (!Json.value_equals(this[key], obj[key])) {
+        if (!util.obj.Json.value_equals(this[key], obj[key])) {
           logger.log(
             "Obj#equals members " +
               key +
@@ -218,7 +343,7 @@ class Obj {
     // Fetch enumerable properties
     {
       for (const prop_name in this) {
-        ret[prop_name] = Json.to_json_value(this[prop_name]);
+        ret[prop_name] = util.obj.Json.to_json_value(this[prop_name]);
       }
     }
 
@@ -228,7 +353,7 @@ class Obj {
       if (include_not_enumerable_props) {
         for (let i = 0; i < this.not_enumerable_props.length; i++) {
           const prop_name = this.not_enumerable_props[i];
-          ret[prop_name] = Json.to_json_value(this[prop_name]);
+          ret[prop_name] = util.obj.Json.to_json_value(this[prop_name]);
         }
       }
     }
@@ -248,7 +373,7 @@ class Obj {
           continue;
         }
 
-        ret[key] = Json.to_json_value(this[key]);
+        ret[key] = util.obj.Json.to_json_value(this[key]);
 
         //to string conversion
         if (typeof ret[key] === "number" || ret[key] instanceof Number) {
@@ -268,7 +393,7 @@ class Obj {
             continue;
           }
 
-          ret[prop_name] = Json.to_json_value(this[prop_name]);
+          ret[prop_name] = util.obj.Json.to_json_value(this[prop_name]);
 
           //to string conversion
           if (
@@ -298,7 +423,7 @@ class Obj {
     // Clone enumerable properties
     {
       for (let key in this) {
-        ret[key] = Json.clone_value(this[key]);
+        ret[key] = util.obj.Json.clone_value(this[key]);
 
         /*const type = typeof ret[key];
       if (type !== "undefined") {
@@ -333,16 +458,20 @@ class Obj {
    * Class name is prefixed to log
    */
   set debug(log_msg) {
-    // fetch 3rd stack trace's line
-    // (remove get_stack_trace and debu calls -> calling file)
-    const stack_trace = Obj_Errors.get_stack_trace(3);
+    // with 3rd stack trace's line
+    // (remove debug calls -> to get calling file)
+    const caller = util.obj.Errors.get_caller_infos(2, true);
 
-    const class_str = this.constructor.name;
-    const method_name = ("" + stack_trace).replace(
-      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
-      "$1"
+    logger.debug(
+      caller.class_name +
+        "#" +
+        caller.method_name +
+        " " +
+        log_msg +
+        " (" +
+        caller.line +
+        ")"
     );
-    logger.debug(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -350,16 +479,20 @@ class Obj {
    * Class name is prefixed to log
    */
   set error(log_msg) {
-    // fetch 3rd stack trace's line
-    // (remove get_stack_trace and debu calls -> calling file)
-    const stack_trace = Obj_Errors.get_stack_trace(3);
+    // with 3rd stack trace's line
+    // (remove debug calls -> to get calling file)
+    const caller = util.obj.Errors.get_caller_infos(2, true);
 
-    const class_str = this.constructor.name;
-    const method_name = ("" + stack_trace).replace(
-      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
-      "$1"
+    logger.error(
+      caller.class_name +
+        "#" +
+        caller.method_name +
+        " " +
+        log_msg +
+        " (" +
+        caller.line +
+        ")"
     );
-    logger.error(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -367,16 +500,22 @@ class Obj {
    * Class name is prefixed to log
    */
   set log(log_msg) {
-    // fetch 3rd stack trace's line
-    // (remove get_stack_trace and debu calls -> calling file)
-    const stack_trace = Obj_Errors.get_stack_trace(3);
+    // with 3rd stack trace's line
+    // (remove debug calls -> to get calling file)
+    const caller = util.obj.Errors.get_caller_infos(2, true);
 
-    const class_str = this.constructor.name;
-    const method_name = ("" + stack_trace).replace(
-      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
-      "$1"
+    logger.log(
+      caller.class_name +
+        "#" +
+        caller.method_name +
+        " " +
+        log_msg +
+        " (" +
+        caller.file_name +
+        ", " +
+        caller.line +
+        ")"
     );
-    logger.log(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -384,16 +523,22 @@ class Obj {
    * Class name is prefixed to log
    */
   set trace(log_msg) {
-    // fetch 3rd stack trace's line
-    // (remove get_stack_trace and debu calls -> calling file)
-    const stack_trace = Obj_Errors.get_stack_trace(3);
+    // with 3rd stack trace's line
+    // (remove debug calls -> to get calling file)
+    const caller = util.obj.Errors.get_caller_infos(2, true);
 
-    const class_str = this.constructor.name;
-    const method_name = ("" + stack_trace).replace(
-      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
-      "$1"
+    logger.trace(
+      caller.class_name +
+        "#" +
+        caller.method_name +
+        " " +
+        log_msg +
+        " (" +
+        caller.file_name +
+        ", " +
+        caller.line +
+        ")"
     );
-    logger.trace(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   /**
@@ -401,20 +546,55 @@ class Obj {
    * Class name is prefixed to log
    */
   set warn(log_msg) {
-    // fetch 3rd stack trace's line
-    // (remove get_stack_trace and debu calls -> calling file)
-    const stack_trace = Obj_Errors.get_stack_trace(3);
+    // with 3rd stack trace's line
+    // (remove debug calls -> to get calling file)
+    const caller = util.obj.Errors.get_caller_infos(2, true);
 
-    const class_str = this.constructor.name;
-    const method_name = ("" + stack_trace).replace(
-      /^\s*at\s{1}[\w_]+\.([\w_]+)\s{1}\(.+\)$/,
-      "$1"
+    logger.warn(
+      caller.class_name +
+        "#" +
+        caller.method_name +
+        " " +
+        log_msg +
+        " (" +
+        caller.file_name +
+        ", " +
+        caller.line +
+        ")"
     );
-    logger.warn(class_str + "#" + method_name + " " + log_msg + stack_trace);
   }
 
   //
   // === ERRORS ===
+  //
+  // === GETTERS ===
+  /**
+   * @return{integer}
+   */
+  get nb_errs() {
+    return this.errs.nb;
+  }
+
+  /**
+   * Return all errors as a single string
+   *
+   * @return{string}
+   */
+  get errs_str() {
+    return this.errs.strs;
+  }
+
+  /**
+   * Get error associated to specified property name
+   *
+   * @return{str}
+   */
+  set err_str(prop_name) {
+    return (this.err_str = prop_name);
+  }
+
+  //
+  // === SETTERS ===
   /**
    *
    * @param {string} prop_name Property's name which raised the error
@@ -422,12 +602,7 @@ class Obj {
    * @param {*} value_which_raised  Value which raised the error
    */
   add_error(prop_name, error, value_which_raised = undefined) {
-    this.errs[prop_name] = error;
-    this[prop_name + "_set"] = value_which_raised;
-  }
-
-  get nb_errs() {
-    return this.errs.nb;
+    this.errs.set_error(prop_name, error, value_which_raised);
   }
 
   /**
@@ -478,6 +653,7 @@ class Obj {
     update_members = false,
     set_res = { nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }
   ) {
+    this.log = "Will set values";
     let that = this;
     let nb_errs = 0;
 
@@ -486,10 +662,24 @@ class Obj {
     {
       for (const prop_name in values) {
         const type = typeof values[prop_name];
-        if (type !== "undefined" && type !== "function" && this[prop_name]) {
-          // prevent value to be set twice
-          if (!this.not_enumerable_props.includes(prop_name)) {
-            if (set(prop_name, values[prop_name]) && update_members) {
+        this.log = "Enumerable : " + prop_name + " of type " + type;
+
+        if (
+          type !== "undefined" &&
+          type !== "function" &&
+          this.propertyIsEnumerable(prop_name) //property exists
+        ) {
+          this.log =
+            "Setting enumerable " + prop_name + " = " + values[prop_name];
+
+          let set_ok = false;
+          try {
+            set_ok = set_value(prop_name, values[prop_name]);
+          } catch (ex) {
+            that.error = ex.message;
+          }
+          if (set_ok) {
+            if (update_members) {
               this.push_updated_member(prop_name);
             }
           }
@@ -502,25 +692,40 @@ class Obj {
       }
     }
 
-    //
-    // Set non enumerable properties
-    {
-      for (let i = 0; i < this.not_enumerable_props.length; i++) {
-        const prop_name = this.not_enumerable_props[i];
-        if (values[prop_name]) {
-          if (set(prop_name, values[prop_name]) && update_members) {
-            this.push_updated_member(prop_name);
+    try {
+      //
+      // Set non enumerable properties
+      {
+        for (let i = 0; i < this.not_enumerable_props.length; i++) {
+          const prop_name = this.not_enumerable_props[i];
+          this.log = "Not enumerable " + prop_name;
+          if (this.hasOwnProperty(prop_name)) {
+            this.log =
+              "Setting not enumerable " + prop_name + " of type " + type;
+            if (set_value(prop_name, values[prop_name]) && update_members) {
+              this.push_updated_member(prop_name);
+            }
           }
         }
       }
+    } catch (ex) {
+      that.error = ex.message;
     }
 
-    function set(prop_name, value) {
+    function set_value(prop_name, value) {
+      that.log = "set_value(prop_name, value)";
       try {
+        that.log =
+          "set_value to : " +
+          prop_name +
+          " - " +
+          JSON.stringify(Object.getOwnPropertyDescriptor(that, prop_name));
+
         that[prop_name] = values[prop_name];
         set_res.nb_set++;
         return true;
       } catch (ex) {
+        that.log = "catched : " + ex.constructor.name;
         nb_errs++;
 
         //
@@ -536,7 +741,7 @@ class Obj {
           }
         }
 
-        const msg =
+        that.warn =
           "Could not set property " +
           prop_name +
           " to " +
@@ -545,7 +750,6 @@ class Obj {
           ex +
           " - Current value : " +
           that[prop_name];
-        logger.warn("Obj#set " + msg);
         return false;
       }
     }
