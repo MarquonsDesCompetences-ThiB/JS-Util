@@ -75,20 +75,20 @@ class Price extends Obj {
 
       if (util.Number.is_number(obj.unit)) {
         if (isNaN(obj.unit)) {
-          logger.warn(
+          logger.warn=
             "Price#set Unknown specified unit : " + obj.unit + " ; removing it"
           );
           delete obj.unit;
           nb_not_set++;
         } else if (obj.unit < 0 || obj.unit >= Price.units.length) {
-          logger.warn(
+          logger.warn=
             "Price#set Wrong unit index : " + obj.unit + " ; removing it"
           );
           delete obj.unit;
           nb_not_set++;
         }
       } else {
-        logger.warn(
+        logger.warn=
           "Price#set Unexpected unit type : " +
             typeof obj.unit +
             " ; removing it"

@@ -46,7 +46,7 @@ class Unit_ranges {
   static get_unit(unit_str) {
     const unit = this.units.indexOf(unit_str);
     if (unit < 0) {
-      logger.warn(
+      logger.warn=
         "Unit_ranges#get_unit Unknown unit " +
           unit_str +
           '; returning "no units" value'
@@ -58,7 +58,7 @@ class Unit_ranges {
 
   static get_unit_str(unit_number) {
     if (unit_number < 0 || unit_number >= Unit_ranges.units.length) {
-      logger.error(
+      logger.error=
         "Unit_ranges#get_unit_str Unexisting units value : " +
           unit_number +
           ". Should be in [0;" +
@@ -76,7 +76,7 @@ class Unit_ranges {
    */
   static get_unit_meaning(unit_number) {
     if (unit_number < 0 || unit_number >= Unit_ranges.units_meaning.length) {
-      logger.warn(
+      logger.warn=
         "Unit_ranges#get_unit_meaning Unexisting unit " + unit_number
       );
       return "Droit inexistant";

@@ -84,7 +84,7 @@ const File = (function () {
             if (err) {
               const msg =
                 "Error reading this file : " + err + " ; abort merging";
-              logger.error("File#merge_file " + msg);
+              logger.error="File#merge_file " + msg;
               return cbk(msg);
             }
 
@@ -101,7 +101,7 @@ const File = (function () {
             if (err) {
               const msg =
                 "Error reading other file : " + err + " ; abort merging";
-              logger.error("File#merge_file " + msg);
+              logger.error="File#merge_file " + msg;
               return cbk(msg);
             }
 
@@ -185,7 +185,7 @@ const File = (function () {
       function on_read_file1(err) {
         if (err) {
           const msg = "Error reading this file to be merged : " + err;
-          logger.error("File#merge::on_read_file1 " + msg);
+          logger.error="File#merge::on_read_file1 " + msg;
           return cbk(msg);
         }
 
@@ -198,7 +198,7 @@ const File = (function () {
       function on_read_file2(err) {
         if (err) {
           const msg = "Error reading other file to merge : " + err;
-          logger.error("File#merge::on_read_file2 " + msg);
+          logger.error="File#merge::on_read_file2 " + msg;
           return cbk(msg);
         }
 
@@ -207,13 +207,13 @@ const File = (function () {
         this.write(function (err) {
           if (err) {
             const msg = "Error writing merged files : " + err;
-            logger.error("File#merge::on_read_file2::write " + msg);
+            logger.error="File#merge::on_read_file2::write " + msg;
             return cbk(msg);
           }
-          logger.log(
+          logger.log=
             "File#merge::on_read_file2::write Merged files writtent to " +
               that.get_full_path()
-          );
+          ;
           cbk();
         });
       }

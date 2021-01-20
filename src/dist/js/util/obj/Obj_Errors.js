@@ -1,210 +1,6 @@
 "use strict";
 
 class Obj_Errors {
-  //
-  // === LOGS ===
-  /**
-   *
-   * @param {integer} line_from
-   * @param {integer | optional} line_to Line included in result
-   */
-  static get_stack_trace(line_from, line_to = line_from) {
-    // lines are incremented to remove get_stack_trace call
-    return new Error().stack.split("\n").slice(line_from + 1, line_to + 2);
-  }
-
-  /**
-   * Returns info about the calling method from the specified stack traces line
-   *
-   * Stack trace examples :
-   *    Method inside a method
-   *       at set_value (C:\Users\taubh\GitProjects\web\WebApps\ClickAndCollect\src\dist\js\util\obj\Obj.js:736:9)
-   *
-   *    Constructor call
-   *       at new child2 (C:\Users\web\obj\Obj\obj_init.test.js:82:5)
-   *
-   *    Anonymous method
-   *      at Object.<anonymous> (C:\Users\web\obj\Obj\obj_init.test.js:107:7)
-   *
-   *    Class' setter
-   *      at child2.set properties [as properties] (C:\Users\web\obj\Obj.js:173:5)
-   *
-   * @return{object} {    class_name, method_name,
-   *                    if include_file_infos = true :
-   *                      file_path,
-   *                      file_name,
-   *                      line {string : "<col>:<line>"}
-   *                  }
-   */
-  static get_caller_infos(stack_trace_line, include_file_infos = false) {
-    // increment stack_trace_line to remove get_caller_infos call
-    const stack_trace = Obj_Errors.get_stack_trace(stack_trace_line + 1)[0];
-
-    let res = {};
-
-    //
-    // Class and method name
-    {
-      /*
-        What follows 'at ' and precedes '('
-      */
-      const first_part = stack_trace.match(/(?<=at\s)(.+)(?=\s\()/)[0];
-
-      /*
-        Either what follows 'new '
-        Or what precedes '.'
-      */
-      const class_name_match = first_part.match(
-        /((?<=\bnew\b\s)(.+)|(.+)(?=\.))/
-      );
-      res.class_name = class_name_match
-        ? class_name_match[0]
-        : // method is not from a class
-          "";
-
-      /*
-        Either 'new'
-        Or what follows '.'
-      */
-      res.method_name =
-        res.class_name.length === 0
-          ? //method not from a class => the entire first_part is the method name
-            first_part
-          : // name is 'new' or after a dot '.'
-            first_part.match(/(\bnew\b|(?<=\.)(.+))/)[0];
-    }
-
-    //
-    // File infos
-    {
-      if (include_file_infos) {
-        /*
-        What are in braces '(' ')'
-      */
-        const second_part = stack_trace.match(/(?<=\()(.+)(?=\))/)[0];
-
-        // Most of characters preceding a '\'
-        res.file_path = second_part.match(/(.+)(?=\\)/)[0] + "\\";
-        // What is not a '\' between a '\' and ':'
-        res.file_name = second_part.match(/((?<=\\)([^\\:]+)(?=:))+/)[0];
-        // Digits preceding by a ':' and including a ':'
-        res.line = second_part.match(/(?<=:)(\d+:\d+)/)[0];
-      }
-    }
-
-    return res;
-  }
-
-  /**
-   * Log specified message as debug
-   * Class name is prefixed to log
-   */
-  static set debug(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = Obj_Errors.get_caller_infos(2, true);
-
-    logger.debug(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
-  }
-
-  /**
-   * Log specified message as error
-   * Class name is prefixed to log
-   */
-  static set error(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = Obj_Errors.get_caller_infos(2, true);
-
-    logger.error(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
-  }
-
-  /**
-   * Log specified message
-   * Class name is prefixed to log
-   */
-  static set log(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = Obj_Errors.get_caller_infos(2, true);
-
-    logger.log(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
-  }
-
-  /**
-   * Log specified message as trace
-   * Class name is prefixed to log
-   */
-  static set trace(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = Obj_Errors.get_caller_infos(2, true);
-
-    logger.trace(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
-  }
-
-  /**
-   * Log specified message as warning
-   * Class name is prefixed to log
-   */
-  static set warn(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = Obj_Errors.get_caller_infos(2, true);
-
-    logger.warn(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
-  }
-
   /**
    *
    * @param {Obj | Object} obj Object whose errors have to be handled
@@ -298,7 +94,7 @@ class Obj_Errors {
     // Check preconds
     {
       if (!this.errs[prop_name]) {
-        Obj_Errors.warn = "No error associated to " + prop_name;
+        logger.warn = "No error associated to " + prop_name;
         return prop_name + " : No error";
       }
     }
@@ -340,7 +136,7 @@ class Obj_Errors {
               ? " (" + err.constructor.name + ")"
               : "";
 
-          Obj_Errors.error =
+          logger.error =
             "Could not convert to string error associated to " +
             prop_name +
             err_type_str;
@@ -404,17 +200,17 @@ class Obj_Errors {
       {
         if (!global_texts) {
           const msg = "No global_texts argument or errors property in it";
-          logger.error("Obj_Errors#localize " + msg);
+          logger.error = "Obj_Errors#localize " + msg;
           throw msg;
         }
         if (!global_texts.default) {
           const msg = "No default property in global_texts argument";
-          logger.error("Obj_Errors#localize " + msg);
+          logger.error = "Obj_Errors#localize " + msg;
           throw msg;
         }
         if (!global_texts.default.errors) {
           const msg = "No errors property in global_texts.default argument";
-          logger.error("Obj_Errors#localize " + msg);
+          logger.error = "Obj_Errors#localize " + msg;
           throw msg;
         }
       }

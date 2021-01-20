@@ -4,9 +4,6 @@ const Csv_File = require(process.env.SRC_ROOT + "js/util/files/Csv_File");
 const Scripted_File = require(process.env.SRC_ROOT +
   "js/util/files/scripted/Scripted_File");
 
-const UI_Fixtures_Scripted = require(process.env.SRC_ROOT +
-  "js/util/files/scripted/UI_Fixtures_Scripted");
-
 /**
  * Column containing row names must be
  * called either Name or Id (case sensitive)
@@ -221,13 +218,12 @@ class Fixtures_Scripted_File extends Csv_File {
       on_read();
       return true;
     }
-    logger.log(
-      "Fixtures_Scripted_File#parse Reading file " + this.name + "..."
-    );
+    logger.log =
+      "Fixtures_Scripted_File#parse Reading file " + this.name + "...";
     this.read(function (err) {
       if (err) {
         const msg = "Error reading file " + this.name + " : " + err;
-        logger.error("Fixtures_Scripted_File#parse::read " + msg);
+        logger.error="Fixtures_Scripted_File#parse::read " + msg;
         return cbk(msg);
       }
       on_read();
@@ -246,7 +242,7 @@ class Fixtures_Scripted_File extends Csv_File {
       {
         if (!row) {
           const msg = "File " + that.name + " has no headings row";
-          logger.warn("Fixtures_Scripted_File#parse::read " + msg);
+          logger.warn="Fixtures_Scripted_File#parse::read " + msg;
           return cbk([msg]);
         }
       }
@@ -293,7 +289,7 @@ class Fixtures_Scripted_File extends Csv_File {
                   " (" +
                   col_idx +
                   ") already exists and will be removed";
-                logger.error("Fixtures_Scripted_File#parse " + msg);
+                logger.error="Fixtures_Scripted_File#parse " + msg;
                 errs.push(msg);
               }
 
@@ -308,7 +304,7 @@ class Fixtures_Scripted_File extends Csv_File {
                 "Data column cannot be called '" +
                 col_name +
                 "' : this is a reserved word by this class";
-              logger.error("Fixtures_Scripted_File#parse " + msg);
+              logger.error="Fixtures_Scripted_File#parse " + msg;
               errs.push(msg);
               continue;
             }
@@ -318,7 +314,7 @@ class Fixtures_Scripted_File extends Csv_File {
                 "Data column " +
                 col_name +
                 " already exists and will be removed";
-              logger.error("Fixtures_Scripted_File#parse " + msg);
+              logger.error="Fixtures_Scripted_File#parse " + msg;
               errs.push(msg);
             }
 
@@ -335,7 +331,7 @@ class Fixtures_Scripted_File extends Csv_File {
         if (!name_col_id) {
           const msg =
             "No column owns rows' Id (case sensitive). Could not parse rows.";
-          logger.error("Fixtures_Scripted_File#parse " + msg);
+          logger.error="Fixtures_Scripted_File#parse " + msg;
           errs.push(msg);
           return cbk(errs);
         }
@@ -392,7 +388,7 @@ class Fixtures_Scripted_File extends Csv_File {
                   " (" +
                   row_id +
                   ")";
-                logger.error("Fixtures_Scripted_File#parse " + msg);
+                logger.error="Fixtures_Scripted_File#parse " + msg;
                 errs.push(msg);
               }
             }
@@ -434,13 +430,13 @@ class Fixtures_Scripted_File extends Csv_File {
       if (!this.env) {
         const msg =
           "this.env is missing ; an Environment_Scripted_File is required to evaluate rows";
-        logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+        logger.error="Fixtures_Scripted_File#iterate_fixtures " + msg;
         return nb_rows_processed;
       }
 
       if (!this.data_cols) {
         const msg = "No data names parsed ; did you call this.parse(cbk) ?";
-        logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+        logger.warn="Fixtures_Scripted_File#iterate_fixtures " + msg;
         return nb_rows_processed;
       }
     }
@@ -457,7 +453,7 @@ class Fixtures_Scripted_File extends Csv_File {
           " - start_row : " +
           start_row +
           ")";
-        logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+        logger.warn="Fixtures_Scripted_File#iterate_fixtures " + msg;
         continue;
       }
 
@@ -487,7 +483,7 @@ class Fixtures_Scripted_File extends Csv_File {
               row_id +
               " of file " +
               this.name;
-            logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+            logger.warn="Fixtures_Scripted_File#iterate_fixtures " + msg;
             errs.push(msg);
             continue;
           }
@@ -497,7 +493,7 @@ class Fixtures_Scripted_File extends Csv_File {
           if (row_vals[data_name]) {
             const msg =
               "Data " + col_name + " already exists and will be removed";
-            logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+            logger.error="Fixtures_Scripted_File#iterate_fixtures " + msg;
             errs.push(msg);
           }
 
@@ -530,7 +526,7 @@ class Fixtures_Scripted_File extends Csv_File {
                   col_id +
                   ") in file " +
                   this.name;
-                logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+                logger.error="Fixtures_Scripted_File#iterate_fixtures " + msg;
                 errs.push(msg);
               }
             }
@@ -554,13 +550,13 @@ class Fixtures_Scripted_File extends Csv_File {
     {
       if (row_id >= this.content.length) {
         const msg = "Unexisting row " + row_id + " in " + this.name;
-        logger.error("Fixtures_Scripted_File#assert_row " + msg);
+        logger.error="Fixtures_Scripted_File#assert_row " + msg;
         return 0;
       }
 
       if (!values) {
         const msg = "Missing values arguments to assert row " + row_id;
-        logger.error("Fixtures_Scripted_File#assert_row " + msg);
+        logger.error="Fixtures_Scripted_File#assert_row " + msg;
         return 0;
       }
     }
@@ -581,7 +577,7 @@ class Fixtures_Scripted_File extends Csv_File {
           this.rows_asserts_progress[row_id] +
           ") for row " +
           row_id;
-        logger.error("Fixtures_Scripted_File#assert_row " + msg);
+        logger.error="Fixtures_Scripted_File#assert_row " + msg;
         return 0;
       }
     }
@@ -608,7 +604,7 @@ class Fixtures_Scripted_File extends Csv_File {
             row_id +
             " of file " +
             this.name;
-          logger.warn("Fixtures_Scripted_File#iterate_fixtures " + msg);
+          logger.warn="Fixtures_Scripted_File#iterate_fixtures " + msg;
           continue;
         }
 
@@ -631,7 +627,7 @@ class Fixtures_Scripted_File extends Csv_File {
                 col_id +
                 ") in file " +
                 this.name;
-              logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+              logger.error="Fixtures_Scripted_File#iterate_fixtures " + msg;
               continue;
             }
           }
@@ -659,7 +655,7 @@ class Fixtures_Scripted_File extends Csv_File {
                 row_id +
                 " of file " +
                 this.name;
-              logger.error("Fixtures_Scripted_File#iterate_fixtures " + msg);
+              logger.error="Fixtures_Scripted_File#iterate_fixtures " + msg;
               err = true;
               break;
             }

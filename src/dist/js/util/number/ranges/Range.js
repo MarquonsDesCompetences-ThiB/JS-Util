@@ -33,7 +33,7 @@ class Range {
 
         // val is in [min; infinite[
         if (this.max === '' && val >= this.min) {
-            logger.log('Range#in_range Value (' +
+            logger.log='Range#in_range Value (' +
                 val + ') is in [' + this.min + '; infinite[ => return true');
             return true;
         }

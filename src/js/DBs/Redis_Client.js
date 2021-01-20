@@ -41,49 +41,44 @@ class Redis_Client {
 
     this.client.on("end", function (err) {
       that.state = Redis_Client.states.indexOf("end");
-      logger.info(
+      logger.info =
         "Redis_Client#client::end Redis client " +
-          that.id +
-          " has closed connection : " +
-          err
-      );
+        that.id +
+        " has closed connection : " +
+        err;
     });
 
     this.client.on("error", function (err) {
       that.state = Redis_Client.states.indexOf("error");
-      logger.error(
-        "Redis_Client#client::error Redis client: " + that.id + " : " + err
-      );
+      logger.error =
+        "Redis_Client#client::error Redis client: " + that.id + " : " + err;
     });
 
     this.client.on("ready", function (err) {
       that.state = Redis_Client.states.indexOf("ready");
-      logger.info(
+      logger.info =
         "Redis_Client#client::ready Redis client " +
-          that.id +
-          " is ready : " +
-          err
-      );
+        that.id +
+        " is ready : " +
+        err;
     });
 
     this.client.on("reconnecting", function (err) {
       that.state = Redis_Client.states.indexOf("reconnecting");
-      logger.info(
+      logger.info =
         "Redis_Client#client::reconnecting Redis client " +
-          that.id +
-          " is trying to reconnect : " +
-          err
-      );
+        that.id +
+        " is trying to reconnect : " +
+        err;
     });
 
     this.client.on("warning", function (err) {
       that.state = Redis_Client.states.indexOf("warning");
-      logger.warn(
+      logger.warn =
         "Redis_Client#client::warning Redis client " +
-          that.id +
-          " used a password without need or used a deprecated option/function/similar : " +
-          err
-      );
+        that.id +
+        " used a password without need or used a deprecated option/function/similar : " +
+        err;
     });
   }
 

@@ -58,16 +58,15 @@ class Obj {
             key: values[key],
           });
         } catch (ex) {
-          logger.warn(
+          logger.warn =
             "Obj#get_property_values_errors Error setting " +
-              key +
-              "=" +
-              values[key] +
-              " to " +
-              constructor +
-              ": " +
-              ex
-          );
+            key +
+            "=" +
+            values[key] +
+            " to " +
+            constructor +
+            ": " +
+            ex;
 
           errs[key] = ex;
         }
@@ -88,16 +87,15 @@ class Obj {
             key: values[key],
           });
         } catch (ex) {
-          logger.warn(
+          logger.warn =
             "Obj#get_property_values_errors Error setting " +
-              key +
-              "=" +
-              values[key] +
-              " to " +
-              constructor +
-              ": " +
-              ex
-          );
+            key +
+            "=" +
+            values[key] +
+            " to " +
+            constructor +
+            ": " +
+            ex;
 
           errs[key] = ex;
         }
@@ -171,7 +169,7 @@ class Obj {
     // With 4th stack trace's line
     // (remove c and not_enumerable_props calls
     //   -> to get calling file)
-    const caller = util.obj.Errors.get_caller_infos(2);
+    const caller = logger.get_caller_infos(2);
 
     if (caller.class_name !== this.constructor.name) {
       //
@@ -310,14 +308,13 @@ class Obj {
     {
       for (let key in this) {
         if (!util.obj.Json.value_equals(this[key], obj[key])) {
-          logger.log(
+          logger.log =
             "Obj#equals members " +
-              key +
-              " are different : " +
-              this[key] +
-              " !== " +
-              obj[key]
-          );
+            key +
+            " are different : " +
+            this[key] +
+            " !== " +
+            obj[key];
           return false;
         }
       }
@@ -330,14 +327,13 @@ class Obj {
         for (let i = 0; i < this.not_enumerable_props.length; i++) {
           const prop_name = this.not_enumerable_props[i];
           if (this[prop_name] !== obj[prop_name]) {
-            logger.log(
+            logger.log =
               "Obj#equals Not enumerable members " +
-                prop_name +
-                " are different : " +
-                this[prop_name] +
-                " !== " +
-                obj[prop_name]
-            );
+              prop_name +
+              " are different : " +
+              this[prop_name] +
+              " !== " +
+              obj[prop_name];
             return false;
           }
         }
@@ -479,113 +475,66 @@ class Obj {
   // === LOGS ===
 
   /**
+   * Shorthand to logger.debug
    * Log specified message as debug
    * Class name is prefixed to log
    */
-  set debug(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = util.obj.Errors.get_caller_infos(2, true);
-
-    logger.debug(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
+  set debug(msg) {
+    logger.debug = msg;
   }
 
   /**
+   * Shorthand to logger.info
+   * Log specified message as info
+   * Class name is prefixed to log
+   */
+  set info(msg) {
+    logger.info = msg;
+  }
+
+  /**
+   * Shorthand to logger.error
    * Log specified message as error
    * Class name is prefixed to log
    */
-  set error(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = util.obj.Errors.get_caller_infos(2, true);
-
-    logger.error(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
+  set error(msg) {
+    logger.error = msg;
   }
 
   /**
+   * Shorthand to logger.fatal
+   * Log specified message as fatal
+   * Class name is prefixed to log
+   */
+  set fatal(msg) {
+    logger.fatal = msg;
+  }
+
+  /**
+   * Shorthand to logger.log
    * Log specified message
    * Class name is prefixed to log
    */
-  set log(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = util.obj.Errors.get_caller_infos(2, true);
-
-    logger.log(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
+  set log(msg) {
+    logger.log = msg;
   }
 
   /**
+   * Shorthand to logger.trace
    * Log specified message as trace
    * Class name is prefixed to log
    */
-  set trace(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = util.obj.Errors.get_caller_infos(2, true);
-
-    logger.trace(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
+  set trace(msg) {
+    logger.trace = msg;
   }
 
   /**
+   * Shorthand to logger.warn
    * Log specified message as warning
    * Class name is prefixed to log
    */
-  set warn(log_msg) {
-    // with 3rd stack trace's line
-    // (remove debug calls -> to get calling file)
-    const caller = util.obj.Errors.get_caller_infos(2, true);
-
-    logger.warn(
-      caller.class_name +
-        "#" +
-        caller.method_name +
-        "| " +
-        log_msg +
-        " |in " +
-        caller.file_name +
-        " at " +
-        caller.line
-    );
+  set warn(msg) {
+    logger.warn = msg;
   }
 
   //
@@ -785,7 +734,7 @@ class Obj {
   set multi(get_promises) {
     if (!(get_promises instanceof Array)) {
       const msg = "Argument should be an Array of Promise";
-      logger.error("Obj#set multi " + msg);
+      logger.error = "Obj#set multi " + msg;
       throw msg;
     }
 
@@ -798,7 +747,7 @@ class Obj {
       {
         if (!(prom instanceof Promise)) {
           const msg = "Array's element " + prom_idx + " is not a Promise";
-          logger.error("Obj#set multi " + msg);
+          logger.error = "Obj#set multi " + msg;
 
           if (prom_idx >= errs.length) {
             errs.length = prom_idx + 1;
@@ -835,7 +784,7 @@ class Obj {
         {
           if (typeof cbk !== "function") {
             const msg = "Last array's element is not a method";
-            logger.error("Obj#set multi " + msg);
+            logger.error = "Obj#set multi " + msg;
             throw msg;
           }
         }
@@ -869,27 +818,24 @@ class Obj {
         value_type === "undefined" ||
         (value_type === "object" && !(value instanceof Date))
       ) {
-        logger.warn(
+        logger.warn =
           "Obj#get_redis_array Member " +
-            member +
-            " has wrong type " +
-            value_type +
-            " ; skipping it"
-        );
+          member +
+          " has wrong type " +
+          value_type +
+          " ; skipping it";
         continue;
       }
-      logger.log(
-        "Obj#get_redis_array Member " + member + " type : " + value_type
-      );
+      logger.log =
+        "Obj#get_redis_array Member " + member + " type : " + value_type;
 
       //
       // Redis member key
       {
         if (!key_members_to_redis[member]) {
-          logger.error(
+          logger.error =
             "Obj#get_redis_array No Redis key format associated to member " +
-              member
-          );
+            member;
           continue;
         }
         arr.push(key_members_to_redis[member]);

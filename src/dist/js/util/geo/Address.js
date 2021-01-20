@@ -33,9 +33,8 @@ class Address extends Obj {
 
     if (typeof this.number !== "undefined") {
       str += this.number + " ";
-      logger.debug(
-        "Address#to_string number " + str + " " + typeof this.number
-      );
+      logger.debug =
+        "Address#to_string number " + str + " " + typeof this.number;
     }
 
     if (typeof this.address !== "undefined") {
@@ -58,7 +57,7 @@ class Address extends Obj {
       str += this.country + " ";
     }
 
-    logger.debug("Address#to_string " + str);
+    logger.debug = "Address#to_string " + str;
 
     return str;
   }
@@ -77,7 +76,7 @@ class Address extends Obj {
 
   equals(addr) {
     if (!addr || !(addr instanceof Address)) {
-      logger.debug("Address#equals addr ! Address");
+      logger.debug = "Address#equals addr ! Address";
       return false;
     }
 
@@ -102,20 +101,18 @@ class Address extends Obj {
       nb_err: 0,
     };
 
-    logger.debug(
+    logger.debug =
       "Address#get_members_errors addr: " +
-        this.address +
-        " addr2:" +
-        this.address2
-    );
+      this.address +
+      " addr2:" +
+      this.address2;
     if (
       (errs.number = Util_Identity.get_address_number_error(this.number)) !==
       undefined
     ) {
-      logger.debug(
+      logger.debug =
         "Address#get_members_errors error in number : " +
-          JSON.stringify(errs.number)
-      );
+        JSON.stringify(errs.number);
       errs.nb_err++;
     }
 
@@ -125,45 +122,41 @@ class Address extends Obj {
         this.address2
       )) !== undefined
     ) {
-      logger.debug(
+      logger.debug =
         "Address#get_members_errors error in addr : " +
-          JSON.stringify(errs.address)
-      );
+        JSON.stringify(errs.address);
       errs.nb_err++;
     }
 
-    logger.debug("Address#get_members_errors zip_code: " + this.zip_code);
+    logger.debug = "Address#get_members_errors zip_code: " + this.zip_code;
     if (
       (errs.zip_code = Util_Identity.get_zip_code_error(this.zip_code)) !==
       undefined
     ) {
-      logger.debug(
+      logger.debug =
         "Address#get_members_errors error in zip_code : " +
-          JSON.stringify(errs.zip_code)
-      );
+        JSON.stringify(errs.zip_code);
 
       errs.nb_err++;
     }
 
-    logger.debug("Address#get_members_errors city: " + this.city);
+    logger.debug = "Address#get_members_errors city: " + this.city;
     if ((errs.city = Util_Identity.get_city_error(this.city)) !== undefined) {
-      logger.debug(
+      logger.debug =
         "Address#get_members_errors error in city : " +
-          JSON.stringify(errs.city)
-      );
+        JSON.stringify(errs.city);
 
       errs.nb_err++;
     }
 
-    logger.debug("Address#get_members_errors country: " + this.country);
+    logger.debug = "Address#get_members_errors country: " + this.country;
     if (
       (errs.country = Util_Identity.get_country_error(this.country)) !==
       undefined
     ) {
-      logger.debug(
+      logger.debug =
         "Address#get_members_errors error in country : " +
-          JSON.stringify(errs.country)
-      );
+        JSON.stringify(errs.country);
 
       errs.nb_err++;
     }

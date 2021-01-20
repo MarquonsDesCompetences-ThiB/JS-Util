@@ -44,13 +44,13 @@ class Util_Identity {
         empty: true,
       };
     } else if (address.length >= Util_Identity.maxlengthes.address) {
-      logger.warn(
+      logger.warn=
         "Util_Identity#get_address_error Too long address : " +
           address.length +
           " (" +
           address +
           ")"
-      );
+      ;
       return {
         too_long: true,
       };
@@ -77,10 +77,10 @@ class Util_Identity {
     let special_chars = -1;
     let start_idx = -1;
     do {
-      logger.log(
+      logger.log=
         "Util_Identity#get_address_number_error special_chars : " +
           special_chars
-      );
+      ;
       special_chars++;
       start_idx++;
       start_idx = number.indexOf("%", start_idx);
@@ -91,14 +91,14 @@ class Util_Identity {
       number.length - special_chars >=
       Util_Identity.maxlengthes.address_number
     ) {
-      logger.log(
+      logger.log=
         "Util_Identity#get_address_number_error " +
           number +
           " too long : " +
           number.length +
           " >= " +
           Util_Identity.maxlengthes.address_number
-      );
+      ;
       return {
         too_long: true,
       };

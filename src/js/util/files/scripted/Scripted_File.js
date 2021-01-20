@@ -121,11 +121,11 @@ class Scripted_File extends Csv_File {
       return true;
     }
 
-    logger.log("Scripted_File#parse Reading file " + this.name + "...");
+    logger.log="Scripted_File#parse Reading file " + this.name + "...";
     this.read(function (err) {
       if (err) {
         const msg = "Error reading file " + this.name + " : " + err;
-        logger.error("Scripted_File#parse::read " + msg);
+        logger.error="Scripted_File#parse::read " + msg;
         return cbk(msg);
       }
       on_read();
@@ -146,7 +146,7 @@ class Scripted_File extends Csv_File {
             "File " +
             that.name +
             " should have at least 2 rows (meaning empty datas)";
-          logger.warn("Scripted_File#parse::read " + msg);
+          logger.warn="Scripted_File#parse::read " + msg;
           return cbk(msg);
         }
       }
@@ -166,7 +166,7 @@ class Scripted_File extends Csv_File {
           ) {
             const msg =
               "Column " + i + " from file " + that.name + " has no member name";
-            logger.warn("Scripted_File#parse::read " + msg);
+            logger.warn="Scripted_File#parse::read " + msg;
           }
           that.cols_names.push(member_name);
         }
@@ -184,7 +184,7 @@ class Scripted_File extends Csv_File {
           if (!util.text.String.is_string(type) || type.length === 0) {
             const msg =
               "Column " + i + " from file " + that.name + " has no type";
-            logger.error("Scripted_File#parse::read " + msg);
+            logger.error="Scripted_File#parse::read " + msg;
           } else if (!this.request_object(type)) {
             const msg =
               "Unexisting type " +
@@ -193,7 +193,7 @@ class Scripted_File extends Csv_File {
               i +
               " of file " +
               that.name;
-            logger.error("Scripted_File#parse::read " + msg);
+            logger.error="Scripted_File#parse::read " + msg;
           }
           that.cols_types.push(type);
         }
@@ -210,7 +210,7 @@ class Scripted_File extends Csv_File {
             nb_parsed_rows++;
           } else {
             const msg = "Could not parse row " + i;
-            logger.error("Scripted_File#parse::read " + msg);
+            logger.error="Scripted_File#parse::read " + msg;
           }
         }
 
@@ -221,7 +221,7 @@ class Scripted_File extends Csv_File {
         // Not all rows parsed
         {
           if (nb_rows !== nb_parsed_rows) {
-            logger.error("Scripted_File#parse::read Only " + msg);
+            logger.error="Scripted_File#parse::read Only " + msg;
             return cbk("Only " + msg, nb_parsed_rows);
           }
         }
@@ -229,7 +229,7 @@ class Scripted_File extends Csv_File {
         //
         // Success : All rows parsed
         {
-          logger.log("Scripted_File#parse::read " + msg);
+          logger.log="Scripted_File#parse::read " + msg;
           cbk(undefined, nb_parsed_rows);
         }
       }
@@ -242,7 +242,7 @@ class Scripted_File extends Csv_File {
     {
       if (!row || !(row instanceof Array)) {
         const msg = "No row set or not an array";
-        logger.error("Scripted_File#parse_object_row " + msg);
+        logger.error="Scripted_File#parse_object_row " + msg;
         return false;
       }
     }
@@ -275,7 +275,7 @@ class Scripted_File extends Csv_File {
           " requested through " +
           row[0] +
           " amready exists and will be removed";
-        logger.warn("Scripted_File#parse_object_row " + msg);
+        logger.warn="Scripted_File#parse_object_row " + msg;
       }
     }
 
@@ -286,7 +286,7 @@ class Scripted_File extends Csv_File {
         const member_name = this.cols_names[col_id];
         if (!member_name) {
           const msg = "Column " + col_id + " has no name";
-          logger.error("Scripted_File#parse_object_row " + msg);
+          logger.error="Scripted_File#parse_object_row " + msg;
           continue;
         }
 
@@ -298,7 +298,7 @@ class Scripted_File extends Csv_File {
             "(" +
             col_id +
             ") could not be parsed";
-          logger.error("Scripted_File#parse_object_row " + msg);
+          logger.error="Scripted_File#parse_object_row " + msg;
           continue;
         }
         nb_parsed_cols++;
@@ -312,7 +312,7 @@ class Scripted_File extends Csv_File {
       constructor = this.request_object(this.objects_type);
       if (!constructor) {
         const msg = "Constructor for type " + this.objects_type + " not found";
-        logger.error("Scripted_File#parse_object_row " + msg);
+        logger.error="Scripted_File#parse_object_row " + msg;
         return false;
       }
     }
@@ -328,13 +328,13 @@ class Scripted_File extends Csv_File {
           " of type " +
           this.objects_type +
           " could not be constructed";
-        logger.error("Scripted_File#parse_object_row " + msg);
+        logger.error="Scripted_File#parse_object_row " + msg;
         return false;
       }
     }
 
     const msg = nb_parsed_cols + " columns parsed/" + row.length;
-    logger.log("Scripted_File#parse_object_row " + msg);
+    logger.log="Scripted_File#parse_object_row " + msg;
     return true;
   }
 
@@ -380,7 +380,7 @@ class Scripted_File extends Csv_File {
             equal_parts[1] +
             " to be cloned to " +
             equal_parts[0];
-          logger.error("Scripted_File#parse_column_name " + msg);
+          logger.error="Scripted_File#parse_column_name " + msg;
         }
         // else if obj has a clone function -> clone it
         else if (typeof obj.clone === "function") {
@@ -392,7 +392,7 @@ class Scripted_File extends Csv_File {
             "The object " +
             equal_parts[1] +
             " has no clone method ; original references will be used";
-          logger.warn("Scripted_File#parse_column_name " + msg);
+          logger.warn="Scripted_File#parse_column_name " + msg;
         }
       }
     }
@@ -418,7 +418,7 @@ class Scripted_File extends Csv_File {
     {
       if (!value || value.length === 0) {
         const msg = "Value is missing in column " + col_id;
-        logger.warn("Scripted_File#parse_column_value " + msg);
+        logger.warn="Scripted_File#parse_column_value " + msg;
         return "";
       }
 
@@ -429,7 +429,7 @@ class Scripted_File extends Csv_File {
           ") ; should be in [0; " +
           this.cols_types.length +
           "[";
-        logger.error("Scripted_File#parse_column_value " + msg);
+        logger.error="Scripted_File#parse_column_value " + msg;
         return undefined;
       }
     }
@@ -446,7 +446,7 @@ class Scripted_File extends Csv_File {
         if (value[last_char] !== "]") {
           const msg =
             "Variable in column " + col_id + " has no closing bracket";
-          logger.error("Scripted_File#parse_column_value " + msg);
+          logger.error="Scripted_File#parse_column_value " + msg;
           return undefined;
         }
 
@@ -468,7 +468,7 @@ class Scripted_File extends Csv_File {
           if (value[last_char] !== "}") {
             const msg =
               "Variable in column " + col_id + " has no closing brace";
-            logger.error("Scripted_File#parse_column_value " + msg);
+            logger.error="Scripted_File#parse_column_value " + msg;
             return undefined;
           }
 
@@ -476,7 +476,7 @@ class Scripted_File extends Csv_File {
           let obj = this.get_object(var_name);
           if (obj == null) {
             const msg = "Variable " + var_name + " does not exist";
-            logger.error("Scripted_File#parse_column_value " + msg);
+            logger.error="Scripted_File#parse_column_value " + msg;
           }
           arr_objects.push(obj);
           continue;
@@ -500,7 +500,7 @@ class Scripted_File extends Csv_File {
                 " from column " +
                 col_id +
                 " has no ending brace";
-              logger.warn("Scripted_File#parse_column_value " + msg);
+              logger.warn="Scripted_File#parse_column_value " + msg;
               continue;
             }
 
@@ -517,7 +517,7 @@ class Scripted_File extends Csv_File {
         let type_name = this.cols_types[col_id];
         if (!type_name) {
           const msg = "Column " + col_id + " has no type set";
-          logger.error("Scripted_File#parse_column_value " + msg);
+          logger.error="Scripted_File#parse_column_value " + msg;
           arr_objects.push(undefined);
           continue;
         }
@@ -525,7 +525,7 @@ class Scripted_File extends Csv_File {
         constructor = this.get_object(type_name, true);
         if (constructor == null) {
           const msg = "Type " + type_name + " does not exist";
-          logger.error("Scripted_File#parse_column_value " + msg);
+          logger.error="Scripted_File#parse_column_value " + msg;
           arr_objects.push(undefined);
           continue;
         }
@@ -604,7 +604,7 @@ class Scripted_File extends Csv_File {
             msg += "a member of " + name_parts[i - 1];
           }
           msg += " (from " + name + ")";
-          logger.warn("Scripted_File#get_object " + msg);
+          logger.warn="Scripted_File#get_object " + msg;
         }
       }
 
@@ -615,7 +615,7 @@ class Scripted_File extends Csv_File {
         this.objects_type +
         " found in file " +
         this.name;
-      logger.log("Scripted_File#get_object " + msg);
+      logger.log="Scripted_File#get_object " + msg;
 
       if (json || !request_environment) {
         return json;
@@ -625,7 +625,7 @@ class Scripted_File extends Csv_File {
     //
     // Request environment
     const msg = "Requesting environment";
-    logger.log("Scripted_File#get_object " + msg);
+    logger.log="Scripted_File#get_object " + msg;
     return this.request_object(name);
   }
 
@@ -691,14 +691,14 @@ class Scripted_File extends Csv_File {
           msg += "a member of " + name_parts[i - 1];
         }
         msg += " (from " + name + ")";
-        logger.warn("Scripted_File#delete_object " + msg);
+        logger.warn="Scripted_File#delete_object " + msg;
       }
     }
 
     delete json[name_parts[parts_length - 1]];
 
     const msg = "Variable " + name + " deleted from parsed file " + this.name;
-    logger.log("Scripted_File#delete_object " + msg);
+    logger.log="Scripted_File#delete_object " + msg;
     return true;
   }
 }

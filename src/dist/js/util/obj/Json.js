@@ -61,12 +61,12 @@ class Json {
     else {
       const str = "Json#clone_value Couldn't clone " + val;
       if (reference_if_cannot_clone) {
-        logger.warn(str + " ; reference given");
+        logger.warn=str + " ; reference given");
         return val;
       }
 
       {
-        logger.warn(str + " ; value forgot");
+        logger.warn=str + " ; value forgot");
         return undefined;
       }
     }
@@ -169,7 +169,7 @@ class Json {
             Json.factorize_property_names(obj[id]);
           } catch (ex) {
             const msg = "Could not factorize_property_names of " + id;
-            logger.warn("Json#factorize_property_names " + msg);
+            logger.warn="Json#factorize_property_names " + msg);
           }
         }
       }
@@ -251,7 +251,7 @@ class Json {
             Json.set_ids(obj[prop_name]);
           } catch (ex) {
             const msg = "Could not set_ids of " + prop_name;
-            logger.warn("Json#set_ids " + msg);
+            logger.warn="Json#set_ids " + msg);
           }
         }
       }
@@ -331,7 +331,7 @@ class Json {
       if (obj_receiving[key] === undefined) {
         obj_receiving[key] = obj_to_merge[key];
       } else if (type !== typeof obj_to_merge[key]) {
-        logger.warn(
+        logger.warn=
           "Json#concat Key " +
             key +
             " has different types in objects : " +
