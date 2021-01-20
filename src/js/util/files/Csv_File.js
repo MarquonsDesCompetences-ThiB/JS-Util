@@ -177,17 +177,17 @@ class Csv_File extends util.files.File {
     }
 
     if (!this.nb_cols) {
-      logger.error("Csv_File#to_csv_array The number of columns is not set");
+      logger.error="Csv_File#to_csv_array The number of columns is not set";
       return undefined;
     }
 
     if (String_.is_string(this.content)) {
       let all_columns = this.content.split(",");
       if (all_columns.length % this.nb_cols !== 0) {
-        logger.error(
+        logger.error=
           "Csv_File#to_csv_array Wrong number of columns : expected a multiple of " +
             this.nb_cols
-        );
+        ;
         return undefined;
       }
 
@@ -204,14 +204,14 @@ class Csv_File extends util.files.File {
       return this.content;
     }
 
-    logger.error(
+    logger.error=
       "Csv_File#to_csv_array Content is not an handled type : " +
         typeof this.content
-    );
+    ;
     return undefined;
   }
 
-  to_csv_string() {
+  async to_csv_string() {
     if (String_.is_string(this.content)) {
       return this.content;
     }
@@ -221,11 +221,9 @@ class Csv_File extends util.files.File {
       //
       // Convert every array row in a string
       // -> joins content[i][]
-      await(
-        this.content.forEach(function (row_arr, idx) {
-          that.content[idx] = row_arr.join(",");
-        })
-      );
+      await this.content.forEach(function (row_arr, idx) {
+        that.content[idx] = row_arr.join(",");
+      });
 
       //
       // Join all rows string in one
@@ -240,10 +238,10 @@ class Csv_File extends util.files.File {
       return this.to_csv_string();
     }
 
-    logger.error(
+    logger.error=
       "Csv_File#to_csv_string Content is not an handled type : " +
         typeof this.content
-    );
+    ;
     return undefined;
   }
 
@@ -262,10 +260,10 @@ class Csv_File extends util.files.File {
     // Check preconditions
     {
       if (!(this.content instanceof Array)) {
-        logger.error(
+        logger.error=
           "Csv_File#init_values_association_column this.content is not an array ; typeof content : " +
             typeof this.content
-        );
+        ;
         return 0;
       }
     }
@@ -288,12 +286,12 @@ class Csv_File extends util.files.File {
         //
         // Check row
         if (this.content[i].length <= column_id) {
-          logger.error(
+          logger.error=
             "Csv_File#init_values_association_column Column " +
               column_id +
               " is missing from row " +
               i
-          );
+          ;
           continue;
         }
 
@@ -314,9 +312,9 @@ class Csv_File extends util.files.File {
   // === VIEW ===
   construct_dom_column_select(select_name = "", select_id = "") {
     if (!(this.content instanceof Array) || this.content.length === 0) {
-      logger.error(
+      logger.error=
         "Csv_File#construct_dom_column_select Content misses a 1st row"
-      );
+      ;
       return undefined;
     }
 
@@ -336,4 +334,6 @@ class Csv_File extends util.files.File {
   }
 }
 
-module.exports = Csv_File;
+if (typeof process !== "undefined") {
+  module.exports = Csv_File;
+}
