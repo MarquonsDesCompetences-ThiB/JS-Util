@@ -169,7 +169,7 @@ class Obj {
     // With 4th stack trace's line
     // (remove c and not_enumerable_props calls
     //   -> to get calling file)
-    const caller = logger.get_caller_infos(2);
+    const caller = logger.constructor.get_caller_infos(2);
 
     if (caller.class_name !== this.constructor.name) {
       //
