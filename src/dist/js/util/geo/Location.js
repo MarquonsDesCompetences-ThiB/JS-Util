@@ -1,21 +1,13 @@
 "use strict";
 
-if (typeof process !== "undefined") {
-  global.Obj = require(process.env.SRC_ROOT + "dist/js/util/Obj");
-}
-
-class Location extends Obj {
+class Location extends util.obj.Obj {
+  /**
+   *
+   * Parameters are for this.set
+   * @param {*} obj
+   */
   constructor(obj = undefined) {
-    super();
-
-    this.lat = null; //number
-    this.lng = null; //number
-
-    return this.set(obj).that;
-  }
-
-  clone() {
-    return new Location(super.get_cloned_JSON());
+    super(obj);
   }
 
   equals(location) {
@@ -26,14 +18,14 @@ class Location extends Obj {
     return super.equals(location);
   }
 
-  get_JSON() {
-    return super.get_JSON();
-  }
-
-  get_cloned_JSON() {
-    return super.get_cloned_JSON();
-  }
-
+  /**
+   * Set every members in obj but functions
+   *
+   * @param {json|object} obj
+   *
+   * @return number of set/not set members which are not a function
+   *          3 values : nb_set, nb_not_set, that
+   */
   set(obj) {
     return super.set(obj);
   }
@@ -55,6 +47,4 @@ class Location extends Obj {
   }
 }
 
-if (typeof process !== "undefined") {
-  module.exports = Location;
-}
+Location.init(require("./Location_properties"), module);
