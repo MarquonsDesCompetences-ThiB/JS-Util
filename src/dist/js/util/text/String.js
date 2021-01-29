@@ -18,8 +18,61 @@ class String {
     return /[\$\?\!\:--~_\*\^`"\/\\\{\}\[\]]/.test(str);
   }
 
-  static is_string(val) {
+  /**
+   * Return if obj is a string/String or not
+   * @param {*} val
+   */
+  static is(val) {
     return typeof val === "string" || val instanceof String;
+  }
+
+  /**
+   * Convert specified value to string
+   * @param {*} obj
+   *
+   * @return {string | null} Return null if failed converting to string
+   */
+  static to(obj) {
+    //
+    // Already string
+    {
+      if (String.is(obj)) {
+        return obj;
+      }
+    }
+
+    //
+    // Number
+    {
+      if (util.number.Number.is(obj)) {
+        return obj + "";
+      }
+    }
+
+    //
+    // Object with toString method
+    {
+      if (typeof obj === "object" && typeof obj.toString === "function") {
+        return obj.toString();
+      }
+    }
+
+    //
+    // Attempt with string constructor
+    {
+      try {
+        return new String(obj);
+      } catch (ex) {
+        const type = typeof obj;
+        const msg =
+          "Could not convert variable of type " +
+          type +
+          (type === "object" ? "(" + obj.constructor.name + ") " : "") +
+          " to string";
+        logger.error = msg;
+        return null;
+      }
+    }
   }
 
   static random(length) {

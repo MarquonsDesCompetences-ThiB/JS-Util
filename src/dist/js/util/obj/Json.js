@@ -11,6 +11,26 @@ if (typeof process !== "undefined") {
 class Json {
   constructor() {}
 
+  /*
+      Enclosing brackets with nothing inside or at least one semi-colon
+  */
+  static is(str) {
+    if (util.text.String.is(str)) {
+      return (
+        // starting bracket
+        /^\s*\{\s*/.test(str) &&
+        //ending bracket
+        /\s*\}\s*$/.test(str) &&
+        // at least one key/parameter inside
+        (/:/.test(str) ||
+          // nothing inside
+          /^\s*\{\s*\}\s*$/.test(str))
+      );
+    }
+
+    return typeof str === "object";
+  }
+
   //
   // === CLONE ===
   /**
@@ -61,12 +81,12 @@ class Json {
     else {
       const str = "Json#clone_value Couldn't clone " + val;
       if (reference_if_cannot_clone) {
-        logger.warn=str + " ; reference given");
+        logger.warn = str + " ; reference given";
         return val;
       }
 
       {
-        logger.warn=str + " ; value forgot");
+        logger.warn = str + " ; value forgot";
         return undefined;
       }
     }
@@ -116,7 +136,7 @@ class Json {
     for (const prop_name in obj) {
       //
       // Escape string
-      if (util.text.String.is_string(obj[prop_name])) {
+      if (util.text.String.is(obj[prop_name])) {
         obj[prop_name] = encodeURIComponent(obj[prop_name]);
       }
       //
@@ -169,7 +189,7 @@ class Json {
             Json.factorize_property_names(obj[id]);
           } catch (ex) {
             const msg = "Could not factorize_property_names of " + id;
-            logger.warn="Json#factorize_property_names " + msg);
+            logger.warn = "Json#factorize_property_names " + msg;
           }
         }
       }
@@ -251,7 +271,7 @@ class Json {
             Json.set_ids(obj[prop_name]);
           } catch (ex) {
             const msg = "Could not set_ids of " + prop_name;
-            logger.warn="Json#set_ids " + msg);
+            logger.warn = "Json#set_ids " + msg;
           }
         }
       }
@@ -331,16 +351,15 @@ class Json {
       if (obj_receiving[key] === undefined) {
         obj_receiving[key] = obj_to_merge[key];
       } else if (type !== typeof obj_to_merge[key]) {
-        logger.warn=
+        logger.warn =
           "Json#concat Key " +
-            key +
-            " has different types in objects : " +
-            type +
-            "; " +
-            typeof obj_to_merge[key] +
-            " Keeping obj_receiving's value : " +
-            keep_obj_receiving_values
-        );
+          key +
+          " has different types in objects : " +
+          type +
+          "; " +
+          typeof obj_to_merge[key] +
+          " Keeping obj_receiving's value : " +
+          keep_obj_receiving_values;
         if (!keep_obj_receiving_values) {
           obj_receiving[key] = obj_to_merge[key];
         }
@@ -365,7 +384,7 @@ class Json {
    */
   static to_json_value(val) {
     //if val does not exist, is not an empty string
-    if (!val && !util.text.String.is_string(val)) {
+    if (!val && !util.text.String.is(val)) {
       return undefined;
     }
 

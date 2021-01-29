@@ -4,34 +4,29 @@ const random = require("random");
 
 class Number_ {
   /**
-   * Return true if val is a number, Number, or string/String representing a number
+   * Return true if val is a number, Number
+   * If not strictly : or a string/String representing a number
    * @param {*} val
+   * @param {bool} strict If not strict and obj is a string ,
+   *                          check if equivalent to a number
    */
-  static is_number(val) {
+  static is(val, strict = false) {
     const type = typeof val;
 
-    if (type !== "string" && !(val instanceof String)) {
+    //
+    // If strict -> must be a number or Number
+    if (strict) {
       return type === "number" || val instanceof Number;
     }
 
     //
-    // Process string val as a number
-    {
-      //
-      // Is an int string ?
-      const int = Number.parseInt(val);
-      //if string is an int
-      if (!isNaN(int)) {
-        return true;
-      }
+    // If not a string -> must be a number or Number
+    if (!util.text.String.is(val)) {
+      return type === "number" || val instanceof Number;
     }
 
-    {
-      //
-      // Is a float string ?
-      const float = Number.parseFloat(val);
-      return !isNaN(float);
-    }
+    // if string is digits with optional decimals
+    return /^\d+(\.\d*)?$/.test(val);
   }
 
   static sanitize(val) {
