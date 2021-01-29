@@ -7,9 +7,21 @@ const os = require("os");
 
 class Logger {
   /**
+   * Return a string indicating the type of obj
+   * and its constructor (if obj is an object) :
+   * "<obj_type> (<obj_constructor>"
+   * @param {*} obj
+   */
+  static get_type_str(obj) {
+    const type = typeof obj;
+    return type + (type === "object" ? " (" + obj.constructor.name + ")" : "");
+  }
+  /**
    *
    * @param {integer} line_from
    * @param {integer | optional} line_to Line included in result
+   *
+   * @return{string[]}
    */
   static get_stack_trace(line_from, line_to = line_from) {
     // lines are incremented to remove get_stack_trace call
@@ -115,7 +127,18 @@ class Logger {
       if (global.logger !== undefined) {
         logger.warn = "Logger Overriding global.logger with Logger";
       }
-      global.logger = Logger.logger;
+      // global logger access
+      let l = (global.logger = Logger.logger);
+      // global access shortcuts
+      [
+        global.debug,
+        global.info,
+        global.error,
+        global.fatal,
+        global.log,
+        global.trace,
+        global.warn,
+      ] = [l.debug, l.info, l.error, l.fatal, l.log, l.trace, l.warn];
     }
   }
 
@@ -126,10 +149,26 @@ class Logger {
    *
    * @return{string}
    */
-  static add_debug_infos(message, include_file_infos = true) {
+  static add_debug_infos(
+    message,
+    include_file_infos = true,
+    include_stack_trace = false
+  ) {
     // with 4th stack trace's line
     // (remove debug calls -> to get calling file)
-    const caller = Logger.get_caller_infos(2, include_file_infos);
+    let caller = Logger.get_caller_infos(2, include_file_infos);
+    //
+    // Caller is one of the Logger's output methods
+    // (error, debug, trace, warn...)
+    if (caller.class_name === "Logger") {
+      // get next line
+      caller = Logger.get_caller_infos(3, include_file_infos);
+    }
+
+    const stack = include_stack_trace
+      ? "\n" + Logger.get_stack_trace(3, 10).join("\n")
+      : "";
+
     return (
       caller.class_name +
       "#" +
@@ -139,7 +178,8 @@ class Logger {
       " |in " +
       caller.file_name +
       " at " +
-      caller.line
+      caller.line +
+      stack
     );
   }
 
@@ -267,7 +307,11 @@ class Logger {
    * Class name is prefixed to log
    */
   set error(message) {
-    const formatted = Logger.add_debug_infos(message);
+    const formatted = Logger.add_debug_infos(
+      message,
+      true, //file infos
+      true // stack trace
+    );
 
     console.error(formatted);
     //Writte to file
