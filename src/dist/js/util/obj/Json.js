@@ -11,26 +11,6 @@ if (typeof process !== "undefined") {
 class Json {
   constructor() {}
 
-  /*
-      Enclosing brackets with nothing inside or at least one semi-colon
-  */
-  static is(str) {
-    if (util.text.String.is(str)) {
-      return (
-        // starting bracket
-        /^\s*\{\s*/.test(str) &&
-        //ending bracket
-        /\s*\}\s*$/.test(str) &&
-        // at least one key/parameter inside
-        (/:/.test(str) ||
-          // nothing inside
-          /^\s*\{\s*\}\s*$/.test(str))
-      );
-    }
-
-    return typeof str === "object";
-  }
-
   //
   // === CLONE ===
   /**
@@ -61,7 +41,7 @@ class Json {
       if (val instanceof Array) {
         let ret = [];
         for (let i = 0; i < val.length; i++) {
-          ret.push(Json.clone_value(val[i]));
+          ret.push(util.obj.Json.clone_value(val[i]));
         }
 
         return ret;
@@ -142,7 +122,7 @@ class Json {
       //
       // Escape object property's values
       else if (typeof obj[prop_name] === "object") {
-        Json.escape_values(obj[prop_name]);
+        util.obj.Json.escape_values(obj[prop_name]);
       }
     }
   }
@@ -186,7 +166,7 @@ class Json {
       {
         if (typeof obj[id] === "object") {
           try {
-            Json.factorize_property_names(obj[id]);
+            util.obj.Json.factorize_property_names(obj[id]);
           } catch (ex) {
             const msg = "Could not factorize_property_names of " + id;
             logger.warn = "Json#factorize_property_names " + msg;
@@ -208,7 +188,11 @@ class Json {
       //
       // Recursive call if property is itself an object
       if (typeof obj[new_name] === "object") {
-        Json.prefix_parent_property_names(obj[new_name], charac, new_name);
+        util.obj.Json.prefix_parent_property_names(
+          obj[new_name],
+          charac,
+          new_name
+        );
       }
     }
 
@@ -268,7 +252,7 @@ class Json {
       {
         if (typeof obj[prop_name] === "object") {
           try {
-            Json.set_ids(obj[prop_name]);
+            util.obj.Json.set_ids(obj[prop_name]);
           } catch (ex) {
             const msg = "Could not set_ids of " + prop_name;
             logger.warn = "Json#set_ids " + msg;
@@ -284,7 +268,7 @@ class Json {
    * Prefix all properties' and subproperties' id in obj
    * with their parent id
    *
-   * You may want to call Json.set_ids first to set every property's id
+   * You may want to call util.obj.Json.set_ids first to set every property's id
    *
    * @param {object} obj
    * @param {string} charac Character(s) between prefix and id
@@ -304,12 +288,16 @@ class Json {
           " to " +
           prefix +
           obj[prop_name].id;
-        Obj_Errors.warn("Json#prefix_parent_ids " + msg);
+        logger.warn = "Json#prefix_parent_ids " + msg;
       }
       //
       // Recursive call if property is itself an object
       if (typeof obj[prop_name] === "object") {
-        Json.prefix_parent_ids(obj[prop_name], charac, obj[prop_name].id);
+        util.obj.Json.prefix_parent_ids(
+          obj[prop_name],
+          charac,
+          obj[prop_name].id
+        );
       }
     }
 
@@ -398,7 +386,7 @@ class Json {
       if (val instanceof Array) {
         let ret = [];
         for (let i = 0; i < val.length; i++) {
-          ret.push(Json.to_json_value(val[i]));
+          ret.push(util.obj.Json.to_json_value(val[i]));
         }
 
         return ret;
@@ -455,7 +443,7 @@ class Json {
         }
 
         for (let i = 0; i < val1.length; i++) {
-          if (!Json.value_equals(val1[i], val2[i])) {
+          if (!util.obj.Json.value_equals(val1[i], val2[i])) {
             return false;
           }
         }

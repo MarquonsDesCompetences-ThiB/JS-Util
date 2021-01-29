@@ -2,7 +2,6 @@
 /**
  * Preconds
  *  util.obj.Errors = Obj_Errors
- *  util.obj.Properties = Obj_Properties
  *  util.obj.Json = Json
  *  util.text.String = String
  */
@@ -44,26 +43,169 @@ class Obj {
 
   /**
    * To export depending on environment
+   * Must be called by the child class
    */
+  static set export(module) {
+    Object.seal(this);
+
+    if (typeof process !== "undefined" && module) {
+      //module.exports = this.constructor ? this.constructor : this;
+      module.exports = this;
+    }
+  }
+
   static export(module, to_export) {
-    if (typeof process !== "undefined") {
+    Object.seal(to_export);
+
+    if (typeof process !== "undefined" && module) {
+      /*module.exports = to_export.constructor
+        ? to_export.constructor
+        : to_export;*/
       module.exports = to_export;
     }
   }
 
   /**
+   * To be called by the main class (the one handling methods)
    *
-   * @param {function} constructor From an Object.protype.constructor
+   * === 2 arguments
+   * @param {object} properties {static, instances} or just instances ones
+   * @param {* | undefined} module Module with export setter
+   *
+   * === 3 arguments
+   * @param {object} instances_properties
+   * @param {object} statics_properties
+   * @param {*} module Module with export setter
+   */
+  static init(properties, module = undefined) {
+    let { statics = undefined, instances = undefined } = properties;
+    {
+      //
+      // statics is set as 2nd proeprty, module as third
+      if (arguments.length >= 3) {
+        instances = properties;
+        statics = module;
+        module = arguments[3];
+      } else if (!instances) {
+        instances = properties;
+      }
+    }
+
+    //
+    // Define static properties from properties.statics
+    {
+      if (statics != null) {
+        //
+        // Iterate properties to set configurable/enumerable/writable
+        // to false when they're not specified
+        Object.keys(statics).forEach((name) => {
+          if (statics[name].configurable == null) {
+            statics[name].configurable = false;
+          }
+
+          if (statics[name].enumerable == null) {
+            statics[name].enumerable = false;
+          }
+
+          if (
+            statics[name].writable == null &&
+            /* if any accessor, no writable configuration can be set :
+                "TypeError: Invalid property descriptor. Cannot both specify 
+                accessors and a value or writable attribute
+            */
+            !statics[name].get &&
+            !statics[name].set
+          ) {
+            statics[name].writable = false;
+          }
+        });
+
+        //
+        // Set statics properties
+        {
+          Object.defineProperties(this, statics);
+        }
+      }
+    }
+
+    //
+    // Set instances' properties descriptors
+    {
+      if (instances != null) {
+        let nenums = new Set(); //not enumerable keys
+
+        //
+        // Iterate properties to set configurable/enumerable/writable
+        // to false when they're not specified
+        Object.keys(instances).forEach((name) => {
+          if (instances[name].configurable == null) {
+            instances[name].configurable = false;
+          }
+
+          //
+          // enumerable
+          {
+            if (instances[name].enumerable == null) {
+              instances[name].enumerable = false;
+            }
+
+            if (!instances[name].enumerable) {
+              nenums.add(name);
+            }
+          }
+
+          if (
+            instances[name].writable == null &&
+            /* if any accessor, no writable configuration can be set :
+                "TypeError: Invalid property descriptor. Cannot both specify 
+                accessors and a value or writable attribute
+            */
+            !instances[name].get &&
+            !instances[name].set
+          ) {
+            instances[name].writable = false;
+          }
+        });
+
+        //
+        // Set instances properties
+        {
+          Object.defineProperty(this, Symbol.for(this.name + "_properties"), {
+            enumerable: false,
+            value: instances,
+          });
+
+          //
+          // Not enumerable ones
+          {
+            Object.defineProperty(this, Symbol.for(this.name + "_nenums"), {
+              enumerable: false,
+              value: nenums,
+            });
+          }
+        }
+      }
+    }
+
+    Object.seal(this);
+
+    if (module) {
+      module.exports = this;
+    }
+  }
+
+  /**
+   * Must be called by the Obj child class to test values on
    * @param {*} values
    */
-  get_property_values_errors(constructor, values) {
+  static get_property_values_errors(values) {
     let errs = {};
 
     {
       for (let key in values) {
         try {
-          new constructor({
-            key: values[key],
+          new this({
+            [key]: values[key],
           });
         } catch (ex) {
           logger.warn =
@@ -72,7 +214,7 @@ class Obj {
             "=" +
             values[key] +
             " to " +
-            constructor.name +
+            this.name +
             ": " +
             ex;
 
@@ -89,143 +231,85 @@ class Obj {
    * @throws {Object { <prop_name : <err> }} If this.set raises error(s)
    */
   constructor(values = undefined) {
-    /*
-      TEMPLATE of what should be in overrding child(ren)
-      super(values);
-
-      // also calls this.set(values)
-      this.properties = properties.props;
-    }*/
-
-    //
-    // To handle set errors
-    this.errs = new util.obj.Errors(this);
-
-    /*
-      Members updated that need to be stored in DB
-      string[] : members name
-    */
-    this.updated_members = [];
-
-    //
-    // Temporary var
-    // To set values with setter properties
-    {
-      Object.defineProperty(this, "vals_", {
-        value: values,
-        configurable: true,
-        enumerable: false,
-        writable: true,
-      });
-    }
+    this.init_properties();
+    this.set(values);
   }
 
   //
   // === PROPERTIES ===
   /**
-   * To set Object's properties
-   * To be called in child constructor
-   *
-   * @param{Obj_Properties} props
+   * Iteratively initialize properties from Obj to final overrider
    */
-  set properties(props) {
-    {
-      if (!props) {
-        const msg = "No properties argument set";
-        logger.error = msg;
-        throw TypeError(msg);
-      }
+  init_properties() {
+    let protos = [this];
 
-      if (typeof props !== "object") {
-        const msg = "Properties argument must be an object (Properties.props)";
-        logger.error = msg;
-        throw TypeError(msg);
-      }
-    }
-
-    /*
-     If calling class is not final child => concat to existing
-     for later final set
-    */
-    {
-      // With 4th stack trace's line
-      // (remove this and properties calls
-      //   -> to get calling file)
-      const caller = logger.constructor.get_caller_infos(2);
-
-      if (caller.class_name !== this.constructor.name) {
-        //
-        // Store properties for later
-        if (!this._prps_tmp) {
-          Object.defineProperty(this, "_prps_tmp", {
-            value: props,
-            enumerable: false,
-            writable: true,
-            configurable: true,
-          });
-        } else {
-          this._prps_tmp = util.obj.Properties.concat(
-            this._prps_tmp, //parent
-            props //child
-          );
-        }
-
-        return;
-      }
+    //
+    // Fetch the prototypes chain
+    for (let i = 1; protos[i - 1].__proto__.constructor.name !== "Obj"; i++) {
+      protos.push(Object.getPrototypeOf(protos[i - 1]));
     }
 
     //
-    //else
-    /* 
-      Calling class is the final one 
-        => define properties
-        => set values
-    */
+    // For each prototype, define its properties from Obj to final
     {
-      //
-      // Store tmp properties
-      {
-        const properties = util.obj.Properties.concat(
-          this._prps_tmp, //parent ; if empty, child is returned
-          props //child
-        );
-        Object.defineProperties(this, properties);
+      let proto;
+      while ((proto = protos.pop())) {
+        const class_ = Object.getPrototypeOf(proto);
+        const props =
+          class_.constructor[
+            Symbol.for(class_.constructor.name + "_properties")
+          ];
 
-        //
-        // Remove temporary variable _prps_tmp
-        {
-          if (this._prps_tmp) {
-            delete this._prps_tmp;
-          }
-        }
-      }
+        try {
+          Object.defineProperties(proto, props);
+        } catch (ex) {
+          const msg =
+            "Could not set properties of " +
+            proto.constructor.name +
+            " : " +
+            ex +
+            "\n Properties :" +
+            JSON.stringify(props);
 
-      //
-      // Set values
-      {
-        if (this.vals_) {
-          try {
-            this.set(this.vals_);
-          } catch (obj_errs) {
-            this.error =
-              obj_errs.nb +
-              " errors setting values (" +
-              typeof obj_errs +
-              " " +
-              obj_errs.constructor.name +
-              " : " +
-              obj_errs.message +
-              ")";
-          }
-
-          //
-          // Remove temporary variable vals_
-          {
-            delete this.vals_;
-          }
+          logger.error = msg;
+          throw msg;
         }
       }
     }
+  }
+
+  /**
+   * All property keys of this object
+   * (=> at every generation contrary to Object.keys)
+   *
+   * @return {Set}
+   */
+  get all_keys() {
+    let keys = new Set();
+    let proto = this;
+    do {
+      //
+      // Enumerable ones
+      {
+        Object.keys(proto).forEach((key) => {
+          keys.add(key);
+        });
+      }
+
+      //
+      // Not enumerable ones
+      {
+        const nenums =
+          proto.constructor[Symbol.for(proto.constructor.name + "_nenums")];
+        if (nenums) {
+          nenums.forEach((key) => {
+            keys.add(key);
+          });
+        }
+      }
+    } while ((proto = Object.getPrototypeOf(proto)) != null);
+
+    return keys;
   }
 
   clone() {
@@ -360,6 +444,26 @@ class Obj {
     }
 
     return ret;
+  }
+
+  //
+  // === OBJECT's METHODS IMPLEMENTATIONS
+  define_property(name, params) {
+    {
+      if (params.configurable == null) {
+        params.configurable = false;
+      }
+
+      if (params.enumerable == null) {
+        params.enumerable = false;
+      }
+
+      if (params.writable == null && params.get == null && params.set == null) {
+        params.writable = false;
+      }
+    }
+
+    Object.defineProperty(this, name, params);
   }
 
   //
@@ -507,35 +611,67 @@ class Obj {
    * @return {object} number of set/not set members which are not a function
    *                    3 values :
    *                                nb_set,
-   *                                nb_nset,
+   *                                nb_nset, Not set but should have been
+   *                                          => property exists in this
+   *                                         Ones not set because not exists in this
+   *                                         are not specified
+   *                                          (not directly implementable when this
+   *                                          has less properties
+   *                                          => is the one iterated to set values)
    *                                nb_nset_ro Not set because are read-only
    *
    * @throws{Obj_Errors} - If setting a property raises an error. Setting all
    *                        properties is attempted before throwing the error
    */
   set(values, set_res = { nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }) {
+    if (!values) {
+      return set_res;
+    }
+
     let that = this;
     let nb_errs = 0;
 
+    //
+    // Iterate either values or this' keys to identify values to set
+    // (=> will be the one which is lower-sized)
     {
-      const props = Object.keys(values);
-      //
-      // Iterate values
-      for (let i = 0; i < props.length; i++) {
-        const prop_name = props[i];
+      const values_keys = Object.keys(values); // Array
+      const values_length = values_keys.length;
 
+      const this_keys = this.all_keys; // Set
+      const this_size = this_keys.size;
+
+      //
+      // Iterate values of the lower-sized object (between values and this)
+      if (values_length < this_size) {
         //
-        // If prop_name is an expected by his
-        if (Object.getOwnPropertyDescriptor(this, prop_name) != null) {
-          if (set_value(prop_name, values[prop_name])) {
-            set_res.nb_set++;
+        // Iterate values
+        Object.entries(values).forEach((entry) => {
+          const [prop_name, value] = entry;
+          //
+          // If prop_name is an expected by his
+          if (this_keys.has(prop_name)) {
+            if (set_value(prop_name, value)) {
+              set_res.nb_set++;
+            } else {
+              set_res.nb_nset++;
+            }
           }
-        }
+        });
+      } else {
         //
-        // Value is not an object's property
-        else {
-          set_res.nb_nset++;
-        }
+        // Iterate this' keys
+        this_keys.forEach((prop_name) => {
+          //
+          // If prop_name is in values
+          if (values_keys.includes(prop_name)) {
+            if (set_value(prop_name, values[prop_name])) {
+              set_res.nb_set++;
+            } else {
+              set_res.nb_nset++;
+            }
+          }
+        });
       }
     }
 
@@ -590,6 +726,8 @@ class Obj {
   }
 
   /**
+   * YOU MAY WANT TO USE Promise.all() INSTEAD
+   *
    * To get multiple asynchronous get values
    *
    * @param {Promise[]} get_promises All getter promises then method
@@ -761,6 +899,51 @@ class Obj {
   }
 }
 
-if (typeof process !== "undefined") {
-  module.exports = Obj;
+Obj.init(require("./Obj_properties"), module);
+
+/**
+class Base{
+	static incr(val){
+  console.log("Base");
+		return val+1;  
+  }
 }
+Object.freeze(Base);
+
+class Sub extends Base{
+	constructor(val){
+  super();
+  	this.val = val;
+  }
+  
+  
+	static incr(val){
+  console.log("Sub");
+		return super.incr(val+1)+this.val;  
+  }
+}
+Object.freeze(Sub);
+
+
+let obj = new Sub(10);
+Object.defineProperty(Object.getPrototypeOf(obj), "incr",
+{
+value:function(val){
+	return this.constructor.incr.apply(this, [val]);
+},
+configurable: false,
+writable: false
+});
+
+Object.defineProperty(obj, "incr",
+{
+value:function(val){
+	return this.constructor.incr.apply(this, [val]);
+},
+configurable: false,
+writable: false
+});
+
+console.log(obj.incr(1));
+
+ */
