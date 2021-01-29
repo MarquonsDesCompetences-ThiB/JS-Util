@@ -4,59 +4,124 @@
  * To quickly initialize Obj with a Properties class
  */
 class Obj_Properties {
-  static set init(object) {
-    if (!object.init_) {
-      object.init_ = true;
-      Object.defineProperties(object, {
-        init_: {
-          value: true,
-          enumerable: false,
-          writable: false,
-          configurable: false,
-        },
+  /**
+   * Concatenate child props to parent props making an overriding :
+   *   If no value in child_props but in parent_props, child_props' remains
+   *   child_props' getter (if any) first calls parent_props' getter (if any)
+   *   child_props' setter (if any) first calls parent_props' setter (if any)
+   * 
+   * @param {Obj_Properties} parent_props If wrong, child_props is returned
+   * @param {*} child_props If wrong, parent_props is returned
+   */
+  static concat(parent_props, child_props) {
+    //
+    // Check preconds
+    {
+      if(!parent_props || !(parent_props instanceof Obj_Properties)){
+        return child_props;
+      }
 
-        enumerable: {
-          enumerable: true,
-          configurable: false,
-        },
-
-        not_enumerable: {
-          enumerable: true,
-          configurable: false,
-        },
-
-        /*
-            Properties' lenghtes
-        */
-        lengthes: {
-          enumerable: true,
-          configurable: false,
-        },
-
-        /*
-            Properties' regex
-        */
-        regex: {
-          enumerable: true,
-          configurable: false,
-        },
-      });
+      if(!child_props || !(child_props instanceof Obj_Properties)){
+        return parent_props;
+      }
     }
-  }
 
-  static get props() {
-    const that = this;
+    let final_props = parent_props.props;
+    const props_c = child_props.props;
+
+    for (const prop in props_p) {
+      //
+      // Just append the child property
+      {
+        if (!final_props[prop]) {
+          final_props[prop] = props_c[prop];
+          continue;
+        }
+      }
+
+      //
+      // Else merge the props : child call the parent
+      {
+        //
+        // Set child value if any
+        {
+          if (props_c[prop].value) {
+            final_props[prop].value = props_c[prop].value;
+          }
+        }
+
+        //
+        // Set getter if any,
+        // which calls super getter if any
+        {
+          if (props_c[prop].get) {
+            if (final_props[prop].get) {
+              final_props[prop].get = new_getter(final_props[prop].get,
+                props_c[prop].get);
+
+              /**
+               * Return a function calling first getter1 then getter2
+               * @param {*} getter1 
+               * @param {*} getter2 
+               */
+              function new_getter(getter1,getter2){
+                return ()=>{
+                  getter1();
+                  getter2();
+                };
+              }
+            } else {
+              final_props[prop].get = props_c[prop].get;
+            }
+          }
+        }
+
+        //
+        // Set setter if any,
+        // which calls super setter if any
+        {
+          if (props_c[prop].set) {
+            if (final_props[prop].set) {
+              final_props[prop].set = new_setter(final_props[prop].set,
+                props_c[prop].set);
+              
+              /**
+               * Return a function with 1 argument
+               * calling first setter1 then setter2
+               * @param {*} setter1 
+               * @param {*} setter2 
+               */
+              function new_setter(setter1,setter2){
+                return (value)=>{
+                  setter1(value);
+                  setter2(value);
+                };
+              }
+            } else {
+              final_props[prop].set = props_c[prop].set;
+            }
+          }
+        }
+      }
+    }
+
     return {
-      enums: that.enumerable,
-      not_enums: that.not_enumerable,
+      static get props(){return final_props;},
+
+      static get lengthes() {
+        return {};
+      },
+    
+      static get regex() {
+        return {};
+      }
     };
   }
 
   /**
    * {Object}
    */
-  static get enumerable() {
-    Obj_Properties.init = Obj_Properties;
+  static get props() {
     return {
       /*-prop_name: {
         value: prop_value,
@@ -67,24 +132,11 @@ class Obj_Properties {
     };
   }
 
-  /**
-   * string[]
-   */
-  static get not_enumerable() {
-    Obj_Properties.init = Obj_Properties;
-    return [
-      /*"not_enum_prop1", "not_enum_prop2"*/
-    ];
-  }
-
   static get lengthes() {
-    util.obj.Properties.init = properties;
-
     return {};
   }
 
   static get regex() {
-    util.obj.Properties.init = properties;
     return {};
   }
 }
