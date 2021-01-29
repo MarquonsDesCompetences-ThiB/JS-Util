@@ -1,15 +1,71 @@
 "use strict";
-
+/**
+ * Preconds
+ *  global.util.obj.Obj = class Obj
+ *  process.env.SRC_ROOT = path to sources files' root
+ */
 const Scripted_File = require(process.env.SRC_ROOT+"js/util/files/scripted/Scripted_File");
 
 const $ = require("jquery");
 const request = require("supertest");
-const Regex = require("../../../src/js/util/Regex");
+const Regex = require("../../../src/dist/js/util/Regex");
+const Fixtures_Scripted_File = require("./Fixtures_Scripted_File");
 
 /**
  * Make http requests, Jquery interactions
  */
-class UI_Fixtures_Scripted extends util.Obj {
+
+const UI_Fixtures_Scripted = (function () {
+  class properties extends util.obj.Properties {
+    static get enumerable() {
+      util.obj.Properties.init = properties;
+      return {
+        /**
+         * {Express App object}
+         * Http app to test
+         */
+        http_app: {
+          value: undefined,
+          enumerable: true,
+          writable: true,
+          configurable: false,
+        },
+
+        /**
+         * Object{}
+         *   <method> <url> : 
+         *      res
+         *      body {Jquery element}
+         * 
+         */
+        pages: {
+          value: undefined,
+          enumerable: true,
+          writable: true,
+          configurable: false,
+        },
+      };
+    }
+
+    static get not_enumerable() {
+      util.obj.Properties.init = properties;
+      return [];
+    }
+
+    static get lengthes() {
+      util.obj.Properties.init = properties;
+
+      return {};
+    }
+
+    static get regex() {
+      util.obj.Properties.init = properties;
+      return {};
+    }
+  }
+
+
+class UI_Fixtures_Scripted_ extends util.obj.Obj {
   //
   // === HTTP ===
   /**
@@ -27,12 +83,12 @@ class UI_Fixtures_Scripted extends util.Obj {
   //
   /**
    * === JQUERY INPUT ===
-   * [SELECTOR]>VALUE
-   * or [SELECTOR]$EVENT>VALUE where >VALUE is optional
+   * [SELECTOR]JQUERY_METHOD{VARIABLE}
+   *    where {VARIABLE} is optional
    *
    * === JQUERY ASSERT OUTPUT ===
    * Classical assert's column name as its value|variable_name replaced by :
-   * [SELECTOR]
+   * [SELECTOR]JQUERY_METHOD
    */
   static jquery_selector_regex; //TODO
   /**
@@ -41,47 +97,32 @@ class UI_Fixtures_Scripted extends util.Obj {
   static jquery_event_regex = "\\s*\\$\\s*\\w+\\s*";
   static jquery_regex = {
     input:
-      "\\s*[\\s*" +
+      // [SELECTOR]
+      "\\s*[\\s*(" +
       Fixtures_Scripted_File.jquery_selector_regex +
-      "\\s*](" +
-      +Fixtures_Scripted_File.jquery_event_regex +
-      ")+" +
-      Scripted_File.variable_name_braces_regex,
+      // ] JQUERY_METHOD
+      ")\\s*]\\s*(\\w+)\\s*(" +
+      // optionnal VARIABLE
+      +Scripted_File.variable_name_braces_regex+")?",
 
     output:
       // | Expect :
       "(\\s*\\|\\s*)?(Expect\\s*\\:)" +
       // jquery selector
-      "\\s*[\\s*" +
+      "\\s*[\\s*(" +
       Fixtures_Scripted_File.jquery_selector_regex +
-      "\\s*]" +
+      // ] JQUERY_METHOD
+      ")\\s*]\\s*(\\w+)\\s*(" +
       // Assert method name
       "\\s+(" +
       Fixtures_Scripted_File.asserts_regex +
       "){1}\\s*",
   };
 
-  static owned_members = [
-    /**
-     * {Express App object}
-     * Http app to test
-     */
-    "http_app",
 
-    /**
-     * Object{}
-     *   <method> <url> : 
-     *      res
-     *      body {Jquery element}
-     * 
-     */
-    "pages"
-  ];
-
-  constructor(obj = undefined, child_owned_members = []) {
-    super(UI_Fixtures_Scripted_File.owned_members.concat(child_owned_members));
-
-    this.set(obj);
+  constructor(obj = undefined, update_members = false) {
+    super(obj, update_members);
+    this.properties = properties.props;
   }
 
   /**
@@ -103,7 +144,7 @@ class UI_Fixtures_Scripted extends util.Obj {
     {
       if(!this.http_app){
         const msg = "this.http_app is not set";
-        logger.error("UI_Fixtures_Scripted#http_request "+msg);
+        logger.error="UI_Fixtures_Scripted#http_request "+msg;
         throw msg;
       }
 
@@ -111,12 +152,12 @@ class UI_Fixtures_Scripted extends util.Obj {
       // http_request
       if(!http_request){
         const msg = "Argument http_request is missing";
-        logger.error("UI_Fixtures_Scripted#http_request "+msg);
+        logger.error="UI_Fixtures_Scripted#http_request "+msg;
         throw msg;
       }
       if(!request_regex.test(http_request)){
         const msg = "Argument http_request : "+http_request+" does not match expected form : GET|POST <url> (regex : "+UI_Fixtures_Scripted.http_regex.request+")";
-        logger.error("UI_Fixtures_Scripted#http_request "+msg);
+        logger.error="UI_Fixtures_Scripted#http_request "+msg;
         throw msg;
       }
     }
@@ -139,7 +180,7 @@ class UI_Fixtures_Scripted extends util.Obj {
       {
         if(this.pages[http_request]){
           const msg = "Page "+http_request+" already stored in this and will be replaced";
-          logger.warn("UI_Fixtures_Scripted#http_request "+msg);
+          logger.warn="UI_Fixtures_Scripted#http_request "+msg;
         }
 
         this.pages[http_request] = {
@@ -152,7 +193,7 @@ class UI_Fixtures_Scripted extends util.Obj {
     }
     catch(ex){
       const msg = "Could not succeed http request "+request_parts[0]+" to "+request_parts[1]+" : "+ex;
-      logger.error("UI_Fixtures_Scripted#http_request "+msg);
+      logger.error="UI_Fixtures_Scripted#http_request "+msg;
       throw msg;
     }
   }
@@ -167,9 +208,13 @@ class UI_Fixtures_Scripted extends util.Obj {
    *                                  previous this.http_request call
    * 
    * @param {string} ui_action Must match jquery_regex.input|output
+   * 
+   * @return {jquery method returned value}
    */
   ui_action(http_request, ui_action){
     let is_assert = false;
+    const input_regex = new RegExp("/^"+UI_Fixtures_Scripted.jquery_regex.input+"$/");
+    
     //
     // Check preconds
     {
@@ -177,13 +222,13 @@ class UI_Fixtures_Scripted extends util.Obj {
       // http_request
       if(!http_request){
         const msg = "Argument http_request is missing";
-        logger.error("UI_Fixtures_Scripted#ui_action "+msg);
+        logger.error="UI_Fixtures_Scripted#ui_action "+msg;
         throw msg;
       }
 
       if(!this.pages[http_request]){
         const msg = "Argument http_request ("+http_request+") does not match a known fetched page ; have you called this.http_request ?";
-        logger.error("UI_Fixtures_Scripted#ui_action "+msg);
+        logger.error="UI_Fixtures_Scripted#ui_action "+msg;
         throw msg;
       }
 
@@ -191,34 +236,78 @@ class UI_Fixtures_Scripted extends util.Obj {
       // ui_action
       if(!ui_action){
         const msg = "Argument ui_action is missing";
-        logger.error("UI_Fixtures_Scripted#ui_action "+msg);
+        logger.error="UI_Fixtures_Scripted#ui_action "+msg;
         throw msg;
       }
 
-      const input_regex = new RegExp("/^"+UI_Fixtures_Scripted.jquery_regex.input+"$/");
       const output_regex = new RegExp("/^"+UI_Fixtures_Scripted.jquery_regex.output+"$/");
       if(output_regex.test(ui_action)){
         is_assert = true;
       }
       else if(!input_regex.test(ui_action)){
-        const msg = "Argument ui_action ("+ui_action+") does match neither an ui input : '[SELECTOR] $OPTIONAL_EVENT {INPUT_VARIABLE}' or ui output : 'Expect : [SELECTOR] $OPTIONAL_EVENT ASSERT_METHOD_NAME'  - Regex : Input : "+UI_Fixtures_Scripted.jquery_regex.input+" | Output : "+UI_Fixtures_Scripted.jquery_regex.output;
-        logger.error("UI_Fixtures_Scripted#ui_action "+msg);
+        const msg = "Argument ui_action ("+ui_action+") does match neither an ui input : '[SELECTOR] JQUERY_METHOD {OPTIONNAL_INPUT_VARIABLE}' or ui output : 'Expect : [SELECTOR] JQUERY_METHOD ASSERT_METHOD_NAME'  - Regex : Input : "+UI_Fixtures_Scripted.jquery_regex.input+" | Output : "+UI_Fixtures_Scripted.jquery_regex.output;
+        logger.error="UI_Fixtures_Scripted#ui_action "+msg;
         throw msg;
       }
     }
 
+    let ui_input = ""+ui_action; //clone ui_action
     //
-    // UI input case
+    // If UI assert output => extract action part
     {
-      if(!is_assert){
-        
+      if(is_assert){
+        ui_input.replace(new RegExp("("+UI_Fixtures_Scripted.jquery_regex.input+")"), "$1");
       }
     }
 
     //
-    // UI output case
+    // Split action parts
+    /*
+      [SELECTOR]JQUERY_METHOD{OPTIONAL_VARIABLE} 
+    */
     {
+        ui_input.replace(input_regex, "$1$$2$$3")
+        /*
+          0 : selector
+          1 : jquery_method
+          2 : optional variable
+        */
+       ui_input = ui_input.split("$");
 
+       //
+       // Run input
+       {
+         try{
+          let body = this.pages[http_request].body;
+          //
+          // No value specified
+          if(!ui_input[2]){
+            return body.find(ui_input[0])[ui_input[1]]();
+          }
+          //
+          // Value specified
+          {
+            let val = ui_input[2];
+            //
+            // Value is variable name
+            if(Fixtures_Scripted_File.is_variable_name(val)){
+              val = this.env.get_object(val);
+              if(!val){
+                const msg = "Undefined variable "+ui_input[2] +" from input action "+ui_action+" ("+ui_input.join(" ")+")";
+                logger.error="UI_Fixtures_Scripted#ui_action "+msg;
+                throw msg;
+              }
+            }
+
+            return body.find(ui_input[0])[ui_input[1]](val);
+          }
+         }
+         catch(ex){
+          const msg = "Error running input "+ui_action+" ("+ui_input.join(" ")+") : "+ex;
+          logger.warn="UI_Fixtures_Scripted#ui_action "+msg;
+          throw msg;
+         }
+       }
     }
   }
 
@@ -228,7 +317,7 @@ class UI_Fixtures_Scripted extends util.Obj {
     {
       if(!this.pages[http_request]){
         const msg = "Argument http_request ("+http_request+") does not match a known fetched page ; have you called this.http_request ?";
-        logger.error("UI_Fixtures_Scripted#get_object "+msg);
+        logger.error="UI_Fixtures_Scripted#get_object "+msg;
         return undefined;
       }
     }
@@ -240,7 +329,7 @@ class UI_Fixtures_Scripted extends util.Obj {
       const name = name_parts[i];
       if(!json[name]){
         const msg = "Undefined "+name+" in "+var_name+" from "+http_request;
-        logger.warn("UI_Fixtures_Scripted#get_object "+msg);
+        logger.warn="UI_Fixtures_Scripted#get_object "+msg;
         return undefined;
       }
 
@@ -251,4 +340,9 @@ class UI_Fixtures_Scripted extends util.Obj {
   }
 }
 
-module.exports = UI_Fixtures_Scripted;
+return UI_Fixtures_Scripted_.prototype.constructor;
+})();
+
+if (typeof process !== "undefined") {
+  module.exports = UI_Fixtures_Scripted;
+}
