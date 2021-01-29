@@ -53,7 +53,7 @@ class Logger {
    */
   static get_caller_infos(stack_trace_line, include_file_infos = false) {
     // increment stack_trace_line to remove get_caller_infos call
-    const stack_trace = Logger.get_stack_trace(stack_trace_line + 1)[0];
+    const stack_line = Logger.get_stack_trace(stack_trace_line + 1)[0];
 
     let res = {};
 
@@ -63,7 +63,8 @@ class Logger {
       /*
         What follows 'at ' and precedes '('
       */
-      const first_part = stack_trace.match(/(?<=at\s)(.+)(?=\s\()/)[0];
+      const line_match = stack_line.match(/(?<=at\s)(.+)(?=\s\()/);
+      const first_part = line_match ? line_match[0] : stack_line;
 
       /*
         Either what follows 'new '
@@ -96,7 +97,8 @@ class Logger {
         /*
         What are in braces '(' ')'
       */
-        const second_part = stack_trace.match(/(?<=\()(.+)(?=\))/)[0];
+        const line_match = stack_line.match(/(?<=\()(.+)(?=\))/);
+        const second_part = line_match ? line_match[0] : stack_line;
 
         // Most of characters preceding a '\'
         res.file_path = second_part.match(/(.+)(?=\\)/)[0] + "\\";
@@ -128,6 +130,7 @@ class Logger {
         logger.warn = "Logger Overriding global.logger with Logger";
       }
       // global logger access
+      global.Logger = Logger;
       let l = (global.logger = Logger.logger);
       // global access shortcuts
       [
@@ -152,21 +155,22 @@ class Logger {
   static add_debug_infos(
     message,
     include_file_infos = true,
-    include_stack_trace = false
+    include_stack_trace = false,
+    row = 0
   ) {
     // with 4th stack trace's line
     // (remove debug calls -> to get calling file)
-    let caller = Logger.get_caller_infos(2, include_file_infos);
+    let caller = Logger.get_caller_infos(2 + row, include_file_infos);
     //
     // Caller is one of the Logger's output methods
     // (error, debug, trace, warn...)
     if (caller.class_name === "Logger") {
       // get next line
-      caller = Logger.get_caller_infos(3, include_file_infos);
+      caller = Logger.get_caller_infos(3 + row, include_file_infos);
     }
 
     const stack = include_stack_trace
-      ? "\n" + Logger.get_stack_trace(3, 10).join("\n")
+      ? "\n" + Logger.get_stack_trace(3 + row, 10 + row).join("\n")
       : "";
 
     return (
@@ -183,7 +187,7 @@ class Logger {
     );
   }
 
-  constructor() {
+  constructor(file_name_prefix = "") {
     {
       this.logs = new output.Out();
       this.logs.level_str = "DEBUG";
@@ -191,10 +195,14 @@ class Logger {
     }
 
     {
+      const prefix =
+        file_name_prefix + (file_name_prefix.length > 0 ? "-" : "");
+
       this.file_desc = undefined;
       this.file_path =
         process.env.SRC_ROOT +
         "\\logs\\" +
+        prefix +
         this.logs.level_str +
         "-" +
         new Date().toLocaleTimeString() +
@@ -290,16 +298,14 @@ class Logger {
     const formatted = Logger.add_debug_infos(message);
 
     console.debug(formatted);
-    //Writte to file
-    this.logs.d(formatted);
+    this.logs.d(formatted); //Writte to file
   }
 
   set info(message) {
     const formatted = Logger.add_debug_infos(message);
 
     console.info(formatted);
-    //Writte to file
-    this.logs.i(formatted);
+    this.logs.i(formatted); //Writte to file
   }
 
   /**
@@ -314,16 +320,54 @@ class Logger {
     );
 
     console.error(formatted);
-    //Writte to file
-    this.logs.e(formatted);
+    this.logs.e(formatted); //Writte to file
+  }
+
+  /**
+   * @param {string|Error|(string|Error)[]}
+   */
+  set ex(ex) {
+    if (ex instanceof Array) {
+      this.error = ex.length + " errors :";
+      ex.forEach((err) => {
+        const formatted = format_error(err);
+
+        console.error(formatted);
+        this.logs.e(formatted); //Writte to file
+      });
+
+      return;
+    }
+
+    {
+      const formatted = format_error(ex);
+      /*
+      "manually" displays the error instead of using this.err
+      otherwise the wrong row is fetched from Logger.add_debug_infos
+      */
+      console.error(formatted);
+      this.logs.e(formatted); //Writte to file
+    }
+
+    function format_error(error) {
+      const msg =
+        ex instanceof Error
+          ? ex.name + " : " + ex.message + "\n" + ex.stack
+          : ex;
+      return Logger.add_debug_infos(
+        msg,
+        true,
+        false,
+        1 //remove format_error call
+      );
+    }
   }
 
   set fatal(message) {
     const formatted = Logger.add_debug_infos(message);
 
     console.error(formatted);
-    //Writte to file
-    this.logs.f(formatted);
+    this.logs.f(formatted); //Writte to file
   }
 
   /**
@@ -334,8 +378,23 @@ class Logger {
     const formatted = Logger.add_debug_infos(message);
 
     console.log(formatted);
-    //Writte to file
-    this.logs.i(formatted);
+    this.logs.i(formatted); //Writte to file
+  }
+
+  /**
+   * @param{object[]} If 1st element is a string, displayed before the table
+   */
+  set table(array) {
+    if (util.text.String.is(array[0])) {
+      const formatted = Logger.add_debug_infos(array[0]);
+      console.log(formatted);
+      this.logs.i(formatted); //Writte to file
+
+      array = array.slice(1);
+    }
+
+    console.table(array);
+    this.logs.i(array); //Writte to file
   }
 
   /**
@@ -346,8 +405,7 @@ class Logger {
     const formatted = Logger.add_debug_infos(message);
 
     console.trace(formatted);
-    //Writte to file
-    this.logs.t(formatted);
+    this.logs.t(formatted); //Writte to file
   }
 
   /**
@@ -358,9 +416,7 @@ class Logger {
     const formatted = Logger.add_debug_infos(message);
 
     console.warn(formatted);
-
-    //Writte to file
-    this.logs.w(formatted);
+    this.logs.w(formatted); //Writte to file
   }
 }
 
