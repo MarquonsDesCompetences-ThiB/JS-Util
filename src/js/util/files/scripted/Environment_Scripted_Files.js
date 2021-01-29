@@ -8,433 +8,324 @@ const Csv_File = global.util.files.Csv_File;
 const Scripted_File = require("./Scripted_File");
 const Scripted_Type = require("./Scripted_Type");
 
-/**
- * Object types usable by values
- *
- * Files with 3 columns :
- *     - type name
- *     - value type (type of value specified in the 3rd column)
- *         - class
- *         - number
- *         - string
- *     - class path (loaded with Node#require())
- *         or raw value (integer, float or string)
- */
-const Environment_Scripted_Files = (function () {
-  class properties extends util.obj.Properties {
-    static get enumerable() {
-      util.obj.Properties.init = properties;
-      return {
-        files_path: {
-          value: undefined,
-          enumerable: true,
-          writable: true,
-          configurable: false,
-        },
-
-        types: {
-          value: {
-            objects: {
-              //
-              // Basic JS objects
-              Array: Array,
-              Date: Date,
-              Number: Number,
-              Object: Object,
-              String: String,
-              null: null,
-              undefined: undefined,
-            },
-            files: {},
-            //
-            // string[types.files keys]
-            //files_order_loading: [],
-          },
-          enumerable: true,
-          writable: true,
-          configurable: false,
-        },
-
-        /**
-         * Global values
-         */
-        global: {
-          value: {},
-          enumerable: true,
-          writable: true,
-          configurable: false,
-        },
-
-        values: {
-          value: {
-            files: {},
-            //
-            // object associating types.objects keys to string[values.files keys]
-            //files_order_loading: {},
-          },
-          enumerable: true,
-          writable: true,
-          configurable: false,
-        },
-      };
-    }
-
-    static get not_enumerable() {
-      util.obj.Properties.init = properties;
-      return [];
-    }
-
-    static get lengthes() {
-      util.obj.Properties.init = properties;
-
-      return {};
-    }
-
-    static get regex() {
-      util.obj.Properties.init = properties;
-      return {};
-    }
+class Environment_Scripted_Files extends util.obj.Obj {
+  constructor(obj = undefined) {
+    super(obj);
   }
 
-  class Environment_Scripted_Files_ extends util.obj.Obj {
-    constructor(obj = undefined, update_members = false) {
-      super(obj, update_members);
-      this.properties = properties.props;
-    }
-
+  //
+  // === GETTERS / SETTERS
+  //
+  // === TYPES ===
+  set_type(type_name, type_path, file_name = undefined) {
     //
-    // === GETTERS / SETTERS
-    //
-    // === TYPES ===
-    set_type(type_name, type_path, file_name = undefined) {
+    // Process preconds
+    {
       //
-      // Process preconds
+      // type_name
       {
-        //
-        // type_name
-        {
-          if (!type_name) {
-            const msg = "Argument type_name is undefined";
-            logger.error = msg;
-            throw TypeError(msg);
-          }
-          if (!util.text.String.is(type_name)) {
-            const type = typeof type_name;
-            const msg =
-              "Argument type_name must be a string but is a " +
-              type +
-              (type === "object"
-                ? " (" + type_name.constructor.name + ")"
-                : "");
-            logger.error = msg;
-            throw TypeError(msg);
-          }
+        if (!type_name) {
+          const msg = "Argument type_name is undefined";
+          logger.error = msg;
+          throw TypeError(msg);
         }
-
-        //
-        // type_path
-        {
-          if (!type_path) {
-            const msg = "Argument type_path is undefined";
-            logger.error = msg;
-            throw TypeError(msg);
-          }
-          if (!util.text.String.is(type_path)) {
-            const type = typeof type_path;
-            const msg =
-              "Argument type_path must be a string but is a " +
-              type +
-              (type === "object"
-                ? " (" + type_path.constructor.name + ")"
-                : "");
-            logger.error = msg;
-            throw TypeError(msg);
-          }
-        }
-      }
-
-      let type_ref;
-      const type_accessors = Scripted_Type.get_accessor(type_name);
-      //
-      // Fetch types object to process (from file or global)
-      {
-        if (file_name) {
-          type_ref = this.types.files[file_name];
-        }
-
-        if (!type_ref) {
-          type_ref = this.types.objects;
-        }
-      }
-
-      //
-      // Go to before last accessor and create subobjects that need to be
-      {
-        for (let i = 0; i < type_accessors.length - 1; i++) {
-          const type_name = type_accessors[i];
-          if (!type_ref[type_name]) {
-            type_ref[type_name] = {};
-          }
-
-          type_ref = type_ref[type_name];
-        }
-      }
-
-      //
-      // Warn if type will be removed
-      const last_accessor = type_accessors[type_accessors.length - 1];
-      {
-        if (type_ref[last_accessor]) {
-          logger.warn =
-            "Type " +
-            last_accessor +
-            " from " +
-            type_name +
-            " already exists in file " +
-            file_name +
-            " and will be erased";
-        }
-      }
-
-      //
-      // Load type
-      {
-        types[last_accessor] = require(type_path);
-        // if no error raised
-        logger.info =
-          "Loaded Type : " +
-          last_accessor +
-          " from " +
-          type_name +
-          " in file " +
-          file_name;
-      }
-    }
-
-    /**
-     *
-     * @param {string} type
-     * @param {string | optional} file_name
-     */
-    get_type(type, file_name = undefined) {
-      const formatted_type = Scripted_Type.get_type_name(type);
-
-      //
-      // Look for in files and return if found
-      {
-        if (file_name) {
-          let types = this.types.files[file_name];
-          if (types) {
-            if (types[formatted_type]) {
-              return types[formatted_type];
-            }
-          }
-        }
-      }
-
-      //
-      // Return global
-      {
-        return this.types.objects[formatted_type];
-      }
-    }
-
-    //
-    // === OBJECTS VARIABLES ===
-    instanciate(var_name, type_name, file_name) {
-      {
-        if (!this.types.objects[type_name]) {
+        if (!util.text.String.is(type_name)) {
+          const type = typeof type_name;
           const msg =
-            "Unknown type " +
-            type_name +
-            " to instanciate " +
-            var_name +
-            " from file " +
-            file_name;
+            "Argument type_name must be a string but is a " +
+            type +
+            (type === "object" ? " (" + type_name.constructor.name + ")" : "");
           logger.error = msg;
           throw TypeError(msg);
         }
       }
 
-      let file_values = this.values.files[file_name];
+      //
+      // type_path
       {
-        if (!file_values) {
-          const msg =
-            "Unknown file " +
-            file_name +
-            " to instanciate " +
-            var_name +
-            " (" +
-            type_name +
-            ")";
+        if (!type_path) {
+          const msg = "Argument type_path is undefined";
           logger.error = msg;
-          throw ReferenceError(msg);
+          throw TypeError(msg);
         }
-
-        if (file_values[var_name]) {
-          logger.warn =
-            var_name +
-            " already exists for file " +
-            file_name +
-            " and will be replaced by a " +
-            type_name;
+        if (!util.text.String.is(type_path)) {
+          const type = typeof type_path;
+          const msg =
+            "Argument type_path must be a string but is a " +
+            type +
+            (type === "object" ? " (" + type_path.constructor.name + ")" : "");
+          logger.error = msg;
+          throw TypeError(msg);
         }
       }
     }
 
-    /**
-     *
-     * @param {string} var_name First accessor can be a file name
-     * @param {string | optional} file_name Set undefined if var_name's
-     *                                      first accessor is the file name
-     */
-    get_object(var_name, file_name = undefined) {
-      const accessors = Scripted_Type.get_accessor_parts(var_name);
+    let type_ref;
+    const type_accessors = Scripted_Type.get_accessor(type_name);
+    //
+    // Fetch types object to process (from file or global)
+    {
+      if (file_name) {
+        type_ref = this.types.files[file_name];
+      }
+
+      if (!type_ref) {
+        type_ref = this.types.objects;
+      }
+    }
+
+    //
+    // Go to before last accessor and create subobjects that need to be
+    {
+      for (let i = 0; i < type_accessors.length - 1; i++) {
+        const type_name = type_accessors[i];
+        if (!type_ref[type_name]) {
+          type_ref[type_name] = {};
+        }
+
+        type_ref = type_ref[type_name];
+      }
+    }
+
+    //
+    // Warn if type will be removed
+    const last_accessor = type_accessors[type_accessors.length - 1];
+    {
+      if (type_ref[last_accessor]) {
+        logger.warn =
+          "Type " +
+          last_accessor +
+          " from " +
+          type_name +
+          " already exists in file " +
+          file_name +
+          " and will be erased";
+      }
+    }
+
+    //
+    // Load type
+    {
+      types[last_accessor] = require(type_path);
+      // if no error raised
+      logger.info =
+        "Loaded Type : " +
+        last_accessor +
+        " from " +
+        type_name +
+        " in file " +
+        file_name;
+    }
+  }
+
+  /**
+   *
+   * @param {string} type
+   * @param {string | optional} file_name
+   */
+  get_type(type, file_name = undefined) {
+    const formatted_type = Scripted_Type.get_type_name(type);
+
+    //
+    // Look for in files and return if found
+    {
+      if (file_name) {
+        let types = this.types.files[file_name];
+        if (types) {
+          if (types[formatted_type]) {
+            return types[formatted_type];
+          }
+        }
+      }
+    }
+
+    //
+    // Return global
+    {
+      return this.types.objects[formatted_type];
+    }
+  }
+
+  //
+  // === OBJECTS VARIABLES ===
+  instanciate(var_name, type_name, file_name) {
+    {
+      if (!this.types.objects[type_name]) {
+        const msg =
+          "Unknown type " +
+          type_name +
+          " to instanciate " +
+          var_name +
+          " from file " +
+          file_name;
+        logger.error = msg;
+        throw TypeError(msg);
+      }
+    }
+
+    let file_values = this.values.files[file_name];
+    {
+      if (!file_values) {
+        const msg =
+          "Unknown file " +
+          file_name +
+          " to instanciate " +
+          var_name +
+          " (" +
+          type_name +
+          ")";
+        logger.error = msg;
+        throw ReferenceError(msg);
+      }
+
+      if (file_values[var_name]) {
+        logger.warn =
+          var_name +
+          " already exists for file " +
+          file_name +
+          " and will be replaced by a " +
+          type_name;
+      }
+    }
+  }
+
+  /**
+   *
+   * @param {string|string[]} name Name can include multiple variables separated by dot
+   *                  Can also include object member's idx (integer)
+   *                  If an array, means accessors are already splitted
+   *                  First accesor can be the file name
+   *                  => makes file_name argument useless
+   *
+   * @param {string | optional} file_name Set undefined if var_name's
+   *                                      first accessor is the file name
+   *
+   *
+   * @return {Promise} Success : {Object}
+   *                   Reject : errs
+   */
+  get_object(var_name, file_name = undefined) {
+    return new Promise((success, reject) => {
+      const accessors =
+        var_name instanceof Array
+          ? var_name
+          : Scripted_Type.get_accessor_parts(var_name);
       const first_access = accessors[0];
-      const last_access = accessors[accessors.length - 1];
 
       //
       // Look for in files and return if found
       {
         if (file_name || this.values.files[first_access]) {
-          let vars = file_name
+          let file = file_name
             ? this.values.files[file_name]
             : this.values.files[first_access];
-          if (!vars) {
-            const msg =
-              "No variables instanciated for file " + file_name
-                ? file_name
-                : first_access + " (to fetch " + var_name + ")";
+
+          //if file_name argument is wrong
+          if (!file) {
+            const msg = "No file " + file_name + " (to fetch " + var_name + ")";
             logger.error = msg;
             throw TypeError(msg);
           }
 
-          for (let i = file_name ? 0 : 1; i < accessors.length - 1; i++) {
-            if (!vars[accessors[i]]) {
-              logger.warn =
-                "Variable " +
-                accessors[i] +
-                " referenced in " +
+          //
+          // No variable requested => fetch all file's objects
+          {
+            const accessors_length = accessors.length;
+            if (
+              (file_name && accessors_length === 0) ||
+              (!file_name && accessors_length === 1)
+            ) {
+              return file.get_all_objects().then(success, reject);
+            }
+          }
+
+          //
+          // Request file
+          return file
+            .get_object(
+              file_name
+                ? accessors
+                : //removing the 1st accessor -> file's name
+                  accessors.slice(1)
+            )
+            .then(success, (error) => {
+              logger.error =
                 var_name +
-                " not found in file " +
-                file_name;
-              vars = undefined;
-              break;
-            }
-
-            vars = accessors[i];
-          }
-
-          if (vars) {
-            if (vars[last_access]) {
-              return vars[last_access];
-            }
-
-            logger.warn =
-              "Variable " +
-              last_access +
-              " referenced in " +
-              var_name +
-              " not found in file " +
-              file_name;
-          }
+                " not instanciated from " +
+                file_name +
+                " : " +
+                error +
+                " \nLooking for in globals...";
+              search_globals.apply(this);
+            });
         }
       }
+
+      search_globals.apply(this);
 
       //
       // Look for in global and return if found
-      {
+      function search_globals() {
         let vars = this.global;
-        for (let i = 0; i < accessors.length - 1; i++) {
+        for (let i = 0; i < accessors.length; i++) {
           if (!vars[accessors[i]]) {
-            logger.warn =
+            const msg =
               "Variable " +
               accessors[i] +
               " referenced in " +
               var_name +
               " not found in global values";
-            return undefined;
+            logger.error = msg;
+
+            return reject(msg);
           }
 
-          vars = accessors[i];
+          vars = vars[accessors[i]];
         }
 
-        return vars[last_access];
+        success(vars);
       }
-    }
+    });
+  }
 
-    /**
-     *
-     * @param {string} var_name First accessor can be a file name
-     * @param {string | optional} file_name Set undefined if var_name's
-     *                                      first accessor is the file name
-     *
-     * @return{bool}
-     */
-    delete_object(var_name, file_name = undefined) {
-      const accessors = Scripted_Type.get_accessor_parts(var_name);
-      const first_access = accessors[0];
-      const last_access = accessors[accessors.length - 1];
+  /**
+   *
+   * @param {string} var_name First accessor can be a file name
+   * @param {string | optional} file_name Set undefined if var_name's
+   *                                      first accessor is the file name
+   *
+   * @return{bool}
+   */
+  delete_object(var_name, file_name = undefined) {
+    const accessors = Scripted_Type.get_accessor_parts(var_name);
+    const first_access = accessors[0];
+    const last_access = accessors[accessors.length - 1];
 
-      //
-      // Look for in files and delete if found
-      {
-        if (file_name || this.values.files[first_access]) {
-          let vars = file_name
-            ? this.values.files[file_name]
-            : this.values.files[first_access];
-          if (!vars) {
-            const msg =
-              "No variables instanciated for file " + file_name
-                ? file_name
-                : first_access + " (to delete " + var_name + ")";
-            logger.warn = msg;
-            return false;
-          }
+    //
+    // Look for in files and delete if found
+    {
+      if (file_name || this.values.files[first_access]) {
+        let vars = file_name
+          ? this.values.files[file_name]
+          : this.values.files[first_access];
+        if (!vars) {
+          const msg =
+            "No variables instanciated for file " + file_name
+              ? file_name
+              : first_access + " (to delete " + var_name + ")";
+          logger.warn = msg;
+          return false;
+        }
 
-          for (let i = file_name ? 0 : 1; i < accessors.length - 1; i++) {
-            if (!vars[accessors[i]]) {
-              logger.warn =
-                "Variable " +
-                accessors[i] +
-                " referenced in " +
-                var_name +
-                " not found in file " +
-                file_name;
-              return false;
-            }
-
-            vars = accessors[i];
-          }
-
-          if (!vars[last_access]) {
+        for (let i = file_name ? 0 : 1; i < accessors.length - 1; i++) {
+          if (!vars[accessors[i]]) {
             logger.warn =
               "Variable " +
-              last_access +
+              accessors[i] +
               " referenced in " +
               var_name +
               " not found in file " +
               file_name;
-            return false;
-          }
-
-          delete vars[last_access];
-          return true;
-        }
-      }
-
-      //
-      // Look for in global and delete if found
-      {
-        let vars = this.global;
-        for (let i = 0; i < accessors.length - 1; i++) {
-          if (!vars[accessors[i]]) {
-            logger.warn =
-              "Variable " +
-              accessors[i] +
-              " referenced in " +
-              var_name +
-              " not found in global values";
             return false;
           }
 
@@ -447,51 +338,91 @@ const Environment_Scripted_Files = (function () {
             last_access +
             " referenced in " +
             var_name +
-            " not found in global values";
+            " not found in file " +
+            file_name;
           return false;
         }
+
         delete vars[last_access];
         return true;
       }
     }
 
     //
-    // === TYPES FILES ===
-    /**
-     *
-     * @param {Csv_File | _File | Object} file If not Csv_File type, will be created
-     */
-    async add_types_file(file) {
+    // Look for in global and delete if found
+    {
+      let vars = this.global;
+      for (let i = 0; i < accessors.length - 1; i++) {
+        if (!vars[accessors[i]]) {
+          logger.warn =
+            "Variable " +
+            accessors[i] +
+            " referenced in " +
+            var_name +
+            " not found in global values";
+          return false;
+        }
+
+        vars = accessors[i];
+      }
+
+      if (!vars[last_access]) {
+        logger.warn =
+          "Variable " +
+          last_access +
+          " referenced in " +
+          var_name +
+          " not found in global values";
+        return false;
+      }
+      delete vars[last_access];
+      return true;
+    }
+  }
+
+  //
+  // === TYPES FILES ===
+  /**
+   *
+   * @param {Csv_File | _File | Object} file If not Csv_File type, will be created
+   *
+   *
+   * @return Promise    Success:  {integer} nb_rows_parsed_success
+   *                    Reject : {string[]} errs
+   */
+  add_types_file(file) {
+    return new Promise((success, reject) => {
       //
       // Check arguments
       {
         if (!file) {
-          logger.error =
-            "Environment_Scripted_Files#add_types_file file argument is not specified";
-          return false;
+          const msg = "file argument is not specified";
+          logger.error = msg;
+          return reject(msg);
         }
         if (!file.name) {
-          logger.error =
-            "Environment_Scripted_Files#add_types_file file has no name member";
-          return false;
+          const msg = "file has no name member";
+          logger.error = msg;
+          return reject(msg);
         }
 
         let files = this.types.files;
         //
         // file.name already exists
         if (files[file.name]) {
-          logger.error =
-            "Environment_Scripted_Files#add_types_file Types file " +
+          const msg =
+            "Types file " +
             file.name +
             " already exists ; ignoring this new add";
-          return false;
+          logger.error = msg;
+          return reject(msg);
         }
       }
 
       let file_obj = file;
       file_obj.path = this.files_path + file_obj.path;
-      if (!(file_obj instanceof Csv_File)) {
-        file_obj = new Csv_File(file_obj);
+      if (!(file_obj instanceof util.files.File)) {
+        file_obj = new util.files.File(file_obj);
       }
 
       //
@@ -506,84 +437,95 @@ const Environment_Scripted_Files = (function () {
       this.types.files_order_loading[obj_type].push(fName);
 */
 
-      await this.parse_type_file(fName, function () {});
-      return true;
-    }
+      try {
+        this.parse_type_file(fName).then(success, reject);
+      } catch (ex) {
+        const msg = "Error parsing type file " + this.name + " : " + ex;
+        logger.error = msg;
+        reject([msg]);
+      }
+    });
+  }
 
-    /**
-     * @param {function} cbk Callback with 2 params :
-     *                            errs : string[]
-     *                            nb_files_parsed_success : integer
-     */
-    async parse_types_files(cbk) {
+  /**
+   *
+   * @return Promise    Success:  {integer} nb_files_parsed_success
+   *                    Reject : {string[]} errs
+   */
+  parse_types_files() {
+    return new Promise(function (success, reject) {
       const files_order = this.types.files_order_loading;
       const nb_tot_files = files_order.length;
       let nb_files_parsed = 0;
       let errs = [];
 
       for (let i = 0; i < nb_tot_files; i++) {
-        this.parse_type_file(files_order[i], on_parsed);
+        this.parse_type_file(files_order[i]).then(on_parsed, (err) => {
+          errs.push(err);
+          on_parsed();
+        });
       }
 
-      function on_parsed(err, nb_parsed_rows) {
-        if (err) {
-          errs.push(err);
+      function on_parsed() {
+        nb_files_parsed++;
+        if (nb_files_parsed !== nb_tot_files) {
+          return;
         }
 
         //
-        // Callback
+        // All parsings done
         {
-          nb_files_parsed++;
-          if (nb_files_parsed === nb_tot_files) {
-            logger.log =
-              "Environment_Scripted_Files#parse_types_files Parsing of " +
-              nb_tot_files +
-              " files done with " +
-              errs.length +
-              " errors";
+          const msg =
+            "Parsing of " +
+            nb_tot_files +
+            " files done with " +
+            errs.length +
+            " errors";
 
-            const nb_well_parsed = nb_files_parsed - errs.length;
-            cbk(errs.length > 0 ? errs : undefined, nb_well_parsed);
+          const nb_well_parsed = nb_files_parsed - errs.length;
+          if (errs.length > 0) {
+            logger.error = msg;
+            return reject(errs, nb_well_parsed);
           }
+
+          logger.log = msg;
+          success(nb_well_parsed);
         }
       }
-    }
+    });
+  }
 
-    /**
-     *
-     * @param {string} file_name File to parse ; must be a key of this.types.files
-     * @param {function} cbk Callback with 2 params : err, nb_parsed_rows
-     */
-    async parse_type_file(file_name, cbk) {
+  /**
+   *
+   * @param {string} file_name File to parse ; must be a key of this.types.files
+   *
+   * @return Promise    Success:  {integer} nb_rows_parsed_success
+   *                    Reject : {string} err
+   */
+  parse_type_file(file_name) {
+    return new Promise((success, reject) => {
       let file = this.types.files[file_name];
       {
         if (!file) {
           const msg =
             "The specified file does not exist in environment : " + file_name;
-          logger.error = "Environment_Scripted_Files#parse_type_file " + msg;
-          cbk(msg);
-          return false;
+          logger.error = msg;
+          return reject(msg);
         }
       }
 
-      let that = this;
       if (file.content) {
-        parse();
-        return true;
+        return parse.apply(this);
       }
-
-      logger.log = "Environment_Scripted_Files#parse_type_file Reading file...";
-      file.read(function (err) {
-        if (err) {
-          logger.error =
-            "Environment_Scripted_Files#parse_type_file::read Error reading file " +
-            file_name +
-            " : " +
-            err;
-          return cbk(err);
+      logger.log = "Reading file...";
+      file.read().then(
+        () => {
+          parse.apply(this);
+        },
+        (error) => {
+          reject(error);
         }
-        parse();
-      });
+      );
 
       function parse() {
         if (!(file.content instanceof Array)) {
@@ -592,67 +534,113 @@ const Environment_Scripted_Files = (function () {
 
         const content = file.content;
         let nb_parsed_rows = 0;
+
         //
         // Iterate rows skipping first one (headings)
-        for (let i = 1; i < content.length; i++) {
-          if (that.parse_type_file_row(file_name, content[i])) {
-            nb_parsed_rows++;
-          } else {
-            const msg = "Could not parse row " + i;
-            logger.error =
-              "Environment_Scripted_Files#parse_type_file::parse " + msg;
+        let nb_async_got = 0;
+        const nb_async_tot = content.length - 1;
+        content.forEach((row, i) => {
+          //
+          // Skips headings row
+          if (i === 0) {
+            return;
           }
-        }
 
-        // nb_rows skipping the first one : headings
-        const nb_rows = content.length >= 1 ? content.length - 1 : 0;
-        const msg = nb_parsed_rows + " parsed rows/" + nb_rows;
-        //
-        // Not all rows parsed
-        {
-          if (nb_rows !== nb_parsed_rows) {
-            logger.error =
-              "Environment_Scripted_Files#parse_type_file::parse Only " + msg;
-            return cbk("Only " + msg, nb_parsed_rows);
+          this.parse_type_file_row(file_name, row).then(
+            (file_name, row_name) => {
+              nb_parsed_rows++;
+              on_parsed();
+            },
+            (file_name, row_name, error) => {
+              const msg =
+                "Could not parse row " +
+                row_name +
+                " (" +
+                i +
+                ") from file " +
+                file_name +
+                " : " +
+                error;
+              logger.error = msg;
+
+              on_parsed();
+            }
+          );
+        });
+
+        function on_parsed() {
+          nb_async_got++;
+          if (nb_async_got !== nb_async_tot) {
+            return;
           }
-        }
 
-        //
-        // Success : All rows parsed
-        {
-          logger.log =
-            "Environment_Scripted_Files#parse_type_file::parse " + msg;
-          cbk(undefined, nb_parsed_rows);
+          //
+          // All rows parsed
+          {
+            // nb_rows skipping the first one : headings
+            const nb_rows = content.length >= 1 ? content.length - 1 : 0;
+            const msg =
+              nb_parsed_rows +
+              " parsed rows/" +
+              nb_rows +
+              " from file " +
+              file_name;
+            //
+            // Not all rows parsed
+            {
+              if (nb_rows !== nb_parsed_rows) {
+                logger.error = "Only " + msg;
+                return reject("Only " + msg, nb_parsed_rows);
+              }
+            }
+
+            //
+            // Success : All rows parsed
+            {
+              logger.log = msg;
+              success(nb_parsed_rows);
+            }
+          }
         }
       }
-    }
+    });
+  }
 
-    /**
-     * First value is type name,
-     * second is value type
-     * 3rd is value :
-     *    - class path to load with Node#require()
-     *    - raw value : string, int or float
-     * @param {string} file_name
-     * @param {array[3]} row
-     *
-     * @return {bool}
-     */
-    parse_type_file_row(file_name, row) {
+  /**
+   * First value is type name,
+   * second is value type
+   * 3rd is value :
+   *    - class path to load with Node#require()
+   *    - raw value : string, int or float
+   * @param {string} file_name
+   * @param {array[3]} row
+   *
+   * @return {Promise}
+   *              Success :
+   *                file_name, row_name
+   *              Reject :
+   *                file_name, row_name, msg
+   */
+  parse_type_file_row(file_name, row) {
+    return new Promise((success, reject) => {
       //
       // Check argument
       {
         if (!row || !(row instanceof Array)) {
-          logger.error = file_name + " : No row set or not an array";
-          return false;
+          const msg = file_name + " : No row set or not an array";
+          logger.error = msg;
+
+          return reject(file_name, undefined, msg);
         }
 
         if (row.length < 3) {
-          logger.error =
+          const msg =
             file_name +
             " : Row should have 3 columns but has only " +
             row.length;
-          return false;
+          logger.error = msg;
+
+          return reject(file_name, row[0], msg);
         }
 
         //
@@ -666,73 +654,50 @@ const Environment_Scripted_Files = (function () {
         }
       }
 
-      const name = row[0];
-
-      //
-      // Check name
-      {
-        if (!name || name.length === 0) {
-          const msg = file_name + " : No name set in row's first column";
-          logger.error = msg;
-          return false;
-        }
-      }
-
-      const name_parts = Scripted_Type.get_accessor_parts(name);
-      let type_object = this.types.objects;
-      //
-      // Iterate name parts
-      // ignoring the last one
-      for (let i = 0; i < name_parts.length - 1; i++) {
-        if (!type_object[name_parts[i]]) {
-          type_object[name_parts[i]] = {};
-        }
-        type_object = type_object[name_parts[i]];
-      }
-      const last_name = name_parts[name_parts.length - 1];
-
-      //
-      // Warning if already exists => will be removed
-      if (type_object[last_name]) {
-        logger.warn =
-          file_name +
-          " : Type with name " +
-          name +
-          " already exists and will be erased";
-      }
-
-      return this.parse_type_file_value(last_name, row[1], row[2], type_object);
-    }
-
-    /**
-     * @param {string} name Name that'll identify the value in this.types
-     * @param {string} type Type of value
-     * @param {string} value String being either a class path,
-     *                                              integer,
-     *                                              float,
-     *                                              string
-     *
-     * @return {boolean}
-     */
-    parse_type_file_value(name, type, value, dest_obj = this.types.objects) {
-      type = type.toLowerCase();
+      const [name, type, value] = row;
       switch (type) {
         //
         // Load source
         case "source":
-          try {
-            dest_obj[name] = require(value);
-            const msg = "Class loaded : " + name + " (" + value + ")";
-            logger.log =
-              "Environment_Scripted_Files#parse_type_file_value " + msg;
-            return true;
-          } catch (ex) {
-            const msg =
-              "Couldn't load class " + name + " (" + value + ") : " + ex;
-            logger.error =
-              "Environment_Scripted_Files#parse_type_file_row " + msg;
-            return false;
-          }
+          this.parse_string(value).then(
+            (parsed_str) => {
+              try {
+                let obj = this.create_type(name);
+                obj.object[obj.member] = require(parsed_str);
+                const msg =
+                  file_name + " - Class loaded : " + name + " (" + value + ")";
+                logger.log = msg;
+                return success(file_name, name);
+              } catch (ex) {
+                const msg =
+                  "Couldn't load class " +
+                  name +
+                  " (" +
+                  value +
+                  " -> " +
+                  parsed_str +
+                  ") from file " +
+                  file_name +
+                  " : " +
+                  ex;
+                logger.error = msg;
+                return reject(file_name, name, msg);
+              }
+            },
+            (error) => {
+              const msg =
+                "Couldn't parse string of " +
+                name +
+                " : " +
+                " from file " +
+                file_name +
+                " : " +
+                error;
+              logger.error = msg;
+
+              reject(file_name, name, msg);
+            }
+          );
           break;
 
         // int or float
@@ -742,11 +707,13 @@ const Environment_Scripted_Files = (function () {
           {
             const int = Number.parseInt(value);
             if (!Number.isNaN(int)) {
-              dest_obj[name] = int;
-              const msg = "Integer loaded : " + name + " (" + value + ")";
-              logger.log =
-                "Environment_Scripted_Files#parse_type_file_value " + msg;
-              return true;
+              let obj = this.create_object(name);
+              obj.object[obj.member] = int;
+
+              const msg =
+                file_name + " - Integer loaded : " + name + " (" + value + ")";
+              logger.log = msg;
+              return success(file_name, name);
             }
           }
 
@@ -755,116 +722,308 @@ const Environment_Scripted_Files = (function () {
           {
             const float = Number.parseFloat(value);
             if (!Number.isNaN(float)) {
-              dest_obj[name] = float;
-              const msg = "Float loaded : " + name + " (" + value + ")";
-              logger.log =
-                "Environment_Scripted_Files#parse_type_file_value " + msg;
-              return true;
+              let obj = this.create_object(name);
+              obj.object[obj.member] = float;
+
+              const msg =
+                file_name + " - Float loaded : " + name + " (" + value + ")";
+              logger.log = msg;
+              return success(file_name, name);
             }
           }
 
           {
-            logger.error =
+            const msg =
               "Number " +
               name +
               " (" +
               value +
-              ") is neither an integer or a float";
-            return false;
+              ") from file " +
+              file_name +
+              " is neither an integer or a float";
+            logger.error = msg;
+
+            return reject(file_name, name, msg);
           }
           break;
 
         case "string":
-          dest_obj[name] = this.parse_string(value);
-          return true;
+          let obj = this.create_object(name);
+          obj.object[obj.member] = value;
+          const msg =
+            file_name + " - String loaded : " + name + " (" + value + ")";
+          logger.log = msg;
+          return success(file_name, name);
 
           break;
 
         default: {
-          logger.error = "Unknown value type " + type + " for object " + name;
-          return false;
+          const msg =
+            "Unknown value type " +
+            type +
+            " for object " +
+            name +
+            " from file " +
+            file_name;
+          logger.warn = msg;
+
+          return reject(file_name, name, msg);
         }
       }
-    }
+    });
+  }
 
-    /**
-     * Replace variables into string and return the new string
-     * @param {string} str
-     *
-     * @return{string}
-     */
-    parse_string(str) {
+  /**
+   * Replace variables into string and return the new string
+   * @param {string} str
+   *
+   * @return{Promise}
+   */
+  parse_string(str) {
+    return new Promise((success, reject) => {
       //
       // Extract everyting which is between braces
       // => variable names
-      let vars = str.match(/(?<=\{)[^\}](?=\})/g);
+      let vars = str.match(/(?<=\{)\s*[^\}]*\s*(?=\})/g);
+      if (!vars) {
+        return success(str);
+      }
+
       //
       // Fetch every variable value
       {
-        for (let i = 0; i < vars.length; i++) {
-          const var_name = vars[i];
-          vars[i] = this.get_object(vars[i]);
-          if (!vars[i]) {
-            logger.error = "Variable not found : " + var_name;
-            vars[i] = "<undefined : " + var_name + ">";
-          } else if (!util.text.String.is(vars[i])) {
-            // in case of error message
-            const var_type = typeof vars[i];
-            const var_class =
-              var_type === "object" ? "(" + vars[i].class.name + ")" : "";
+        let nb_vars_got = 0;
+        const nb_vars_tot = vars.length;
+        function on_variable() {
+          nb_vars_got++;
 
-            //
-            // String conversion attempt
-            try {
-              vars[i] = new String(vars[i]) + "";
-            } catch (ex) {
-              logger.error =
-                "Could not convert variable " +
-                var_name +
-                " of type " +
-                var_type +
-                var_class +
-                " to string : " +
-                ex;
-              vars[i] = "<wrong_type : " + var_name + " (";
-              var_type + var_class + " )>";
-            }
+          //
+          // If variables are ready
+          if (nb_vars_got === nb_vars_tot) {
+            format_string();
           }
         }
+        vars.forEach((var_name, i) => {
+          this.get_object(var_name).then(
+            (instance) => {
+              if (!instance) {
+                logger.error = "Variable not found : " + var_name;
+                vars[i] = "<undefined : " + var_name + ">";
+
+                on_variable();
+              } else if (!util.text.String.is(instance)) {
+                //
+                // String conversion attempt
+                try {
+                  vars[i] = new String(instance) + "";
+                } catch (ex) {
+                  const var_type = typeof vars[i];
+                  const var_class =
+                    var_type === "object" ? "(" + vars[i].class.name + ")" : "";
+
+                  logger.error =
+                    "Could not convert variable " +
+                    var_name +
+                    " of type " +
+                    var_type +
+                    var_class +
+                    " to string : " +
+                    ex;
+                  vars[i] = "<wrong_type : " + var_name + " (";
+                  var_type + var_class + " )>";
+                }
+
+                on_variable();
+              } else {
+                vars[i] = instance;
+
+                //
+                // Parse the fetched variable which may contains variable
+                this.parse_string(vars[i]).then(
+                  (var_str) => {
+                    vars[i] = var_str;
+
+                    on_variable();
+                  },
+                  (error) => {
+                    logger.error =
+                      "Error fetching variable " + var_name + " : " + error;
+                    vars[i] = "<error : " + var_name + " (" + error + ")>";
+
+                    on_variable();
+                  }
+                );
+              }
+            },
+            (error) => {
+              logger.error =
+                "Error fetching variable " + var_name + " : " + error;
+              vars[i] = "<error : " + var_name + " (" + error + ")>";
+
+              on_variable();
+            }
+          );
+        });
       }
 
       //
       // Format final string replacing every variable by its value
-      let parsed_str = str;
-      {
-        for (let i = 0; i < vars.length; i++) {
-          // replace the next found variable
-          parsed_str = parsed_str.replace(/\{[^\}]\}/, vars[i]);
+      function format_string() {
+        let parsed_str = str;
+        {
+          for (let i = 0; i < vars.length; i++) {
+            // replace the next found variable
+            parsed_str = parsed_str.replace(/\{\s*[^\}]*\s*\}/, vars[i]);
+          }
         }
-      }
 
-      logger.log = "Parsed string : " + parsed_str + " (from " + str + ")";
-      return parsed_str;
+        logger.log = "Parsed string : " + parsed_str + " (from " + str + ")";
+        success(parsed_str);
+      }
+    });
+  }
+
+  //
+  // === TYPES / OBJECTS ===
+  /**
+   *
+   * @param {*} accessor
+   *
+   * @return {object|undefined} object : object pointed by accessor (without its last part)
+   *                            member : last accessor's part
+   *                            Undefined if failed
+   */
+  create_type(accessor) {
+    //
+    // Check name
+    {
+      if (!accessor || accessor.length === 0) {
+        const msg = "No variable accessor set";
+        logger.error = msg;
+        return undefined;
+      }
     }
 
+    const name_parts = Scripted_Type.get_accessor_parts(accessor);
+    let type_object = this.types.objects;
     //
-    // === VALUES FILES ===
-    /**
-     *
-     * @param {Scripted_File} scripted_file
-     */
-    add_values_file(scripted_file) {
+    // Iterate name parts
+    // ignoring the last one
+    const last_idx = name_parts.length - 1;
+    name_parts.forEach((part, idx) => {
+      if (idx >= last_idx) {
+        return;
+      }
+
+      if (!type_object[part]) {
+        type_object[part] = {};
+      }
+      type_object = type_object[part];
+    });
+
+    const last_name = name_parts[last_idx];
+    //
+    // Warning if already exists => will be removed
+    if (type_object[last_name]) {
+      logger.warn = "Type " + accessor + " already exists";
+    }
+
+    return {
+      object: type_object,
+      member: last_name,
+    };
+  }
+
+  /**
+   *
+   * @param {*} accessor
+   *
+   * @return {object|undefined} object : object pointed by accessor (without its last part)
+   *                            member : last accessor's part
+   *                            Undefined if failed
+   */
+  create_object(accessor) {
+    //
+    // Check name
+    {
+      if (!accessor || accessor.length === 0) {
+        const msg = "No variable accessor set";
+        logger.error = msg;
+        return undefined;
+      }
+    }
+
+    const name_parts = Scripted_Type.get_accessor_parts(accessor);
+    let global_vals = this.global;
+    //
+    // Iterate name parts
+    // ignoring the last one
+    for (let i = 0; i < name_parts.length - 1; i++) {
+      if (!global_vals[name_parts[i]]) {
+        global_vals[name_parts[i]] = {};
+      }
+      global_vals = global_vals[name_parts[i]];
+    }
+
+    const last_name = name_parts[name_parts.length - 1];
+    //
+    // Warning if already exists => will be removed
+    if (global_vals[last_name]) {
+      logger.warn = "Global value " + accessor + " already exists";
+    }
+
+    return {
+      object: global_vals,
+      member: last_name,
+    };
+  }
+
+  //
+  // === VALUES FILES ===
+  /**
+   *
+   * @param {Scripted_File|Object} scripted_file As many as you want
+   *                                              If not a Scripted_File,
+   *                                              instanciated
+   *
+   *
+   * @return {Promise} Success : {(integer|undefined)[]} nb_indexed_rows
+   *                                  undefined if file previously indexed
+   *                               {Scripted_File[]} scripted_file
+   *
+   *                    Reject : {string} err
+   *                              {integer|undefined} nb_indexed_rows
+   */
+  add_values_files(scripted_file) {
+    return new Promise((success, reject) => {
+      let proms = [];
+      Array.from(arguments).forEach((file) => {
+        proms.push(this.add_values_file(file));
+      });
+
+      Promise.all(proms).then(success, reject);
+    });
+  }
+
+  /**
+   *
+   * @param {Scripted_File|Object} scripted_file If not a Scripted_File,
+   *                                              instanciated
+   *
+   * @return {Promise} Success : {integer|undefined} nb_indexed_rows
+   *                                  undefined if file previously indexed
+   *                               {Scripted_File} file
+   *
+   *                    Reject : {string} err
+   *                              {integer|undefined} nb_indexed_rows
+   */
+  add_values_file(scripted_file) {
+    return new Promise((success, reject) => {
       //
       // Check arguments
       {
         if (!scripted_file) {
           const msg = "scripted_file argument is not specified";
-          logger.error = msg;
-          throw TypeError(msg);
-        }
-
-        if (!(scripted_file instanceof Scripted_File)) {
-          const msg = "scripted_file argument is not a Scripted_File";
           logger.error = msg;
           throw TypeError(msg);
         }
@@ -875,35 +1034,58 @@ const Environment_Scripted_Files = (function () {
           throw TypeError(msg);
         }
 
-        //
-        // file.name already exists
+        if (!(scripted_file instanceof Scripted_File)) {
+          scripted_file = new Scripted_File(scripted_file);
+        }
+      }
+
+      scripted_file.path =
+        this.files_path + (scripted_file.path ? scripted_file.path : "");
+
+      let that = this;
+      scripted_file.request_type = function () {
+        return that.get_type(...arguments);
+      };
+      scripted_file.request_object = function () {
+        return that.get_object(...arguments);
+      };
+
+      //
+      // Add file
+      let files = that.values.files;
+      //
+      // file.name already exists => warn ignoring
+      {
         if (files[scripted_file.name]) {
           logger.error =
             "Values file " +
             scripted_file.name +
             " already exists ; ignoring this new add";
-          return false;
+          return success({
+            file: files[scripted_file.name],
+          });
         }
       }
-
-      scripted_file.path = this.files_path + scripted_file.path;
-      scripted_file.request_type = this.get_type;
-      scripted_file.request_object = this.get_object;
-
-      //
-      // Add file
       const fName = scripted_file.name;
-      this.values.files[fName] = scripted_file;
+      files[fName] = scripted_file;
       //this.values.files_order_loading.push(fName);
-      this.values.files[fName].parse();
+      files[fName].index().then((nb_indexed_rows) => {
+        success({
+          nb_indexed_rows,
+          file: files[fName],
+        });
+      }, reject);
+    });
+  }
 
-      return true;
-    }
-
-    /**
-     *
-     */
-    parse_values_files() {
+  /**
+   *
+   * @return {Prommise} Success : {integer} nb_indexed_rows
+   *                    Reject : {string} err
+   *                              {integer|undefined} nb_indexed_rows
+   */
+  index_values_files() {
+    return new Promise((success, reject) => {
       const files_order = this.values.files_order_loading;
       let files = this.values.files;
 
@@ -911,18 +1093,134 @@ const Environment_Scripted_Files = (function () {
         const file_name = files_order[i];
         if (!files[file_name]) {
           const msg = "No file with name " + file_name;
-          logger.error = "Environment_Scripted_Files#get_object " + msg;
+          logger.error = msg;
           continue;
         }
 
-        files[file_name].parse();
+        files[file_name].index().then(success, reject);
+      }
+    });
+  }
+
+  //
+  // === TESTING ===
+  /**
+   * Index files for tests
+   *
+   * @param {Fixtures_Scripted_File|Object} tests_file If not a
+   *                                                   Fixtures_Scripted_File,
+   *                                                    instanciated from
+   *                                                    tests_file
+   *                                                    Original tests_file
+   *                                                    argument is updated
+   *
+   * @param {Scripted_File|Object} fixtures_files As many as you want
+   *                                              If not a Scripted_File,
+   *                                              instanciated
+   *
+   * @return {Fixtures_Scripted_File} tests_file if a Fixtures_Scripted_File
+   *                                  Otherwise the Fixtures_Scripted_File
+   *                                  instanciated from it
+   *
+   * @throws {Error}
+   */
+  async test(tests_file, fixtures_files) {
+    let files = [];
+
+    //
+    // Prepare tests_file
+    {
+      tests_file.env = this;
+      if (!(tests_file instanceof tests.util.fixtures.Fixtures_Scripted_File)) {
+        tests_file = new tests.util.fixtures.Fixtures_Scripted_File(tests_file);
+      }
+      files.push(tests_file);
+    }
+
+    //
+    // Add fixtures files
+    {
+      await this.add_values_files(
+        // remove the 1st argument and send the next ones
+        ...[].slice.call(arguments, 1)
+      ).then((indexed_files) => {
+        // indexed = {nb_indexed_rows{int}, file{Scripted_File}}
+        indexed_files.forEach((indexed) => {
+          files.push(indexed.file);
+        });
+      });
+    }
+
+    //
+    // Index tests_file
+    {
+      await tests_file.index().then(
+        () => {
+          logger.log = "Tests fixtures " + tests_file.name + " indexed";
+        },
+        (errs) => {
+          let msg = " indexing tests fixtures file : ";
+          if (errs instanceof Array) {
+            msg = msg + " errors" + msg + errs.join("\n");
+          } else {
+            msg = " Error" + msg + errs;
+          }
+
+          logger.error = msg;
+          throw new Error(msg);
+        }
+      );
+    }
+
+    //
+    // Keep track into this.test_files
+    {
+      this.tests_files.set(tests_file.full_path, files);
+    }
+
+    return tests_file;
+  }
+
+  /**
+   *
+   * @param {Fixtures_Scripted_File} tests_file
+   *
+   * @throws {TypeError}
+   */
+  release(tests_file) {
+    const full_path = tests_file.full_path;
+    //
+    // Preconds
+    {
+      if (!full_path) {
+        throw TypeError("full_path is missing from tests_file argument");
+      }
+    }
+
+    let files = this.tests_files.get(full_path);
+    {
+      if (!files) {
+        logger.info = "No tests files for " + full_path;
+        return;
+      }
+    }
+
+    //
+    // {Fixtures_Scripted_File}
+    // write tests results in file and release it
+    files[0].release();
+
+    //
+    // Release suite's specific fixtures
+    {
+      for (let i = 1; i < files.length; i++) {
+        this.delete_object(files[i].name);
       }
     }
   }
-
-  return Environment_Scripted_Files_.prototype.constructor;
-})();
-
-if (typeof process !== "undefined") {
-  module.exports = Environment_Scripted_Files;
 }
+
+Environment_Scripted_Files.init(
+  require("./Environment_Scripted_Files_properties"),
+  module
+);
