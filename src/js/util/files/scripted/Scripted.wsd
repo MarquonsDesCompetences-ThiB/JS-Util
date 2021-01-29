@@ -1,0 +1,277 @@
+@startuml Scripted
+/' 
+ Scripted Type
+ Scripted File 
+ Asserts_Scripted
+ Fixtures_Scripted_File
+'/
+
+' Asserts_Scripted
+Asserts_Scripted "* asserts" --> Assert
+Asserts_Scripted "* results[col_id]" --> Result
+Asserts_Scripted ..> Jest_Result
+
+class Asserts_Scripted{
+    __ statics __
+    asserts_regex : string
+    reset_iteration_stats(stats : Stats) : void
+
+    __ methods __
+    -- Initialization --
+    parse_assert(assert : string) : Assert
+
+    add_assert(
+        variable_to_test : string|string[], 
+        assert_to_do : string, 
+        col_id : int
+    ) : void
+
+    push_assert(
+        variable_to_test : string|string[], 
+        assert_to_do : string, 
+        col_id : int
+    ) : void
+
+    -- Usage --
+    iterator(row_id : int, row : *[]) : *iterator
+    *_ierator(row_id : int, row : *[])
+
+
+    -- Assert/Result --
+    assert(
+        row_id : int, 
+        input_value : any, 
+        assert_descr : Assert_Description, 
+        expected_val : any
+    ) : Jest_Result
+
+    add_result(
+        row_id : int, 
+        col_id : int, 
+        jest_result : Jest_Result
+    ) : Jest_Result
+}
+
+enum Asserts_Scripted.asserts{
+    "value",
+    "extend",
+
+    "addSnapshotSerializer",
+    "anything",
+    "any",
+    "arrayContaining",
+
+    "assertions",
+    "hasAssertions",
+
+    "objectContaining",
+
+    //
+    // Not
+    "not",
+    "not_arrayContaining",
+    "not_objectContaining",
+    "not_stringContaining",
+    "not_stringMatching",
+
+    "resolves",
+    "rejects",
+
+    //
+    // String
+    "stringContaining",
+    "stringMatching",
+
+    //
+    // To Be
+    "toBe",
+    "toBeDefined",
+    "toBeFalsy",
+    "toBeInstanceOf",
+    "toBeNull",
+    "toBeTruthy",
+    "toBeUndefined",
+    "toBeNaN",
+
+    //
+    // To Be : Number comparison
+    "toBeGreaterThan",
+    "toBeGreaterThanOrEqual",
+    "toBeLessThan",
+    "toBeLessThanOrEqual",
+    "toEqual",
+    "toStrictEqual",
+
+    //
+    // To Contain
+    "toContain",
+    "toContainEqual",
+
+    //
+    // To have : Been called
+    "toHaveBeenCalled",
+    "toHaveBeenCalledWith",
+
+    "toHaveLength",
+    "toHaveProperty",
+
+    //
+    // To have : Returned
+    "toHaveReturned",
+    "toHaveReturnedTimes",
+    "toHaveReturnedWith",
+    "toHaveLastReturnedWith",
+    "toHaveNthReturnedWith",
+
+    //
+    // To Match
+    "toMatch",
+    "toMatchObject",
+    "toMatchSnapshot",
+    "toMatchInlineSnapshot",
+
+    //
+    // To Throw
+    "toThrow",
+    "toThrowErrorMatchingSnapshot",
+    "toThrowErrorMatchingInlineSnapshot",
+}
+
+abstract class Assert{
+  method_name : string
+  all : bool
+  not : bool
+}
+
+abstract class Result{
+  fails : string[row_id]
+  successes : string[row_id]
+}
+
+class Jest_Result{
+    message : string
+    pass : bool
+}
+
+' Fixtures_Scripted_File
+Fixtures_Scripted_File "static" --> reserved_names
+Fixtures_Scripted_File "* rows_descriptions[row_id]" --> Row_Description
+Fixtures_Scripted_File "* expecteds[sheet_id]" --> Asserts_Scripted
+
+class Fixtures_Scripted_File{
+    __static__
+    row_name_regex : string
+    expect_regex : string
+    is_assert_column_name(name : string) : RegExp
+    extract_column_name_values(name : string) : string[1;2]
+
+    __properties__
+    env : Environment_Scripted_File
+    _e : env
+    rows_descriptions : string[]
+
+    __methods__
+    index(sheet_id : int|string = 1) : Promise(void)
+    add_row_description(row_descr : Row_Description) : void
+    get_row(id : int|string) : Promise(Row_Description, Object)
+    get_row_by_name(id : string) : Promise(Row_Description, Object)
+    parse_row(row : any[]) : Promise(Object)
+
+    -- Testing --
+    for_each(
+        fn : function, 
+        sheet_id : int|string = 1,
+        start_row : int = 2, 
+        last_row : int = undefined
+    ) : Promise(int)
+
+    apply_updates(sheet_id : int|string = 1) : void
+}
+
+enum reserved_names{
+    id
+}
+
+class Row_Description{
+    id : int
+    name : string
+    template_name : string
+}
+
+' Scripted File
+Scripted_File "* cols_descriptions[col_id]" --> Column_Description
+Scripted_File "* objects[obj_name]" --> Row_Description
+Scripted_File ..> Column_Ref
+
+class Scripted_File{
+    __statics__
+    string[col_id] cols_names
+    WeakMap instances All instanciated objects
+    request_type()
+    request_object()
+
+    __methods__
+    index(only_headings : bool = false) : Prommise(integer)
+    parse_heading_column(heading_value : string|int) : Column_Description
+    parse_row_name(row : any[1+], row_id : int) : Row_Description
+    parse_column_name(name : string) : Promise(Column_Ref)
+
+    -- Parsers --
+    parse_row_object(row_descr : Row_Description) : Promise(Object, int)
+    parse_column_value(col_id : int, value : string|number) : Promise(any)
+    parse_string(str : string) : Promise(string)
+
+    -- Getters/Setters --
+    get_object(
+        name : string|string[], 
+        request_environment : bool = false
+    ) : Promise(any)
+
+    -- Constructors --
+    construct_object_from_type_name(type_name : string, params : any) : Promise(Object)
+
+
+}
+
+abstract class Column_Description{
+    name : string
+    type_name : string
+    ignore : bool|undefined If must be ignored (sign '\')
+    new_group : bool|undefined If starts a new group (sign '|'),
+    assert : string|undefined Fulffiled by Fixtures_Scripted_File
+}
+
+abstract class Column_Ref{
+    obj_ref : Object
+    member_name : string
+    init_obj : Object Object to use to init obj_ref[member_name] members
+}
+
+
+' Scripted Type
+Scripted_Type "* instances" --> Object
+
+class Scripted_Type{
+    -- statics --
+    variable_name_regex : string
+    variable_name_braces_regex : string
+    get_reference(
+        object : object,
+        accessor : string,
+        create_if_unexisting : bool = false,
+        stop_from_end : int = 0
+    ) : Object
+
+    get_accessor_parts(accessor : string) : string[]
+    get_type_name(type_name : string) : string
+    is_variable_name(str : string) : bool
+    get_variable_name(var_name : string) : string
+
+    -- properties --
+    object : prototype
+    type_name : string
+}
+
+
+
+@enduml
