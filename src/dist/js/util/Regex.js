@@ -35,11 +35,11 @@ class Regex {
   static is_number(val) {
     //
     // Check val as a string
-    if (util.text.String.is_string(val)) {
+    if (util.text.String.is(val)) {
       return Regex.has_numbers(val, true);
     }
 
-    return util.number.Number.is_number(val);
+    return util.number.Number.is(val);
   }
 
   /**
