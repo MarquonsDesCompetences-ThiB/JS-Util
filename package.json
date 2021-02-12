@@ -7,6 +7,11 @@
   "keywords": [],
   "author": "Thibaut Batal <thibaut.batal@le-campus-numerique.fr>",
   "contributors": [],
+  "direcories":{
+    "bin": "module/",
+    "lib": "src/",
+    "test": "tests/"
+  },
   "dependencies": {
     "exceljs": "^4.2.0",
     "fs-extra": "^9.0.1",
@@ -51,7 +56,8 @@
     "NODE_ENV": "development",
     "SRC_ROOT": "C:\\Users\\taubh\\GitProjects\\web\\demos_templates\\Back\\JS-Util\\module\\src\\"
   },
-  "main": "src/_util.js",
+  "main": "module/util.js",
+  "module": "src/_util.js",
   "scripts": {
     "build": "npm run build:src && npm run build:tests",
     "build:src": "ttsc -p ./tsconfig.json",
