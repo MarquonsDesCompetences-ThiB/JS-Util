@@ -1,0 +1,71 @@
+{
+  "name": "ClickAndCollect",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "",
+  "homepage": "",
+  "keywords": [],
+  "author": "Thibaut Batal <thibaut.batal@le-campus-numerique.fr>",
+  "contributors": [],
+  "dependencies": {
+    "exceljs": "^4.2.0",
+    "fs-extra": "^9.0.1",
+    "io": "^1.0.3",
+    "jquery": "^3.5.1",
+    "md5": "^2.3.0",
+    "os": "~0.1.1",
+    "output-manager": "~3.0.0",
+    "random": "^2.2.0",
+    "randomstring": "^1.1.5",
+    "read-file-string": "^1.0.4",
+    "safe-compare": "^1.1.4",
+    "socket.io": "^3.1.0",
+    "socket.io-client": "^3.1.0",
+    "write-file": "~1.0.0"
+  },
+  "devDependencies": {
+    "babel": "~0.0.1",
+    "@babel/core": "~7.12.3",
+    "@babel/plugin-syntax-class-properties": "~7.12.1",
+    "babel-plugin-transform-class-properties": "~6.24.1",
+    "@babel/node": "~7.12.6",
+    "@babel/preset-env": "~7.12.1",
+    "@babel/preset-typescript": "~7.12.13",
+    "dotenv": "^8.2.0",
+    "jest": "^26.6.3",
+    "@types/jest": "26.0.20",
+    "typescript": "^3.3.3",
+    "ts-jest": "^26.4.4",
+    "tsconfig-paths": "^3.9.0",
+    "typescript-transform-paths": "^2.2.3",
+    "ttypescript": "^1.5.7",
+    "@k-foss/ts-esnode": "^2.0.2",
+    "tslint": "^5.12.1"
+  },
+  "jest": {
+    "setupFiles": [
+      "dotenv/config"
+    ]
+  },
+  "env": {
+    "NODE_ENV": "development",
+    "SRC_ROOT": "C:\\Users\\taubh\\GitProjects\\web\\demos_templates\\Back\\JS-Util\\src\\"
+  },
+  "main": "module/src/js/App.js",
+  "scripts": {
+    "build": "npm run build:src && npm run build:tests",
+    "build:src": "ttsc -p ./tsconfig.json",
+    "build:tests": "ttsc -p ./tests/tsconfig.tests.json",
+    "build_babel": "babel ./src/ --out-file ./compiled/src/",
+    "clean": "rd /s /q \"module/tests\" \"module/src/config\" \"module/src/dist/js\" \"module/src/js\" \"module/src/lang\"",
+    "debug": "node --inspect-brk ./apps/src/js/App.js",
+    "dev": "node --loader @k-foss/ts-esnode --experimental-specifier-resolution=node ./src/js/App.ts",
+    "dev:babel": "babel-node ./apps/src/js/App.js",
+    "rebuild": "npm run clean && npm run build",
+    "start": "node ./apps/src/js/App.js",
+    "start:dev": "ts-node --project ./tsconfig.json -r tsconfig-paths/register ./src/js/App.ts",
+    "start:dev-brk": "ts-node --inspect-brk --project ./tsconfig.json -r tsconfig-paths/register ./module/src/js/App.js",
+    "test": "jest --json --outputFile=tests/tests.results --detectOpenHandles obj_clone_equals.test",
+    "test_cli": "jest --watch --json --outputFile=tests/tests.results"
+  }
+}

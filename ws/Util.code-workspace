@@ -1,0 +1,21 @@
+{
+  "folders": [
+	{
+		"name": "both",
+		"path": "..\\src\\both"
+	},
+	{
+		"name": "back",
+		"path": "..\\src\\back"
+	},
+	{
+		"name": "front",
+		"path": "..\\src\\front"
+	},
+	{
+		"name": "JS-Util",
+		"path": ".."
+	}
+],
+  "settings": {}
+}

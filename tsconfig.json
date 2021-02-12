@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "module": "es2020",
+    "target": "ES2016",
+    "moduleResolution": "node",
+    "outDir": "./module",
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "checkJs": false,
+
+    "declaration": true,
+    "resolveJsonModule": true,
+    /*"experimentalDecorators": true, /* Enables experimental support for ES7 decorators. */
+
+    "baseUrl": "./src/",
+    "paths": {
+      "@src/*": ["./*"],
+      "@config/*": ["./config/*"],
+
+      "#back": ["./back/back.js"],
+      "@back/*": ["./back/*"],
+
+      "#both": ["./both/both.js"],
+      "@both/*": ["./both/*"],
+
+      "#front": ["./front/front.js"],
+      "@front/*": ["./front/*"]
+    },
+
+    "plugins": [
+      // Transform paths in output .js files
+      { "transform": "typescript-transform-paths" },
+
+      // Transform paths in output .d.ts files (Include this line if you output declarations files)
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+    ]
+  },
+  "include": ["src/"],
+  "exclude": [],
+  "lib": ["es2016"]
+}
