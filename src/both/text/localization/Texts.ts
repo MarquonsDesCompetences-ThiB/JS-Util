@@ -1,6 +1,6 @@
 "use strict";
-import { json } from "#both";
-import { file } from "#back";
+import { json } from "@src/both/_both";
+import { file } from "@src/back/_back";
 import { default_lang } from "./localization.js";
 import * as string from "../string.js";
 import { Texts_props } from "./_props/Texts_props.js";

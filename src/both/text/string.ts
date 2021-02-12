@@ -1,5 +1,5 @@
 "use strict";
-import { number } from "#both";
+import { number } from "@src/both/_both";
 
 import randomstring from "randomstring";
 

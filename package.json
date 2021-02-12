@@ -51,7 +51,7 @@
     "NODE_ENV": "development",
     "SRC_ROOT": "C:\\Users\\taubh\\GitProjects\\web\\demos_templates\\Back\\JS-Util\\module\\src\\"
   },
-  "main": "src/util.js",
+  "main": "src/_util.js",
   "scripts": {
     "build": "npm run build:src && npm run build:tests",
     "build:src": "ttsc -p ./tsconfig.json",

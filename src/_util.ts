@@ -1,7 +1,7 @@
 //
 // === Back
 // all
-import * as back from "./back/back.js";
+import * as back from "./back/_back.js";
 export { back };
 
 // direct access
@@ -10,7 +10,7 @@ export const { file } = back;
 
 //
 // === Both
-import * as both from "./both/both.js";
+import * as both from "./both/_both.js";
 export default { both };
 
 // direct access

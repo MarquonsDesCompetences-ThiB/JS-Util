@@ -1,5 +1,5 @@
 "use strict";
-import { obj } from "#both";
+import { obj } from "@src/both/_both";
 
 export class Money extends obj.Obj {
   /**

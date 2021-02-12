@@ -1,6 +1,6 @@
 "use strict";
 import crypto from "crypto";
-import { text } from "#both";
+import { text } from "@src/both/_both";
 
 export interface Crypted_Data {
   iv: string;

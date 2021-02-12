@@ -1,6 +1,6 @@
 "use strict";
 import { File_props } from "./_props/File_props.js";
-import { json } from "#both";
+import { json } from "@src/both/_both";
 
 // read jsons
 import json_file from "jsonfile";

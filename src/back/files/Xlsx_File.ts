@@ -1,6 +1,6 @@
 "use strict";
 import { Xlsx_File_props } from "./_props/Xlsx_File_props.js";
-import { colors } from "./files.js";
+import { colors } from "./_files.js";
 
 // read jsons
 import fs_extra from "fs-extra";

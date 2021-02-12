@@ -1,5 +1,5 @@
 "use strict";
-import { obj, text } from "#both";
+import { obj, text } from "@src/both/_both";
 
 export abstract class File_props extends obj.Obj {
   //

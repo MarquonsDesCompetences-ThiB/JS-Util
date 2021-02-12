@@ -1,5 +1,5 @@
 "use strict";
-import { text } from "#both";
+import { text } from "@src/both/_both";
 import random from "random";
 
 export { Dimension } from "./Dimension.js";

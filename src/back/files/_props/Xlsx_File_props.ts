@@ -1,6 +1,6 @@
 "use strict";
-import { file } from "#back";
-import { text } from "#both";
+import { file } from "@src/back/_back";
+import { text } from "@src/both/_both";
 
 export abstract class Xlsx_File_props extends file.File {
   /**

@@ -1,7 +1,7 @@
 "use strict";
 import * as bool from "./Bool.js";
-import { number } from "#both";
-import { text } from "#both";
+import { number } from "@src/both/_both";
+import { text } from "@src/both/_both";
 
 /**
  * Return if obj is of specified type

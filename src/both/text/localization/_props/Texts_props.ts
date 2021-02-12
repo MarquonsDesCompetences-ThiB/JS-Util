@@ -1,10 +1,10 @@
 "use strict";
-import { json, obj } from "#both";
+import { json, obj } from "@src/both/_both";
 import { Languages } from "../../Languages.js";
 import { default_lang, texts_dir } from "../localization.js";
 import fs_extra from "fs-extra";
 const { pathExistsSync } = fs_extra;
-import { file } from "#back";
+import { file } from "@src/back/_back";
 import { ELanguage_Code } from "../../language_codes.js";
 
 export abstract class Texts_props extends obj.Obj {
