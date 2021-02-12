@@ -2,5 +2,4 @@
 // === LOGGER ===
 export { Logger } from "./logs/Logger.js";
 
-import * as file_1 from "./files/files.js";
-export { file_1 as file };
+export * as file from "./files/files.js";
