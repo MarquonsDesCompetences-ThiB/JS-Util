@@ -1,6 +1,6 @@
 {
-  "name": "ClickAndCollect",
-  "version": "0.1.0",
+  "name": "js-util",
+  "version": "0.5.0",
   "type": "module",
   "description": "",
   "homepage": "",
@@ -49,22 +49,22 @@
   },
   "env": {
     "NODE_ENV": "development",
-    "SRC_ROOT": "C:\\Users\\taubh\\GitProjects\\web\\demos_templates\\Back\\JS-Util\\src\\"
+    "SRC_ROOT": "C:\\Users\\taubh\\GitProjects\\web\\demos_templates\\Back\\JS-Util\\module\\src\\"
   },
-  "main": "module/src/js/App.js",
+  "main": "src/util.js",
   "scripts": {
     "build": "npm run build:src && npm run build:tests",
     "build:src": "ttsc -p ./tsconfig.json",
     "build:tests": "ttsc -p ./tests/tsconfig.tests.json",
     "build_babel": "babel ./src/ --out-file ./compiled/src/",
-    "clean": "rd /s /q \"module/tests\" \"module/src/config\" \"module/src/dist/js\" \"module/src/js\" \"module/src/lang\"",
-    "debug": "node --inspect-brk ./apps/src/js/App.js",
-    "dev": "node --loader @k-foss/ts-esnode --experimental-specifier-resolution=node ./src/js/App.ts",
-    "dev:babel": "babel-node ./apps/src/js/App.js",
+    "clean": "rd /s /q \"module/\"",
+    "debug": "node --inspect-brk ./src/util.js",
+    "dev": "node --loader @k-foss/ts-esnode --experimental-specifier-resolution=node ./src/util.ts",
+    "dev:babel": "babel-node ./apps/src/util.js",
     "rebuild": "npm run clean && npm run build",
     "start": "node ./apps/src/js/App.js",
-    "start:dev": "ts-node --project ./tsconfig.json -r tsconfig-paths/register ./src/js/App.ts",
-    "start:dev-brk": "ts-node --inspect-brk --project ./tsconfig.json -r tsconfig-paths/register ./module/src/js/App.js",
+    "start:dev": "ts-node --project ./tsconfig.json -r tsconfig-paths/register ./src/util.ts",
+    "start:dev-brk": "ts-node --inspect-brk --project ./tsconfig.json -r tsconfig-paths/register ./module/src/util.js",
     "test": "jest --json --outputFile=tests/tests.results --detectOpenHandles obj_clone_equals.test",
     "test_cli": "jest --watch --json --outputFile=tests/tests.results"
   }
