@@ -14,26 +14,17 @@ export abstract class File_props extends obj.Obj {
    */
   #_cntnt_str?: string;
 
-  /**
-   * Content as a json (object)
-   */
-  #_cntnt_bj?: any;
-
-  get content(): string | any[][] | any {
+  get content(): string | any[][] {
     if (this.#_cntnt_2rr) {
       return this.#_cntnt_2rr;
-    }
-
-    if (this.#_cntnt_bj) {
-      return this.#_cntnt_bj;
     }
 
     return this.#_cntnt_str;
   }
 
-  set content(content: string | any[][] | any) {
-    if (text.string.is(content)) {
-      this.#_cntnt_str = content;
+  set content(content: string | any[][]) {
+    if (content as string) {
+      this.#_cntnt_str = <string>content;
       return;
     }
 
@@ -41,8 +32,6 @@ export abstract class File_props extends obj.Obj {
       this.#_cntnt_2rr = content;
       return;
     }
-
-    this.#_cntnt_bj = content;
   }
 
   /**
