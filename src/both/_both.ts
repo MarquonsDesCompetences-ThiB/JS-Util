@@ -11,6 +11,8 @@ export * as obj from "./obj/_obj.js";
 export * as geo from "./geo/_geo.js";
 export * as graphic from "./graphic/_graphic.js";
 
+export * as queue from "./queue/_queue";
+
 export * as regex from "./regex/_regex.js";
 
 //
