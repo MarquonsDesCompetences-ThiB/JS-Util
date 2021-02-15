@@ -72,7 +72,7 @@ export class Csv_File extends Csv_File_props {
     }
 
     {
-      const id = this.content[0].push(col_name) - 1;
+      const id = (<any[]>this.content[0]).push(col_name) - 1;
       this.col_names[col_name] = id;
       return id;
     }
@@ -84,7 +84,7 @@ export class Csv_File extends Csv_File_props {
   first_row_to_col_names() {
     this.col_names = [];
     let that = this;
-    this.content[0].forEach(function (elmt, idx) {
+    (<any[]>this.content[0]).forEach(function (elmt, idx) {
       that.col_names[idx] = elmt;
     });
   }
@@ -104,7 +104,7 @@ export class Csv_File extends Csv_File_props {
       //
       // Init first row (columns names) with this.col_names
       this.col_names.forEach((name, id) => {
-        this.content[0][id] = name;
+        (<string>this.content[0][id]) = name;
       });
     }
 
@@ -202,12 +202,11 @@ export class Csv_File extends Csv_File_props {
     }
 
     if (this.content instanceof Array) {
-      let that = this;
       //
       // Convert every array row in a string
       // -> joins content[i][]
-      await this.content.forEach(function (row_arr, idx) {
-        that.content[idx] = row_arr.join(",");
+      await this.content.forEach((row_arr, idx) => {
+        (<string>this.content[idx]) = row_arr.join(",");
       });
 
       //
