@@ -6,8 +6,10 @@ import { createReadStream } from "fs";
 import fs_extra from "fs-extra";
 
 export class Json_File extends Json_File_props {
-  async read_key(key: string) {
-    return new Promise(async (success, reject) => {
+  async read_key(key: string | string[]) {
+    return new Promise<string[]>(async (success, reject) => {
+      const keys: string[] = (key as string) ? [<string>key] : <string[]>key;
+
       const path = this.path ? this.full_path : this.full_name;
       {
         if (path == null) {
@@ -28,11 +30,20 @@ export class Json_File extends Json_File_props {
       }
 
       let parsing_str = "";
-      let val_str: string = "";
-      let bKey_found = false;
+      let val_strs: string[] = [];
+      for (let i = 0; i < keys.length; i++) {
+        val_strs.push("");
+      }
+
+      //index in keys of the one found while parsing
+      let key_found_idx: number = -1;
+      //if parsing a value or parsing a key
       let parsing_value = false;
+
       //
       // To parse values
+      let bDelimiter_found = false;
+      let nb_key_values_parsed = 0; //<keys.length
       let nb_opened = {
         //
         // Scopes
@@ -81,83 +92,88 @@ export class Json_File extends Json_File_props {
         //
         // Parsing a value
         if (parsing_value) {
-          const first_delimiter_char = parsing_str.match(chars_delimiters_reg);
-          if (!first_delimiter_char) {
-            //
-            // Append the value's datas
-            if (bKey_found) {
-              val_str += parsing_str;
+          while (true) {
+            const first_delimiter_char = parsing_str.match(
+              chars_delimiters_reg
+            );
+            if (!first_delimiter_char) {
+              parsing_str += parsing_str;
+              return; //end of current string without any interesting character
             }
-            return;
-          }
-          //
-          // else a char is found
-          switch (first_delimiter_char[0]) {
-            //
-            // === Scopes
-            case "{":
-              nb_opened.braces++;
-              break;
-
-            case "}":
-              nb_opened.braces--;
-              break;
-
-            case "[":
-              nb_opened.brackets++;
-              break;
-
-            case "]":
-              nb_opened.brackets--;
-              break;
-
-            case "(":
-              nb_opened.parenthesis++;
-              break;
-
-            case ")":
-              nb_opened.parenthesis--;
-              break;
 
             //
-            // === Strings
-            case "'":
-              nb_opened.quote = 1 - nb_opened.quote;
-              break;
-
-            case '"':
-              nb_opened.double_quotes = 1 - nb_opened.double_quotes;
-              break;
-
-            case "`":
-              nb_opened.template_quote = 1 - nb_opened.template_quote;
-              break;
-
-            case ",":
+            // else a char is found
+            bDelimiter_found = true;
+            switch (first_delimiter_char[0]) {
               //
-              // Value is over if no pending opened scope or quote
-              if (
-                !nb_opened.braces &&
-                !nb_opened.brackets &&
-                !nb_opened.parenthesis &&
-                !nb_opened.quote &&
-                !nb_opened.double_quotes &&
-                !nb_opened.template_quote
-              ) {
-                parsing_value = false;
+              // === Scopes
+              case "{":
+                nb_opened.braces++;
+                break;
 
+              case "}":
+                nb_opened.braces--;
+                break;
+
+              case "[":
+                nb_opened.brackets++;
+                break;
+
+              case "]":
+                nb_opened.brackets--;
+                break;
+
+              case "(":
+                nb_opened.parenthesis++;
+                break;
+
+              case ")":
+                nb_opened.parenthesis--;
+                break;
+
+              //
+              // === Strings
+              case "'":
+                nb_opened.quote = 1 - nb_opened.quote;
+                break;
+
+              case '"':
+                nb_opened.double_quotes = 1 - nb_opened.double_quotes;
+                break;
+
+              case "`":
+                nb_opened.template_quote = 1 - nb_opened.template_quote;
+                break;
+
+              case ",":
                 //
-                // Value is fetched => call success
-                if (bKey_found) {
-                  bKey_found = false;
+                // Value is over if no pending opened scope or quote
+                if (
+                  !nb_opened.braces &&
+                  !nb_opened.brackets &&
+                  !nb_opened.parenthesis &&
+                  !nb_opened.quote &&
+                  !nb_opened.double_quotes &&
+                  !nb_opened.template_quote
+                ) {
+                  parsing_value = false;
 
-                  const comma_idx = parsing_str.search(/,/);
-                  val_str += parsing_str.slice(0, comma_idx);
+                  //
+                  // Value is fetched => call success
+                  if (key_found_idx >= 0) {
+                    key_found_idx = -1;
 
-                  return success(val_str);
+                    const comma_idx = parsing_str.search(/,/);
+                    val_strs[key_found_idx] += parsing_str.slice(0, comma_idx);
+
+                    nb_key_values_parsed++;
+                    if (nb_key_values_parsed === keys.length) {
+                      return success(val_strs);
+                    }
+                  }
                 }
-              }
-              break;
+                break;
+            }
           }
         }
         //
@@ -182,10 +198,7 @@ export class Json_File extends Json_File_props {
               "No ending double-quotes found at key " + parsing_str
             );
           }
-
-          if (curr_key[0] === key) {
-            bKey_found = true;
-          }
+          key_found_idx = keys.indexOf(curr_key[0]);
 
           //
           // Consume the ending double_quotes and semi-column
@@ -197,6 +210,8 @@ export class Json_File extends Json_File_props {
 
             parsing_str = parsing_str.slice(col_idx + 1);
           }
+
+          parsing_value = true; //will now parse value
         }
       });
     });
