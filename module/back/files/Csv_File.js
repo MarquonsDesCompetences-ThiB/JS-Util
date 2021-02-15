@@ -186,12 +186,11 @@ export class Csv_File extends Csv_File_props {
                 return converted.call(this);
             }
             if (this.content instanceof Array) {
-                let that = this;
                 //
                 // Convert every array row in a string
                 // -> joins content[i][]
-                yield this.content.forEach(function (row_arr, idx) {
-                    that.content[idx] = row_arr.join(",");
+                yield this.content.forEach((row_arr, idx) => {
+                    this.content[idx] = row_arr.join(",");
                 });
                 //
                 // Join all rows string in one

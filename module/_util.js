@@ -4,21 +4,15 @@
 import * as back from "./back/_back.js";
 export { back };
 // direct access
-export const { Logger } = back;
-export const { file } = back;
+export const { logger, file, fs } = back;
 //
 // === Both
 import * as both from "./both/_both.js";
 export default { both };
 // direct access
-export const { bool } = both;
-export const { json } = both;
-export const { text } = both;
-export const { number } = both;
-export const { types } = both;
-export const { obj } = both;
-export const { geo } = both;
-export const { graphic } = both;
-export const { regex } = both;
-export const { time } = both;
+export const { bool, json } = both;
+export const { text, number } = both;
+export const { types, obj } = both;
+export const { geo, graphic } = both;
+export const { regex, time } = both;
 //# sourceMappingURL=_util.js.map

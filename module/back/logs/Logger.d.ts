@@ -1,78 +1,11 @@
-declare global {
-    var logger: Logger;
-    var debug: any;
-    var info: any;
-    var error: any;
-    var ex: any;
-    var fatal: any;
-    var log: any;
-    var table: any;
-    var trace: any;
-    var warn: any;
-}
-interface Caller_Infos {
-    class_name: string;
-    method_name: string;
-    file_path?: string;
-    file_name?: string;
-    line?: number;
-}
-export declare class Logger {
-    #private;
-    static logger: Logger;
-    protected logs: any;
-    protected file_desc: any;
+/// <reference types="node" />
+import { Logger_props } from "./_props/Logger_props.js";
+export declare class Logger extends Logger_props {
     /**
-     * Return a string indicating the type of obj
-     * and its constructor (if obj is an object) :
-     * "<obj_type> (<obj_constructor>"
-     * @param {*} obj
+     * Override of stream.Writable._write
+     * https://nodejs.org/api/stream.html#stream_writable_write_chunk_encoding_callback_1
      */
-    static get_type_str(obj: any): string;
-    /**
-     *
-     * @param {integer} line_from
-     * @param {integer | optional} line_to Line included in result
-     *
-     * @return{string[]}
-     */
-    static get_stack_trace(line_from: any, line_to?: any): string[];
-    /**
-     * Returns info about the calling method from the specified stack traces line
-     *
-     * Stack trace examples :
-     *    Method inside a method
-     *       at set_value (C:\Users\taubh\GitProjects\web\WebApps\ClickAndCollect\src\dist\js\util\obj\Obj.js:736:9)
-     *
-     *    Constructor call
-     *       at new child2 (C:\Users\web\obj\Obj\obj_init.test.js:82:5)
-     *
-     *    Anonymous method
-     *      at Object.<anonymous> (C:\Users\web\obj\Obj\obj_init.test.js:107:7)
-     *
-     *    Class' setter
-     *      at child2.set properties [as properties] (C:\Users\web\obj\Obj.js:173:5)
-     *
-     * @return{object} {    class_name, method_name,
-     *                    if include_file_infos = true :
-     *                      file_path,
-     *                      file_name,
-     *                      line {string : "<col>:<line>"}
-     *                  }
-     */
-    static get_caller_infos(stack_trace_line: any, include_file_infos?: boolean): Caller_Infos;
-    static new_global_logger(): void;
-    /**
-     * Return a string including specified message and debug informations
-     *
-     * @param {string} message
-     *
-     * @return{string}
-     */
-    static add_debug_infos(message: any, include_file_infos?: boolean, include_stack_trace?: boolean, row?: number): string;
-    constructor(file_name_prefix?: string);
-    get file_path(): string;
-    set file_path(file_path: string);
+    _write(chunk: Buffer | string | any, encoding: BufferEncoding, callback: (error?: Error | null) => void): void;
     /**
      * Log specified message as debug
      * Class name is prefixed to log
@@ -109,4 +42,3 @@ export declare class Logger {
      */
     set warn(message: any);
 }
-export {};

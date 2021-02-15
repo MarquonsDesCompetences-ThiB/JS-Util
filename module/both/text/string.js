@@ -34,6 +34,23 @@ export function is(val) {
     return typeof val === "string" || val instanceof String;
 }
 /**
+ * Return the number of occurences
+ * of the specified regex
+ * in the specified string
+ * @param regex
+ * @param str
+ */
+export function nb_occurences(regex, str) {
+    let look_in = "" + str;
+    let idx;
+    let nb = 0;
+    while ((idx = str.search(regex))) {
+        nb++;
+        str = str.slice(idx + 1);
+    }
+    return nb;
+}
+/**
  * Remove starting and ending spaces in str and return the result
  * @param str
  */

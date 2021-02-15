@@ -12,7 +12,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     privateMap.set(receiver, value);
     return value;
 };
-var __cntnt_2rr, __cntnt_str, __cntnt_bj, __xt, __n, __p;
+var __cntnt_2rr, __cntnt_str, __xt, __n, __p;
 import { obj, text } from "../../../both/_both";
 export class File_props extends obj.Obj {
     constructor() {
@@ -27,10 +27,6 @@ export class File_props extends obj.Obj {
          * Content as a string
          */
         __cntnt_str.set(this, void 0);
-        /**
-         * Content as a json (object)
-         */
-        __cntnt_bj.set(this, void 0);
         /**
          * === File EXTENSION ===
          * Without dot
@@ -51,13 +47,10 @@ export class File_props extends obj.Obj {
         if (__classPrivateFieldGet(this, __cntnt_2rr)) {
             return __classPrivateFieldGet(this, __cntnt_2rr);
         }
-        if (__classPrivateFieldGet(this, __cntnt_bj)) {
-            return __classPrivateFieldGet(this, __cntnt_bj);
-        }
         return __classPrivateFieldGet(this, __cntnt_str);
     }
     set content(content) {
-        if (text.string.is(content)) {
+        if (content) {
             __classPrivateFieldSet(this, __cntnt_str, content);
             return;
         }
@@ -65,7 +58,6 @@ export class File_props extends obj.Obj {
             __classPrivateFieldSet(this, __cntnt_2rr, content);
             return;
         }
-        __classPrivateFieldSet(this, __cntnt_bj, content);
     }
     get ext() {
         return __classPrivateFieldGet(this, __xt);
@@ -86,10 +78,35 @@ export class File_props extends obj.Obj {
         return this.name + (this.ext != null ? "." + this.ext : "");
     }
     /**
+     * Parse the specified name to split name and extension
+     */
+    set full_name(full_name) {
+        const last_dot_idx = full_name.lastIndexOf(".");
+        if (last_dot_idx < 0) {
+            __classPrivateFieldSet(this, __n, full_name);
+            return;
+        }
+        __classPrivateFieldSet(this, __n, full_name.slice(0, last_dot_idx));
+        __classPrivateFieldSet(this, __xt, full_name.slice(last_dot_idx));
+    }
+    /**
      * === Full path : full_name + path ===
      */
     get full_path() {
         return this.path + this.full_name;
+    }
+    /**
+     * Parse the specified path to split directories path,
+     * file's name and extension
+     */
+    set full_path(full_path) {
+        const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\//);
+        if (last_delimiter_idx < 0) {
+            __classPrivateFieldSet(this, __p, full_path);
+            return;
+        }
+        __classPrivateFieldSet(this, __p, full_path.slice(0, last_delimiter_idx + 1));
+        this.full_name = full_path.slice(last_delimiter_idx + 1);
     }
     get name() {
         return __classPrivateFieldGet(this, __n);
@@ -170,5 +187,5 @@ export class File_props extends obj.Obj {
         this[symb] = nb;
     }
 }
-__cntnt_2rr = new WeakMap(), __cntnt_str = new WeakMap(), __cntnt_bj = new WeakMap(), __xt = new WeakMap(), __n = new WeakMap(), __p = new WeakMap();
+__cntnt_2rr = new WeakMap(), __cntnt_str = new WeakMap(), __xt = new WeakMap(), __n = new WeakMap(), __p = new WeakMap();
 //# sourceMappingURL=File_props.js.map

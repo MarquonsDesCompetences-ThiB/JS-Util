@@ -19,6 +19,14 @@ export declare function if_is(val: any): string | String;
  */
 export declare function is(val: any): boolean;
 /**
+ * Return the number of occurences
+ * of the specified regex
+ * in the specified string
+ * @param regex
+ * @param str
+ */
+export declare function nb_occurences(regex: RegExp, str: string): number;
+/**
  * Remove starting and ending spaces in str and return the result
  * @param str
  */

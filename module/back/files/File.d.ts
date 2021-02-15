@@ -16,7 +16,7 @@ export declare class File extends File_props {
         path: string;
         name: string;
         ext: string;
-        content: any;
+        content: string | any[][];
     };
     /**
      *
@@ -25,20 +25,13 @@ export declare class File extends File_props {
      * @return {Promise}
      */
     merge(other_file: any): Promise<unknown>;
+    read_sequential(): Promise<unknown>;
     /**
-     *
-     * @param {function} cbk
-     * @param {boolean | integer | optional} read_as_text|sheet_id
-     *                                        read_as_text :
-     *                                          If file must be read as string,
-     *                                          not as json
-     *                                        sheet_id :
-     *                                          For xlsx files, the sheet to read
      *
      * @return {Promise}  Success: {string|string[]|object} content
      *                    Reject: {string} err
      */
-    read(asText?: boolean): Promise<unknown>;
+    read(): Promise<unknown>;
     /**
      * Return the requested row by directly reading the file
      * Result not stored in this.content
@@ -53,20 +46,13 @@ export declare class File extends File_props {
      *                                        =>sheet 1 might not exist but 2
      * @return {*[]} Row content
      */
-    read_row(row_id: number): any;
+    read_row(row_id: number): string | any[];
     /**
      *
-     * @param {integer | string | undefined} sheet_id_or_name
-     *                                        For xlsx files
-     *                                        Sheet's id or name
-     *                                        Removing/adding sheets make
-     *                                        their id not to stay ordered
-     *                                        in 1.. !
-     *                                        =>sheet 1 might not exist but 2
      * @return {Promise}  Success
      *                    Reject: {string} err
      */
-    write(sheet_id_or_name?: number | string): Promise<void>;
+    write(): Promise<void>;
     /**
      * Apply this.output_updates => write file
      *
