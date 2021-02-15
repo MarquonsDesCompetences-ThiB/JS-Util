@@ -79,7 +79,7 @@ export class Xlsx_File extends Xlsx_File_props {
             if (bLoad_content) {
               worksheet.eachRow((row, rowNumber) => {
                 //remove the first empty column added by exceljs
-                this.content.push(row.values.slice(1));
+                (<any[]>this.content).push(row.values.slice(1));
               });
             }
           }
