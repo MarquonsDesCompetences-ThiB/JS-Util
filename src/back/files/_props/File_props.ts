@@ -61,10 +61,39 @@ export abstract class File_props extends obj.Obj {
   }
 
   /**
+   * Parse the specified name to split name and extension
+   */
+  set full_name(full_name: string) {
+    const last_dot_idx = full_name.lastIndexOf(".");
+    if (last_dot_idx < 0) {
+      this.#_n = full_name;
+      return;
+    }
+
+    this.#_n = full_name.slice(0, last_dot_idx);
+    this.#_xt = full_name.slice(last_dot_idx);
+  }
+
+  /**
    * === Full path : full_name + path ===
    */
   get full_path() {
     return this.path + this.full_name;
+  }
+
+  /**
+   * Parse the specified path to split directories path,
+   * file's name and extension
+   */
+  set full_path(full_path: string) {
+    const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\//);
+    if (last_delimiter_idx < 0) {
+      this.#_p = full_path;
+      return;
+    }
+
+    this.#_p = full_path.slice(0, last_delimiter_idx + 1);
+    this.full_name = full_path.slice(last_delimiter_idx + 1);
   }
 
   /**

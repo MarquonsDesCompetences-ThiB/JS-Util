@@ -8,14 +8,9 @@ import fs_extra from "fs-extra";
 export class Json_File extends Json_File_props {
   async read_key(key: string) {
     return new Promise(async (success, reject) => {
-      const full_path = this.full_path;
+      const path = this.path ? this.full_path : this.full_name;
       {
-        if (
-          full_path == null ||
-          // because full_path is the cocnatenation of both below
-          this.path == null ||
-          this.name == null
-        ) {
+        if (path == null) {
           const msg =
             "Undefined full path ; path : " +
             this.path +
@@ -25,8 +20,8 @@ export class Json_File extends Json_File_props {
           return reject(msg);
         }
 
-        if (!fs_extra.pathExistsSync(full_path)) {
-          const msg = "Unexisting file " + full_path;
+        if (!fs_extra.pathExistsSync(path)) {
+          const msg = "Unexisting file " + path;
           logger.error = msg;
           return reject(msg);
         }
@@ -79,7 +74,7 @@ export class Json_File extends Json_File_props {
       }
       const chars_delimiters_reg = new_chars_delimiters_regex();
 
-      const stream = createReadStream(full_path);
+      const stream = createReadStream(path);
       stream.on("data", (chunk) => {
         parsing_str += <string>chunk;
 
