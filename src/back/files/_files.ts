@@ -8,6 +8,7 @@ const { readJsonSync } = fs_extra;
 
 export { File as File };
 export { Csv_File as Csv_File };
+export { Json_File } from "./Json_File";
 export { Xlsx_File as Xlsx_File };
 
 export function file_factory(obj: any) {

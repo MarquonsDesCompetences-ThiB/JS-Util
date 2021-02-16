@@ -1,5 +1,6 @@
 "use strict";
 import { obj, text } from "@src/both/_both";
+import { sep as os_path_separator } from "path";
 
 export abstract class File_props extends obj.Obj {
   //
@@ -135,7 +136,7 @@ export abstract class File_props extends obj.Obj {
       //
       // No ending slash or backslash
       if (!/(\/|\\)$/.test(this.#_p)) {
-        this.#_p += "\\";
+        this.#_p += os_path_separator;
       }
     }
   }
