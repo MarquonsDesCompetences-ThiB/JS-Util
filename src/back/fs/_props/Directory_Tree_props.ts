@@ -1,18 +1,10 @@
 import { obj } from "@src/_util";
-import { Dirent } from "fs";
+import { Stats } from "fs";
+import { Entry_Tree } from "../Entry_Tree";
+import { sep as os_path_separator } from "path";
 
-export interface Files_Tree_intf {
-  dirs: Dir_Tree_intf[];
-  files: Dirent[];
-}
-
-export interface Dir_Tree_intf {
-  dir: Dirent;
-  subtree?: Files_Tree_intf;
-}
-
-export abstract class Directory_Tree_props extends obj.Obj {
-  tree: Dir_Tree_intf;
+export abstract class Directory_Tree_props extends Entry_Tree {
+  parent_stats?: Stats;
 
   /**
    * Path
@@ -41,7 +33,7 @@ export abstract class Directory_Tree_props extends obj.Obj {
     // Add ending slash if missing
     {
       if (!/\\|\/$/.test(path)) {
-        path += "/";
+        path += os_path_separator;
       }
     }
 

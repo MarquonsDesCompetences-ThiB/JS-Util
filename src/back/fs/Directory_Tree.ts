@@ -1,63 +1,67 @@
-import {
-  Directory_Tree_props,
-  Dir_Tree_intf,
-  Files_Tree_intf,
-} from "./_props/Directory_Tree_props";
-import { Dirent, promises as fs_promises } from "fs";
+import { Directory_Tree_props } from "./_props/Directory_Tree_props";
+import { Dirent, promises as fs_promises, Stats } from "fs";
+import { Entry_Tree } from "./Entry_Tree";
 
 export class Directory_Tree extends Directory_Tree_props {
-  scan(entries_matching_path?: string) {
-    return new Promise<Directory_Tree>(async (success) => {
+  /**
+   *
+   * @param entries_matching_path
+   * @param get_stats If stats must also be set in the returned value
+   */
+  scan(entries_matching_path?: string, get_stats?: boolean) {
+    return new Promise<Entry_Tree>(async (success) => {
       //
-      //Fetch directory_path's Dirent
-      {
-        let last_separator_idx;
-        let end_dir_name_idx = this.path.length;
+      // Get parent' stats if stats are requested
+      if (get_stats) {
+        //
+        //Fetch directory_path's Dirent
         {
-          // used separator is a slash or backslash ?
-          const separator_char = /\//.test(this.path) ? "/" : "\\";
-          const dir_path_last_idx = this.path.length - 1;
-          //
-          // Fetch from path the slash or backslash preceding the dir name
+          let last_separator_idx;
+          let end_dir_name_idx = this.path.length;
           {
-            last_separator_idx = this.path.lastIndexOf(separator_char);
+            // used separator is a slash or backslash ?
+            const separator_char = /\//.test(this.path) ? "/" : "\\";
+            const dir_path_last_idx = this.path.length - 1;
             //
-            // If slash|backslash is the last char, get the previous one
-            if (last_separator_idx === dir_path_last_idx) {
-              end_dir_name_idx = last_separator_idx;
-              last_separator_idx = this.path.lastIndexOf(
-                separator_char,
-                dir_path_last_idx - 1
-              );
+            // Fetch from path the slash or backslash preceding the dir name
+            {
+              last_separator_idx = this.path.lastIndexOf(separator_char);
+              //
+              // If slash|backslash is the last char, get the previous one
+              if (last_separator_idx === dir_path_last_idx) {
+                end_dir_name_idx = last_separator_idx;
+                last_separator_idx = this.path.lastIndexOf(
+                  separator_char,
+                  dir_path_last_idx - 1
+                );
+              }
             }
           }
+
+          const dir_path = this.path.slice(0, last_separator_idx);
+          fs_promises.stat(dir_path).then((stats) => {
+            this.parent_stats = stats;
+
+            _scan_directory(
+              this.path,
+              this,
+              entries_matching_path,
+              get_stats
+            ).then(on_scanned_tree);
+          });
+        }
+      } else {
+        _scan_directory(this.path, this, entries_matching_path, get_stats).then(
+          on_scanned_tree
+        );
+      }
+
+      function on_scanned_tree(tree: Entry_Tree) {
+        for (const key in Entry_Tree) {
+          this[key] = tree[key];
         }
 
-        const parent_dir_path = this.path.slice(0, last_separator_idx);
-        const dir_name = this.path.slice(
-          last_separator_idx + 1,
-          end_dir_name_idx
-        );
-        let dir_found = false;
-        fs_promises.opendir(parent_dir_path).then(async (parent_directory) => {
-          for await (const parent_dir_entry of parent_directory) {
-            if (parent_dir_entry.name === dir_name) {
-              dir_found = true;
-              _scan(
-                parent_dir_path,
-                parent_dir_entry,
-                entries_matching_path
-              ).then((tree: Dir_Tree_intf) => {
-                this.tree = tree;
-                success(this);
-              });
-            }
-          }
-
-          if (!dir_found) {
-            throw ReferenceError("Directory not found : " + this.path);
-          }
-        });
+        success(this);
       }
     });
   }
@@ -108,39 +112,44 @@ function get_path_request(path?: string | string[]): Path_Request_intf {
 
 //
 // === RECURSIVE SCAN ===
-function _scan(
-  parent_dir_path: string,
-  dir_ent: Dirent,
-  path?: string | string[]
-): Promise<Dir_Tree_intf> {
+function _scan_directory(
+  dir_path: string,
+  dir_entry?: Entry_Tree,
+  entries_matching_path?: string | string[],
+  get_stats?: boolean
+): Promise<Entry_Tree> {
   return new Promise((success, reject) => {
-    const fTree: Files_Tree_intf = {
-      dirs: [],
-      files: [],
-    };
+    const fTree: Entry_Tree = new Entry_Tree(dir_entry);
 
     //
     // Format path
     {
-      if (path) {
+      if (entries_matching_path) {
         //
         // Convert path to string[] of needed
         {
-          if (path as string) {
+          if (entries_matching_path as string) {
             //
             // Split by slash or backslash
-            if (/\//.test(<string>path)) {
-              path = (<string>path).split("/");
+            if (/\//.test(<string>entries_matching_path)) {
+              entries_matching_path = (<string>entries_matching_path).split(
+                "/"
+              );
             } else {
-              path = (<string>path).split("\\");
+              entries_matching_path = (<string>entries_matching_path).split(
+                "\\"
+              );
             }
           }
         }
 
         //
         // Only "**" in path <=> all files
-        if (path.length === 1 && path[0] === "**") {
-          path = undefined;
+        if (
+          entries_matching_path.length === 1 &&
+          entries_matching_path[0] === "**"
+        ) {
+          entries_matching_path = undefined;
         }
       }
     }
@@ -153,7 +162,7 @@ function _scan(
       entry_to_find_reg,
       bEntry_to_find_is_dir,
       bIterate_subdirs,
-    } = get_path_request(path);
+    } = get_path_request(entries_matching_path);
 
     //
     // Not to iterate all entries twice
@@ -165,12 +174,14 @@ function _scan(
     //
     // path argument for recursive calls to scan
     // to be used only if !bAll_wildcard
-    let recursive_path = !path ? undefined : path.slice(1);
+    let recursive_path = !entries_matching_path
+      ? undefined
+      : entries_matching_path.slice(1);
 
     {
-      const scan_proms: Promise<Dir_Tree_intf>[] = [];
+      const scan_proms: Promise<Entry_Tree>[] = [];
+      const stats_proms: Promise<Stats>[] = get_stats ? [] : undefined;
 
-      const dir_path = parent_dir_path + "/" + dir_ent.name;
       fs_promises.opendir(dir_path).then(async (directory) => {
         //
         // Iterate files
@@ -185,12 +196,22 @@ function _scan(
                   if (bIterate_subdirs) {
                     //
                     // scan the found directory
-                    scan_proms.push(_scan(dir_path, entry, recursive_path));
+                    scan_proms.push(
+                      _scan_directory(dir_path, fTree, recursive_path)
+                    );
                   } else {
-                    fTree.dirs.push({ dir: entry });
+                    fTree.dirs.push(new Entry_Tree(fTree, entry));
                   }
                 } else {
                   fTree.files.push(entry);
+                }
+
+                //
+                // Fetch entry' stats if requested
+                {
+                  if (stats_proms) {
+                    stats_proms.push(fs_promises.stat(dir_path));
+                  }
                 }
 
                 continue;
@@ -210,12 +231,12 @@ function _scan(
                       if (bIterate_subdirs) {
                         //
                         // scan the found directory
-                        scan_proms.push(_scan(dir_path, entry, recursive_path));
+                        scan_proms.push(
+                          _scan_directory(dir_path, fTree, recursive_path)
+                        );
                       } else {
-                        fTree.dirs.push({ dir: entry });
+                        fTree.dirs.push(new Entry_Tree(fTree, entry));
                       }
-
-                      // do not break, the regex could math other entries
                     }
                   }
                   //
@@ -223,10 +244,18 @@ function _scan(
                   else {
                     if (!bEntry_to_find_is_dir) {
                       fTree.files.push(entry);
-
-                      // do not break, the regex could math other entries
                     }
                   }
+
+                  //
+                  // Fetch entry' stats if requested
+                  {
+                    if (stats_proms) {
+                      stats_proms.push(fs_promises.stat(dir_path));
+                    }
+                  }
+
+                  // do not break, the regex could math other entries
                 }
               }
               //
@@ -256,7 +285,9 @@ function _scan(
               //
               // Update recursive path accordingly
               // => remove '**' and entry regex
-              path = !path ? undefined : path.slice(2);
+              entries_matching_path = !entries_matching_path
+                ? undefined
+                : entries_matching_path.slice(2);
             }
 
             //
@@ -268,9 +299,11 @@ function _scan(
                     if (bIterate_subdirs) {
                       //
                       // scan the found directory
-                      scan_proms.push(_scan(dir_path, entry, recursive_path));
+                      scan_proms.push(
+                        _scan_directory(dir_path, fTree, recursive_path)
+                      );
                     } else {
-                      fTree.dirs.push({ dir: entry });
+                      fTree.dirs.push(new Entry_Tree(fTree, entry));
                     }
 
                     // do not break, the regex could math other entries
@@ -285,6 +318,14 @@ function _scan(
                     // do not break, the regex could math other entries
                   }
                 }
+
+                //
+                // Fetch entry' stats if requested
+                {
+                  if (stats_proms) {
+                    stats_proms.push(fs_promises.stat(dir_path));
+                  }
+                }
               });
             }
           }
@@ -294,19 +335,33 @@ function _scan(
         // Wait for promises
         {
           if (scan_proms.length === 0) {
-            return success({
-              dir: dir_ent,
-              subtree: fTree,
-            });
+            return success(fTree);
           }
 
           Promise.all(scan_proms).then((dirTrees) => {
             directory.close();
-
             fTree.dirs = dirTrees;
-            return success({
-              dir: dir_ent,
-              subtree: fTree,
+
+            //
+            // If no stats requested
+            if (!stats_proms || stats_proms.length === 0) {
+              return success(fTree);
+            }
+            //
+            // else stats are requested
+            Promise.all(stats_proms).then((stats: Stats[]) => {
+              let file_idx = 0,
+                dir_idx = 0;
+
+              for (let i = 0; i < stats.length; i++) {
+                if (stats[i].isFile()) {
+                  fTree.files[file_idx].stats = stats[i];
+                  file_idx++;
+                } else {
+                  fTree.dirs[dir_idx].stats = stats[i];
+                  dir_idx++;
+                }
+              }
             });
           });
         }
