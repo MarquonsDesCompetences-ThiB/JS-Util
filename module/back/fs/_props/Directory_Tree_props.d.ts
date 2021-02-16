@@ -1,18 +1,18 @@
 /// <reference types="node" />
 import { obj } from "../../../_util";
 import { Dirent } from "fs";
-export interface Files_Tree_intf {
-    dirs: Dir_Tree_intf[];
-    files: Dirent[];
+export interface Dir_Entry_intf {
+  dirs: Entry_Tree[];
+  files: Dirent[];
 }
-export interface Dir_Tree_intf {
-    dir: Dirent;
-    subtree?: Files_Tree_intf;
+export interface Entry_Tree {
+  dir: Dirent;
+  subtree?: Dir_Entry_intf;
 }
 export declare abstract class Directory_Tree_props extends obj.Obj {
-    #private;
-    tree: Dir_Tree_intf;
-    constructor(obj?: any);
-    get path(): string;
-    set path(path: string);
+  #private;
+  tree: Entry_Tree;
+  constructor(obj?: any);
+  get path(): string;
+  set path(path: string);
 }
