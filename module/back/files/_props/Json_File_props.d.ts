@@ -1,4 +1,4 @@
-import { File } from "../_files.js";
+import { File } from "../File.js";
 export declare abstract class Json_File_props extends File {
     #private;
     get content(): any;

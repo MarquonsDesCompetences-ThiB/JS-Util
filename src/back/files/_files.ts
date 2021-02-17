@@ -1,21 +1,29 @@
 "use strict";
 import fs from "fs";
 import fs_extra from "fs-extra";
-import { File } from "./File.js";
-import { Csv_File } from "./Csv_File.js";
-import { Xlsx_File } from "./Xlsx_File.js";
-const { readJsonSync } = fs_extra;
 
+import { File } from "./File.js";
 export { File as File };
+
+import { Csv_File } from "./Csv_File.js";
 export { Csv_File as Csv };
-export { Json_File as Json } from "./Json_File.js";
+
+import { Xlsx_File } from "./Xlsx_File.js";
 export { Xlsx_File as Xlsx };
+
+import { Json_File } from "./Json_File.js";
+export { Json_File as Json };
+
+const { readJsonSync } = fs_extra;
 
 export function file_factory(obj: any) {
   if (obj.ext) {
     switch (obj.ext) {
       case "csv":
         return new Csv_File(obj);
+
+      case "json":
+        return new Json_File(obj);
 
       case "xlsx":
         return new Xlsx_File(obj);
