@@ -1,8 +1,7 @@
 import { Directory_Tree } from "../Directory_Tree";
 import { Entry_Stats_intf } from "../_props/Directory_Tree_props";
 export declare class Directory_Tree_Slave extends Directory_Tree {
-    _master: Directory_Tree;
-    parent: Directory_Tree_Slave;
+    #private;
     dirs?: Map<string, Directory_Tree_Slave>;
     constructor(master: Directory_Tree, slave_parent: Directory_Tree_Slave);
     get master(): Directory_Tree;

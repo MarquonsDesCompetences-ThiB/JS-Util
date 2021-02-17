@@ -2,13 +2,13 @@ import { Directory_Tree } from "../Directory_Tree";
 import { Entry_Stats_intf } from "../_props/Directory_Tree_props";
 
 export class Directory_Tree_Slave extends Directory_Tree {
-  _master: Directory_Tree;
+  protected _master: Directory_Tree;
 
   //
   // === Directory_Tree OVERRIDES ===
   //
   // === If not root only
-  parent: Directory_Tree_Slave;
+  protected _parent: Directory_Tree_Slave;
 
   dirs?: Map<string, Directory_Tree_Slave>;
 
@@ -122,7 +122,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
     }
 
     if (this.is_empty && this.parent) {
-      this.parent.delete(this.name);
+      this._parent.delete(this.name);
     }
   }
 
@@ -134,7 +134,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
     this.dirs.delete(dir_name);
 
     if (this.is_empty && this.parent) {
-      this.parent.delete(this.name);
+      this._parent.delete(this.name);
     }
   }
 }

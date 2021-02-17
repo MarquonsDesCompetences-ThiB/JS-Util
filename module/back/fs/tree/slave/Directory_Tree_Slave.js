@@ -1,13 +1,33 @@
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, privateMap, value) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to set private field on non-instance");
+    }
+    privateMap.set(receiver, value);
+    return value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
+    if (!privateMap.has(receiver)) {
+        throw new TypeError("attempted to get private field on non-instance");
+    }
+    return privateMap.get(receiver);
+};
+var _master, _parent;
 import { Directory_Tree } from "../Directory_Tree";
 export class Directory_Tree_Slave extends Directory_Tree {
     constructor(master, slave_parent) {
         super(slave_parent);
-        this._master = master;
+        _master.set(this, void 0);
+        //
+        // === Directory_Tree OVERRIDES ===
+        //
+        // === If not root only
+        _parent.set(this, void 0);
+        __classPrivateFieldSet(this, _master, master);
     }
     //
     // === MASTER ===
     get master() {
-        return this._master;
+        return __classPrivateFieldGet(this, _master);
     }
     //
     // === PATH ===
@@ -95,7 +115,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
             }
         }
         if (this.is_empty && this.parent) {
-            this.parent.delete(this.name);
+            __classPrivateFieldGet(this, _parent).delete(this.name);
         }
     }
     /**
@@ -105,8 +125,9 @@ export class Directory_Tree_Slave extends Directory_Tree {
     delete(dir_name) {
         this.dirs.delete(dir_name);
         if (this.is_empty && this.parent) {
-            this.parent.delete(this.name);
+            __classPrivateFieldGet(this, _parent).delete(this.name);
         }
     }
 }
+_master = new WeakMap(), _parent = new WeakMap();
 //# sourceMappingURL=Directory_Tree_Slave.js.map

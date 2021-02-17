@@ -5,6 +5,7 @@ import {
 import { Dirent, promises as fs_promises, Stats } from "fs";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
 import { equal as stats_equal } from "../stats.js";
+import { sanitize_regex_path } from "../_fs";
 
 export class Directory_Tree extends Directory_Tree_props {
   //
@@ -557,47 +558,6 @@ export class Directory_Tree extends Directory_Tree_props {
       });
     }
   }
-}
-
-/**
- * Postcond :
- *  typeof path = string
- *  path.length>0
- *  || path[0]="**" and path.length>1
- *
- * @param path
- */
-export function sanitize_regex_path(
-  path: string | string[]
-): string[] | undefined {
-  //
-  // Convert path to string[] if is a string
-  {
-    if (path as string) {
-      //
-      // Split by slash or backslash
-      if (/\//.test(<string>path)) {
-        path = (<string>path).split("/");
-      } else {
-        path = (<string>path).split("\\");
-      }
-    }
-  }
-
-  switch (path.length) {
-    case 0:
-      return undefined;
-
-    case 1:
-      //
-      // Only "**" in path <=> all files
-      if (path[0] === "**") {
-        return undefined;
-      }
-      break;
-  }
-
-  return <string[]>path;
 }
 
 //
