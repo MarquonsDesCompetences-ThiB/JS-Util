@@ -229,3 +229,16 @@ writable: false
 console.log(obj.incr(1));
 
  */
+/**
+ * Return all JSON parsable keys owned by obj and its parents
+ * A JSON parsable key is a property :
+ *  - being a primitive type
+ *  - being an array of primitive types
+ *  - being an object with a toJSON function
+ *  - having a method with the same name ending with "_json"
+ *  - being a setter declaration => begins with '_', ending with '_set_'
+ *    A setter declaration must have an associated setter function
+ *
+ * @param obj
+ */
+export declare function get_parsable_keys<T extends Obj>(obj: T): string[];

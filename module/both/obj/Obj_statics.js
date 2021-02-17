@@ -1,7 +1,5 @@
 "use strict";
 import util from "util";
-import { is_primitive } from "../types/Type.js";
-import { Obj } from "./Obj.js";
 export function exports_(module, to_export) {
     Object.seal(to_export);
     if (typeof process !== "undefined" && module) {
@@ -178,62 +176,6 @@ export function dynamic_extends(oChildChain, oExtendsProto) {
     }
     Object.setPrototypeOf(o2nd, oNewProto);
     return oReturn;
-}
-/**
- * Return all JSON parsable keys owned by obj and its parents
- * A JSON parsable key is a property :
- *  - being a primitive type
- *  - being an array of primitive types
- *  - being an object with a toJSON function
- *  - having a method with the same name ending with "_json"
- *  - being a setter declaration => begins with '_', ending with '_set_'
- *    A setter declaration must have an associated setter function
- *
- * @param obj
- */
-export function get_parsable_keys(obj) {
-    const keys = [];
-    let proto;
-    do {
-        proto = Object.getPrototypeOf(obj);
-        Object.keys(proto).forEach((key) => {
-            const type = typeof proto[key];
-            //
-            // Primitive type
-            if (is_primitive(type)) {
-                keys.push(key);
-            }
-            else if (type === "object") {
-                //
-                // Object with toJSON()
-                if (typeof proto[key].toJSON === "function") {
-                    keys.push(key);
-                }
-                //
-                // Object has a method <key>_json
-                else if (typeof proto[key + "_json"] === "function") {
-                    keys.push(key + "_json");
-                }
-                //
-                // Array of primitives
-                else if (proto[key] instanceof Array) {
-                    if (proto[key].length > 0 && is_primitive(typeof proto[key][0])) {
-                        keys.push(key);
-                    }
-                }
-            }
-            //
-            // setter declaration
-            else if (/^_.+_set_$/.test(key)) {
-                const setter_name = key.replace(/^_(.+)_set_$/, "$1");
-                keys.push(setter_name);
-            }
-            else {
-                logger.warn = "Unhandled type " + type + " of property " + key;
-            }
-        });
-    } while (proto !== Obj);
-    return keys;
 }
 /**
  * Fetch non enumarable keys by parsing util.inspect(obj)

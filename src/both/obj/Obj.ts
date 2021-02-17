@@ -1,8 +1,8 @@
 "use strict";
 import { json } from "@src/both/_both.js";
-import * as obj from "./Obj_statics.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "@src/both/_both.js";
+import { is_primitive } from "../types/Type.js";
 
 /**
  * Preconds
@@ -304,7 +304,7 @@ export class Obj extends Obj_props {
     // Only enumerable properties
     {
       if (!include_not_enumerable_props) {
-        const props = obj.get_parsable_keys<this>(this); // Object.keys(this);
+        const props = get_parsable_keys<this>(this); // Object.keys(this);
         for (const prop_name in props) {
           ret[prop_name] = json.to_json_value(this[prop_name]);
 
@@ -319,7 +319,7 @@ export class Obj extends Obj_props {
     //
     // Process both enumerable and not enumerable properties
     {
-      const props = obj.get_parsable_keys<this>(this); //Object.keys(this);
+      const props = get_parsable_keys<this>(this); //Object.keys(this);
       for (let i = 0; i < props.length; i++) {
         const prop_name = props[i];
         ret[prop_name] = json.to_json_value(this[prop_name]);
@@ -706,3 +706,61 @@ writable: false
 console.log(obj.incr(1));
 
  */
+
+/**
+ * Return all JSON parsable keys owned by obj and its parents
+ * A JSON parsable key is a property :
+ *  - being a primitive type
+ *  - being an array of primitive types
+ *  - being an object with a toJSON function
+ *  - having a method with the same name ending with "_json"
+ *  - being a setter declaration => begins with '_', ending with '_set_'
+ *    A setter declaration must have an associated setter function
+ *
+ * @param obj
+ */
+export function get_parsable_keys<T extends Obj>(obj: T): string[] {
+  const keys = [];
+  let proto;
+  do {
+    proto = Object.getPrototypeOf(obj);
+
+    Object.keys(proto).forEach((key) => {
+      const type = typeof proto[key];
+
+      //
+      // Primitive type
+      if (is_primitive(type)) {
+        keys.push(key);
+      } else if (type === "object") {
+        //
+        // Object with toJSON()
+        if (typeof proto[key].toJSON === "function") {
+          keys.push(key);
+        }
+        //
+        // Object has a method <key>_json
+        else if (typeof proto[key + "_json"] === "function") {
+          keys.push(key + "_json");
+        }
+        //
+        // Array of primitives
+        else if (proto[key] instanceof Array) {
+          if (proto[key].length > 0 && is_primitive(typeof proto[key][0])) {
+            keys.push(key);
+          }
+        }
+      }
+      //
+      // setter declaration
+      else if (/^_.+_set_$/.test(key)) {
+        const setter_name = key.replace(/^_(.+)_set_$/, "$1");
+        keys.push(setter_name);
+      } else {
+        logger.warn = "Unhandled type " + type + " of property " + key;
+      }
+    });
+  } while (proto !== Obj);
+
+  return keys;
+}

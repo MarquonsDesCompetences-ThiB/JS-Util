@@ -1,4 +1,3 @@
-import { Obj } from "./Obj.js";
 export declare function exports_(module: any, to_export: any): void;
 export declare function clone(object: any): any;
 /**
@@ -29,19 +28,6 @@ export declare function concat(parent_props: any, child_props: any): any;
  * From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
  **/
 export declare function dynamic_extends(oChildChain: any, oExtendsProto: any): any;
-/**
- * Return all JSON parsable keys owned by obj and its parents
- * A JSON parsable key is a property :
- *  - being a primitive type
- *  - being an array of primitive types
- *  - being an object with a toJSON function
- *  - having a method with the same name ending with "_json"
- *  - being a setter declaration => begins with '_', ending with '_set_'
- *    A setter declaration must have an associated setter function
- *
- * @param obj
- */
-export declare function get_parsable_keys<T extends Obj>(obj: T): string[];
 /**
  * Fetch non enumarable keys by parsing util.inspect(obj)
  * @param obj
