@@ -1,5 +1,5 @@
 "use strict";
-import { Json_File_props } from "./_props/Json_File_props";
+import { Json_File_props } from "./_props/Json_File_props.js";
 import json_file from "jsonfile";
 
 import { createReadStream } from "fs";
