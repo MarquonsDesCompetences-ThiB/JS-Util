@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { Json_File_props } from "./_props/Json_File_props";
+import { Json_File_props } from "./_props/Json_File_props.js";
 import json_file from "jsonfile";
 import { createReadStream } from "fs";
 import fs_extra from "fs-extra";

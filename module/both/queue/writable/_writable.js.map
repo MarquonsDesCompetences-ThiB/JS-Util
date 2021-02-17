@@ -1,0 +1,1 @@
+{"version":3,"file":"_writable.js","sourceRoot":"","sources":["../../../../src/both/queue/writable/_writable.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,GAAG,EAAE,0BAAsB;AACpC,OAAO,EAAE,iBAAiB,EAAE,MAAM,IAAI,CAAC;AAEvC;;;;;;GAMG;AACH,MAAM,UAAU,sBAAsB,CAAC,SAAS,EAAE,IAAY,EAAE,IAAU;IACxE,OAAO,GAAG,CAAC,eAAe,CAAC,SAAS,EAAE,iBAAiB,CAAC,IAAI,EAAE,IAAI,CAAC,CAAC,CAAC;AACvE,CAAC"}

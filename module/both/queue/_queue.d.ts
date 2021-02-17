@@ -1,4 +1,2 @@
-import { ReadableStream_WorkingQueue } from "./readable/ReadableStream_WorkingQueue.js";
-export declare const readable: {
-    Working_Queue: typeof ReadableStream_WorkingQueue;
-};
+export * as readable from "./readable/_readable.js";
+export * as writable from "./writable/_writable.js";
