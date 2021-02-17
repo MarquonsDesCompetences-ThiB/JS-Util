@@ -1,7 +1,7 @@
 "use strict";
 import util from "util";
 import { is_primitive } from "../types/Type.js";
-import { Obj } from "./Obj";
+import { Obj } from "./Obj.js";
 export function exports_(module, to_export) {
     Object.seal(to_export);
     if (typeof process !== "undefined" && module) {

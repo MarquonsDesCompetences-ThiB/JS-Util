@@ -1,4 +1,4 @@
-import { Obj } from "./Obj";
+import { Obj } from "./Obj.js";
 export declare function exports_(module: any, to_export: any): void;
 export declare function clone(object: any): any;
 /**
