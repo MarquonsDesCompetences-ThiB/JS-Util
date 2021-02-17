@@ -12,4 +12,20 @@ export declare function clone(object: any): any;
  * @rturn {Obj_Properties.props}
  */
 export declare function concat(parent_props: any, child_props: any): any;
+/**
+ *** Object.appendChain(@object, @prototype)
+ *
+ * Appends the first non-native prototype of a chain to a new prototype.
+ * Returns @object (if it was a primitive value it will transformed into an object).
+ *
+ *** Object.appendChain(@object [, "@arg_name_1", "@arg_name_2", "@arg_name_3", "..."], "@function_body")
+ *** Object.appendChain(@object [, "@arg_name_1, @arg_name_2, @arg_name_3, ..."], "@function_body")
+ *
+ * Appends the first non-native prototype of a chain to the native Function.prototype object, then appends a
+ * new Function(["@arg"(s)], "@function_body") to that chain.
+ * Returns the function.
+ *
+ * From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
+ **/
+export declare function dynamic_extends(oChildChain: any, oExtendsProto: any): any;
 export declare function get_non_enumerable_keys(obj: any): string[];
