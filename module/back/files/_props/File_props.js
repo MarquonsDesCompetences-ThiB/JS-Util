@@ -94,7 +94,7 @@ export class File_props extends obj.Obj {
         return this.path + this.full_name;
     }
     set full_path(full_path) {
-        const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\//);
+        const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\/)/);
         if (last_delimiter_idx < 0) {
             __classPrivateFieldSet(this, __p, full_path);
             return;
