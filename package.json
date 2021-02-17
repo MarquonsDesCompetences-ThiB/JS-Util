@@ -7,7 +7,7 @@
   "keywords": [],
   "author": "Thibaut Batal <thibaut.batal@le-campus-numerique.fr>",
   "contributors": [],
-  "direcories": {
+  "directories": {
     "bin": "module/",
     "lib": "src/",
     "test": "tests/"
@@ -58,6 +58,9 @@
   },
   "main": "module/_util.js",
   "module": "src/_util.js",
+  "files": [
+    "module/"
+  ],
   "scripts": {
     "build": "npm run build:src && npm run build:tests",
     "build:src": "ttsc -p ./tsconfig.json",
