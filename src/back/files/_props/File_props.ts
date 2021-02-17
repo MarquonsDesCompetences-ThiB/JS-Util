@@ -94,7 +94,7 @@ export abstract class File_props extends obj.Obj {
    */
   protected _full_path_set_;
   set full_path(full_path: string) {
-    const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\//);
+    const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\/)/);
     if (last_delimiter_idx < 0) {
       this.#_p = full_path;
       return;
