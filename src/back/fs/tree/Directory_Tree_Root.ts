@@ -2,7 +2,6 @@ import { Dirent, promises as fs_promises, Stats } from "fs";
 import { Directory_Tree } from "./Directory_Tree";
 import { sep as os_path_separator } from "path";
 import { file } from "@src/back/_back";
-import { Entry_Stats_intf } from "./_props/Directory_Tree_props";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
 
 export class Directory_Tree_Root extends Directory_Tree {

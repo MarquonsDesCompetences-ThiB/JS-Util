@@ -18,7 +18,7 @@ import { Directory_Tree_props, } from "./_props/Directory_Tree_props";
 import { promises as fs_promises } from "fs";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
 import { equal as stats_equal } from "../stats.js";
-import { sanitize_regex_path } from "../_fs";
+import { sanitize_regex_path } from "../fs.js";
 export class Directory_Tree extends Directory_Tree_props {
     //
     // === MASTER ===
