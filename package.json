@@ -8,7 +8,6 @@
   "author": "Thibaut Batal <thibaut.batal@le-campus-numerique.fr>",
   "contributors": [],
   "directories": {
-    "bin": "module/",
     "lib": "src/",
     "test": "tests/"
   },
