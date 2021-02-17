@@ -1,5 +1,5 @@
-import { Directory_Tree } from "../Directory_Tree";
-import { Entry_Stats_intf } from "../_props/Directory_Tree_props";
+import { Directory_Tree } from "../Directory_Tree.js";
+import { Entry_Stats_intf } from "../_props/Directory_Tree_props.js";
 export declare class Directory_Tree_Slave extends Directory_Tree {
     protected _master: Directory_Tree;
     protected _parent: Directory_Tree_Slave;

@@ -3,7 +3,7 @@ import {
   Entry_Stats_intf,
 } from "./_props/Directory_Tree_props";
 import { Dirent, promises as fs_promises, Stats } from "fs";
-import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
+import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 import { equal as stats_equal } from "../stats.js";
 import { sanitize_regex_path } from "../fs.js";
 

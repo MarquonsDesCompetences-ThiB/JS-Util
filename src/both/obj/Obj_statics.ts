@@ -1,6 +1,6 @@
 "use strict";
 import util from "util";
-import { is_primitive } from "../types/Type";
+import { is_primitive } from "../types/Type.js";
 import { Obj } from "./Obj";
 
 export function exports_(module, to_export) {

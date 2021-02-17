@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { promises as fs_promises } from "fs";
-import { Directory_Tree } from "./Directory_Tree";
+import { Directory_Tree } from "./Directory_Tree.js";
 import { sep as os_path_separator } from "path";
 import { file } from "../../_back";
 export class Directory_Tree_Root extends Directory_Tree {

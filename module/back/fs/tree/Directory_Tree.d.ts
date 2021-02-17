@@ -1,5 +1,5 @@
 import { Directory_Tree_props, Entry_Stats_intf } from "./_props/Directory_Tree_props";
-import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
+import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 export declare class Directory_Tree extends Directory_Tree_props {
     get master(): Directory_Tree;
     set subdirs(dirs_trees: Directory_Tree[]);

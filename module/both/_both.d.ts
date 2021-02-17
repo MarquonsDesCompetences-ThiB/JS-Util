@@ -6,6 +6,6 @@ export * as types from "./types/Type.js";
 export * as obj from "./obj/_obj.js";
 export * as geo from "./geo/_geo.js";
 export * as graphic from "./graphic/_graphic.js";
-export * as queue from "./queue/_queue";
+export * as queue from "./queue/_queue.js";
 export * as regex from "./regex/_regex.js";
 export * as time from "./time/_time.js";

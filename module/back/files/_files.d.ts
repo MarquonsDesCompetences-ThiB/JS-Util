@@ -3,7 +3,7 @@ import { Csv_File } from "./Csv_File.js";
 import { Xlsx_File } from "./Xlsx_File.js";
 export { File as File };
 export { Csv_File as Csv };
-export { Json_File as Json } from "./Json_File";
+export { Json_File as Json } from "./Json_File.js";
 export { Xlsx_File as Xlsx };
 export declare function file_factory(obj: any): File | Xlsx_File;
 export declare const colors: {

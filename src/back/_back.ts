@@ -1,6 +1,6 @@
 //
 // === LOGGER ===
-export * as logger from "./logs/_logger";
+export * as logger from "./logs/_logger.js";
 
 export * as file from "./files/_files.js";
 

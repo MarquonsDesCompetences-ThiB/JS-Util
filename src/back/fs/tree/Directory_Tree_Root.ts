@@ -1,8 +1,8 @@
 import { Dirent, promises as fs_promises, Stats } from "fs";
-import { Directory_Tree } from "./Directory_Tree";
+import { Directory_Tree } from "./Directory_Tree.js";
 import { sep as os_path_separator } from "path";
 import { file } from "@src/back/_back";
-import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
+import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 
 export class Directory_Tree_Root extends Directory_Tree {
   parent_stats?: Stats;

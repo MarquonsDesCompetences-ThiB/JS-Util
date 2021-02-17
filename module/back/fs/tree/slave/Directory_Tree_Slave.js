@@ -1,4 +1,4 @@
-import { Directory_Tree } from "../Directory_Tree";
+import { Directory_Tree } from "../Directory_Tree.js";
 export class Directory_Tree_Slave extends Directory_Tree {
     constructor(master, slave_parent) {
         super(slave_parent);

@@ -1,5 +1,5 @@
 import { Dirent, Stats } from "fs";
-import { Directory_Tree } from "../Directory_Tree";
+import { Directory_Tree } from "../Directory_Tree.js";
 
 export interface Entry_Stats_intf extends Dirent {
   stats?: Stats;
