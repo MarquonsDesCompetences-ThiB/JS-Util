@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { Csv_File_props } from "./_props/Csv_File_props.js";
-import { text } from "../../both/_both";
+import { text } from "../../both/_both.js";
 import $ from "jquery";
 export class Csv_File extends Csv_File_props {
     /**

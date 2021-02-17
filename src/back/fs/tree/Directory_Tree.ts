@@ -1,7 +1,7 @@
 import {
   Directory_Tree_props,
   Entry_Stats_intf,
-} from "./_props/Directory_Tree_props";
+} from "./_props/Directory_Tree_props.js";
 import { Dirent, promises as fs_promises, Stats } from "fs";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 import { equal as stats_equal } from "../stats.js";

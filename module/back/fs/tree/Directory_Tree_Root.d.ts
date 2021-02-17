@@ -1,7 +1,7 @@
 /// <reference types="node" />
 import { Dirent, Stats } from "fs";
 import { Directory_Tree } from "./Directory_Tree.js";
-import { file } from "../../_back";
+import { file } from "../../_back.js";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 export declare class Directory_Tree_Root extends Directory_Tree {
     parent_stats?: Stats;

@@ -13,7 +13,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __cntnt_bj;
-import { File } from "../_files";
+import { File } from "../_files.js";
 export class Json_File_props extends File {
     constructor() {
         super(...arguments);

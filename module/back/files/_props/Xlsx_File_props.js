@@ -1,6 +1,6 @@
 "use strict";
-import { file } from "../../_back";
-import { text } from "../../../both/_both";
+import { file } from "../../_back.js";
+import { text } from "../../../both/_both.js";
 export class Xlsx_File_props extends file.File {
     get_sheet(id_or_name) {
         const sheet_name = text.string.if_is(id_or_name);

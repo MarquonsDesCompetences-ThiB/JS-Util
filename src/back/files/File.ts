@@ -1,6 +1,6 @@
 "use strict";
 import { File_props } from "./_props/File_props.js";
-import { json } from "@src/both/_both";
+import { json } from "@src/both/_both.js";
 
 import fs_extra from "fs-extra";
 import file_string_reader from "read-file-string";

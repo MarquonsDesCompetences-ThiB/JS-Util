@@ -1,4 +1,4 @@
-import { file } from "../../_back";
+import { file } from "../../_back.js";
 export declare abstract class Xlsx_File_props extends file.File {
     /**
      * xlsx

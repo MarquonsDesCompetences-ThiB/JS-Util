@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { File_props } from "./_props/File_props.js";
-import { json } from "../../both/_both";
+import { json } from "../../both/_both.js";
 import fs_extra from "fs-extra";
 import file_string_reader from "read-file-string";
 /**

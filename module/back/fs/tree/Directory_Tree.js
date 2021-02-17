@@ -14,7 +14,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
-import { Directory_Tree_props, } from "./_props/Directory_Tree_props";
+import { Directory_Tree_props, } from "./_props/Directory_Tree_props.js";
 import { promises as fs_promises } from "fs";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 import { equal as stats_equal } from "../stats.js";
