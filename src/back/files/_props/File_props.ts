@@ -23,6 +23,10 @@ export abstract class File_props extends obj.Obj {
     return this.#_cntnt_str;
   }
 
+  //
+  // === Content setter
+  protected _content_set_;
+
   set content(content: string | any[][]) {
     if (content as string) {
       this.#_cntnt_str = <string>content;
@@ -44,6 +48,7 @@ export abstract class File_props extends obj.Obj {
     return this.#_xt;
   }
 
+  protected _ext_set_;
   set ext(ext) {
     //
     // Remove forbidden characters from name and set
@@ -64,6 +69,7 @@ export abstract class File_props extends obj.Obj {
   /**
    * Parse the specified name to split name and extension
    */
+  protected _full_name_set_;
   set full_name(full_name: string) {
     const last_dot_idx = full_name.lastIndexOf(".");
     if (last_dot_idx < 0) {
@@ -86,6 +92,7 @@ export abstract class File_props extends obj.Obj {
    * Parse the specified path to split directories path,
    * file's name and extension
    */
+  protected _full_path_set_;
   set full_path(full_path: string) {
     const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\//);
     if (last_delimiter_idx < 0) {
