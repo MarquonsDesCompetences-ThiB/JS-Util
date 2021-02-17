@@ -218,7 +218,7 @@ export class Json_File extends Json_File_props {
   }
 
   async read() {
-    return new Promise(async (success, reject) => {
+    return new Promise<any>(async (success, reject) => {
       const full_path = this.full_path;
       {
         if (
