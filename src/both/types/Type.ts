@@ -35,3 +35,12 @@ export function is(type_name, obj, strict = false) {
 
   return false;
 }
+
+export function is_primitive(type: string) {
+  return (
+    type === "boolean" ||
+    type === "number" ||
+    type === "string" ||
+    type === "Symbol"
+  );
+}
