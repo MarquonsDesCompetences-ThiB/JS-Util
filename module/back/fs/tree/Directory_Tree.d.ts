@@ -45,12 +45,3 @@ export declare class Directory_Tree extends Directory_Tree_props {
     };
     load(json_dir_tree: any): void;
 }
-/**
- * Postcond :
- *  typeof path = string
- *  path.length>0
- *  || path[0]="**" and path.length>1
- *
- * @param path
- */
-export declare function sanitize_regex_path(path: string | string[]): string[] | undefined;

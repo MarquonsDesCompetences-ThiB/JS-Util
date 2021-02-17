@@ -266,7 +266,6 @@ export class File extends File_props {
     return new Promise<number>((success, reject) => {
       this.apply_updates().then((nb_elmts_updated) => {
         this.content = undefined;
-        this.excel = undefined;
         success(nb_elmts_updated);
       }, reject);
     });

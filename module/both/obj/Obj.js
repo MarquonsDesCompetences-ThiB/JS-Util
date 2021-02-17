@@ -1,5 +1,6 @@
 "use strict";
 import { json } from "../_both";
+import * as obj from "./Obj_statics.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "../_both";
 /**
@@ -264,7 +265,7 @@ export class Obj extends Obj_props {
         // Only enumerable properties
         {
             if (!include_not_enumerable_props) {
-                const props = Object.keys(this);
+                const props = obj.get_parsable_keys(this); // Object.keys(this);
                 for (const prop_name in props) {
                     ret[prop_name] = json.to_json_value(this[prop_name]);
                     if (as_string) {
@@ -277,7 +278,7 @@ export class Obj extends Obj_props {
         //
         // Process both enumerable and not enumerable properties
         {
-            const props = Object.keys(this);
+            const props = obj.get_parsable_keys(this); //Object.keys(this);
             for (let i = 0; i < props.length; i++) {
                 const prop_name = props[i];
                 ret[prop_name] = json.to_json_value(this[prop_name]);
@@ -508,7 +509,7 @@ export class Obj extends Obj_props {
                 Object.entries(values).forEach((entry) => {
                     const [prop_name, value] = entry;
                     //
-                    // If prop_name is an expected by his
+                    // If prop_name is an expected by this
                     if (this_keys.has(prop_name)) {
                         if (set_value(prop_name, value)) {
                             set_res.nb_set++;

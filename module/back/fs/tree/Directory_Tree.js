@@ -18,6 +18,7 @@ import { Directory_Tree_props, } from "./_props/Directory_Tree_props";
 import { promises as fs_promises } from "fs";
 import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave";
 import { equal as stats_equal } from "../stats.js";
+import { sanitize_regex_path } from "../_fs";
 export class Directory_Tree extends Directory_Tree_props {
     //
     // === MASTER ===
@@ -502,42 +503,6 @@ export class Directory_Tree extends Directory_Tree_props {
             });
         }
     }
-}
-/**
- * Postcond :
- *  typeof path = string
- *  path.length>0
- *  || path[0]="**" and path.length>1
- *
- * @param path
- */
-export function sanitize_regex_path(path) {
-    //
-    // Convert path to string[] if is a string
-    {
-        if (path) {
-            //
-            // Split by slash or backslash
-            if (/\//.test(path)) {
-                path = path.split("/");
-            }
-            else {
-                path = path.split("\\");
-            }
-        }
-    }
-    switch (path.length) {
-        case 0:
-            return undefined;
-        case 1:
-            //
-            // Only "**" in path <=> all files
-            if (path[0] === "**") {
-                return undefined;
-            }
-            break;
-    }
-    return path;
 }
 function get_path_request(path) {
     const ret = {

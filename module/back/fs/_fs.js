@@ -1,4 +1,11 @@
-export * from "./tree/Directory_Tree.js";
+import { Directory_Tree } from "./tree/Directory_Tree.js";
+import { Directory_Tree_Root } from "./tree/Directory_Tree_Root.js";
+import { Directory_Tree_Slave } from "./tree/slave/Directory_Tree_Slave.js";
+export const tree = {
+    Master_Root: Directory_Tree_Root,
+    Master_Node: Directory_Tree,
+    Slave: Directory_Tree_Slave,
+};
 /**
  * Functions returning the :
  *  - OS' temporary directory (tmp_dir_path)
@@ -17,6 +24,42 @@ export function path_to_regex(path) {
     path = path.replace(/(\\|\/|\.)/g, "\\$1");
     //convert '*' to '.' avoiding '**'
     path = path.replace(/(?<=[^\*])\*(?=[^\*])/g, ".");
+    return path;
+}
+/**
+ * Postcond :
+ *  typeof path = string
+ *  path.length>0
+ *  || path[0]="**" and path.length>1
+ *
+ * @param path
+ */
+export function sanitize_regex_path(path) {
+    //
+    // Convert path to string[] if is a string
+    {
+        if (path) {
+            //
+            // Split by slash or backslash
+            if (/\//.test(path)) {
+                path = path.split("/");
+            }
+            else {
+                path = path.split("\\");
+            }
+        }
+    }
+    switch (path.length) {
+        case 0:
+            return undefined;
+        case 1:
+            //
+            // Only "**" in path <=> all files
+            if (path[0] === "**") {
+                return undefined;
+            }
+            break;
+    }
     return path;
 }
 //# sourceMappingURL=_fs.js.map

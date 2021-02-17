@@ -78,9 +78,6 @@ export class File_props extends obj.Obj {
     get full_name() {
         return this.name + (this.ext != null ? "." + this.ext : "");
     }
-    /**
-     * Parse the specified name to split name and extension
-     */
     set full_name(full_name) {
         const last_dot_idx = full_name.lastIndexOf(".");
         if (last_dot_idx < 0) {
@@ -96,10 +93,6 @@ export class File_props extends obj.Obj {
     get full_path() {
         return this.path + this.full_name;
     }
-    /**
-     * Parse the specified path to split directories path,
-     * file's name and extension
-     */
     set full_path(full_path) {
         const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\//);
         if (last_delimiter_idx < 0) {
