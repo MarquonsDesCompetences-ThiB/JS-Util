@@ -14,6 +14,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 };
 var __cntnt_2rr, __cntnt_str, __xt, __n, __p;
 import { obj, text } from "../../../both/_both";
+import { sep as os_path_separator } from "path";
 export class File_props extends obj.Obj {
     constructor() {
         super(...arguments);
@@ -135,7 +136,7 @@ export class File_props extends obj.Obj {
             //
             // No ending slash or backslash
             if (!/(\/|\\)$/.test(__classPrivateFieldGet(this, __p))) {
-                __classPrivateFieldSet(this, __p, __classPrivateFieldGet(this, __p) + "\\");
+                __classPrivateFieldSet(this, __p, __classPrivateFieldGet(this, __p) + os_path_separator);
             }
         }
     }

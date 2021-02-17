@@ -6,8 +6,9 @@ import { Csv_File } from "./Csv_File.js";
 import { Xlsx_File } from "./Xlsx_File.js";
 const { readJsonSync } = fs_extra;
 export { File as File };
-export { Csv_File as Csv_File };
-export { Xlsx_File as Xlsx_File };
+export { Csv_File as Csv };
+export { Json_File as Json } from "./Json_File";
+export { Xlsx_File as Xlsx };
 export function file_factory(obj) {
     if (obj.ext) {
         switch (obj.ext) {
