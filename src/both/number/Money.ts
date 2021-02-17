@@ -1,5 +1,5 @@
 "use strict";
-import { obj } from "@src/both/_both";
+import { obj } from "@src/both/_both.js";
 
 export class Money extends obj.Obj {
   /**

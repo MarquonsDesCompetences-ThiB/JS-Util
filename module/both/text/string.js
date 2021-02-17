@@ -1,5 +1,5 @@
 "use strict";
-import { number } from "../_both";
+import { number } from "../_both.js";
 import randomstring from "randomstring";
 /**
  * Count the number of UTF-8 characters represented into the string,

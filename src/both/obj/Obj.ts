@@ -1,8 +1,8 @@
 "use strict";
-import { json } from "@src/both/_both";
+import { json } from "@src/both/_both.js";
 import * as obj from "./Obj_statics.js";
 import { Obj_props } from "./_props/Obj_props.js";
-import { text } from "@src/both/_both";
+import { text } from "@src/both/_both.js";
 
 /**
  * Preconds

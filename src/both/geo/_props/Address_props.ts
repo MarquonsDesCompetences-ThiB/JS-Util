@@ -1,5 +1,5 @@
 "use strict";
-import { obj, text } from "@src/both/_both";
+import { obj, text } from "@src/both/_both.js";
 import { address } from "../Address_statics.js";
 import { Location } from "../Location.js";
 import { form_identity } from "@front/form/form_identity.js";

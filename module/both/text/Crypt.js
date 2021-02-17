@@ -1,6 +1,6 @@
 "use strict";
 import crypto from "crypto";
-import { text } from "../_both";
+import { text } from "../_both.js";
 /**
  * Members :
  *  algo {string}

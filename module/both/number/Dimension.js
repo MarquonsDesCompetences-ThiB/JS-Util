@@ -1,5 +1,5 @@
 "use strict";
-import { obj } from "../_both";
+import { obj } from "../_both.js";
 export class Dimension extends obj.Obj {
     constructor(obj = undefined) {
         super(obj);

@@ -13,7 +13,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __mnt;
-import { obj } from "../_both";
+import { obj } from "../_both.js";
 export class Money extends obj.Obj {
     constructor(obj = undefined) {
         super(obj);

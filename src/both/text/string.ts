@@ -1,5 +1,5 @@
 "use strict";
-import { number } from "@src/both/_both";
+import { number } from "@src/both/_both.js";
 
 import randomstring from "randomstring";
 

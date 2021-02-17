@@ -1,8 +1,8 @@
 "use strict";
-import { json } from "../_both";
+import { json } from "../_both.js";
 import * as obj from "./Obj_statics.js";
 import { Obj_props } from "./_props/Obj_props.js";
-import { text } from "../_both";
+import { text } from "../_both.js";
 /**
  * Preconds
  *  util.obj.Errors = Obj_Errors

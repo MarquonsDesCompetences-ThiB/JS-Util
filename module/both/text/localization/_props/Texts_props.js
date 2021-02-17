@@ -13,12 +13,12 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __nt_ccssr;
-import { json, obj } from "../../../_both";
+import { json, obj } from "../../../_both.js";
 import { Languages } from "../../Languages.js";
 import { default_lang, texts_dir } from "../localization.js";
 import fs_extra from "fs-extra";
 const { pathExistsSync } = fs_extra;
-import { file } from "../../../../back/_back";
+import { file } from "../../../../back/_back.js";
 import { ELanguage_Code } from "../../language_codes.js";
 export class Texts_props extends obj.Obj {
     constructor(accessor) {

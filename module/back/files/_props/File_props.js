@@ -13,7 +13,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __cntnt_2rr, __cntnt_str, __xt, __n, __p;
-import { obj, text } from "../../../both/_both";
+import { obj, text } from "../../../both/_both.js";
 import { sep as os_path_separator } from "path";
 export class File_props extends obj.Obj {
     constructor() {

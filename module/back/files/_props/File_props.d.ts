@@ -1,4 +1,4 @@
-import { obj } from "../../../both/_both";
+import { obj } from "../../../both/_both.js";
 export declare abstract class File_props extends obj.Obj {
     #private;
     get content(): string | any[][];

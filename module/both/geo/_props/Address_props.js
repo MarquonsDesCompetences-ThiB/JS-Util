@@ -13,7 +13,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __nm, __nmbr, __ddrss, __ddrss2, __zp_cd, __ct, __cntr, __lctn;
-import { obj, text } from "../../_both";
+import { obj, text } from "../../_both.js";
 import { address } from "../Address_statics.js";
 import { Location } from "../Location.js";
 import { form_identity } from "../../../front/form/form_identity.js";

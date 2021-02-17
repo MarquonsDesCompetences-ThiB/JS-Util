@@ -1,6 +1,6 @@
 "use strict";
 import crypto from "crypto";
-import { text } from "@src/both/_both";
+import { text } from "@src/both/_both.js";
 
 export interface Crypted_Data {
   iv: string;

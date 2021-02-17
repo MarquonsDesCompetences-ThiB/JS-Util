@@ -1,4 +1,4 @@
-import { obj } from "../../../_both";
+import { obj } from "../../../_both.js";
 import { ELanguage_Code } from "../../language_codes.js";
 export declare abstract class Texts_props extends obj.Obj {
     #private;

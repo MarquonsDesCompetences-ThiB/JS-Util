@@ -2,7 +2,7 @@
  * To validate inputs relative to identities (users, companies)
  */
 "use strict";
-import { regex, text } from "../../both/_both";
+import { regex, text } from "../../both/_both.js";
 export var form_identity;
 (function (form_identity) {
     form_identity.minlengthes = {

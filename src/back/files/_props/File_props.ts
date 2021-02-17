@@ -1,5 +1,5 @@
 "use strict";
-import { obj, text } from "@src/both/_both";
+import { obj, text } from "@src/both/_both.js";
 import { sep as os_path_separator } from "path";
 
 export abstract class File_props extends obj.Obj {

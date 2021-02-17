@@ -1,5 +1,4 @@
 "use strict";
-import { text } from "@src/both/_both";
 import { File } from "../_files.js";
 
 export abstract class Json_File_props extends File {

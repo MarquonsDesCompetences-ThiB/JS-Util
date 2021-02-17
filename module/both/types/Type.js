@@ -1,7 +1,7 @@
 "use strict";
 import * as bool from "./Bool.js";
-import { number } from "../_both";
-import { text } from "../_both";
+import { number } from "../_both.js";
+import { text } from "../_both.js";
 /**
  * Return if obj is of specified type
  * Specified type can be a class instance

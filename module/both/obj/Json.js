@@ -1,5 +1,5 @@
 "use strict";
-import { text } from "../_both";
+import { text } from "../_both.js";
 //
 // === CLONE ===
 /**

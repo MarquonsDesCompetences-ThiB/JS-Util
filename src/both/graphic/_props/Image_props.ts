@@ -1,5 +1,5 @@
 "use strict";
-import { obj } from "@src/both/_both";
+import { obj } from "@src/both/_both.js";
 
 export abstract class Image_props extends obj.Obj {
   protected name: string;

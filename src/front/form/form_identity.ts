@@ -2,7 +2,7 @@
  * To validate inputs relative to identities (users, companies)
  */
 "use strict";
-import { regex, text } from "@src/both/_both";
+import { regex, text } from "@src/both/_both.js";
 
 export namespace form_identity {
   export const minlengthes = {
