@@ -111,6 +111,8 @@ export abstract class File_props extends obj.Obj {
   get name() {
     return this.#_n;
   }
+
+  protected _name_set_;
   set name(name) {
     //
     // Remove forbidden characters from name and set
@@ -130,6 +132,7 @@ export abstract class File_props extends obj.Obj {
     return this.#_p;
   }
 
+  protected _path_set_;
   set path(path) {
     //
     // Remove forbidden characters from path and set
@@ -188,6 +191,7 @@ export abstract class File_props extends obj.Obj {
     }
   }
 
+  protected _nb_set_;
   set nb(nb) {
     const symb = Symbol.for("_nb_rws");
 
@@ -208,9 +212,4 @@ export abstract class File_props extends obj.Obj {
    * Updates to apply in file
    */
   protected output_updates: Object;
-
-  /**
-   * xlsx
-   */
-  protected excel?: any;
 }
