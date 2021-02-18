@@ -22,6 +22,8 @@ export declare function accessor_to_property_names(prop_name: string): (string |
  *                              string : parsed by get_accessor_parts to get a string[]
  * @param {bool} create_if_unexisting
  * @param {integer} stop_from_end
+ * @param return_last_existing If a reference does not exist, return its parent
+ *                              instead of throwing an error
  *
  * @return {*} The object pointed by accessors[0;nb_accessors-stop_from_end]
  *              Or if stop_from_end>0 :
@@ -30,7 +32,7 @@ export declare function accessor_to_property_names(prop_name: string): (string |
  * @throws {ReferenceError} If !create_if_unexisting
  *                          and an accessor does not exist in object
  */
-export declare function get_reference(object: any, accessor: string | (string | number)[], create_if_unexisting?: boolean, stop_from_end?: number): any;
+export declare function get_reference(object: any, accessor: string | (string | number)[], create_if_unexisting?: boolean, stop_from_end?: number, return_last_existing?: boolean): any;
 /**
  * Return an array of every words between dots
  * Remove eventual spaces around dots

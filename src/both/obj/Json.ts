@@ -114,6 +114,8 @@ export function accessor_to_property_names(
  *                              string : parsed by get_accessor_parts to get a string[]
  * @param {bool} create_if_unexisting
  * @param {integer} stop_from_end
+ * @param return_last_existing If a reference does not exist, return its parent
+ *                              instead of throwing an error
  *
  * @return {*} The object pointed by accessors[0;nb_accessors-stop_from_end]
  *              Or if stop_from_end>0 :
@@ -126,7 +128,8 @@ export function get_reference(
   object: any,
   accessor: string | (string | number)[],
   create_if_unexisting: boolean = false,
-  stop_from_end: number = 0
+  stop_from_end: number = 0,
+  return_last_existing?: boolean
 ): any {
   const accessors =
     accessor instanceof Array ? accessor : get_accessor_parts(accessor);
@@ -146,6 +149,14 @@ export function get_reference(
           // simply create it
           if (create_if_unexisting) {
             obj[prop_name] = {};
+          }
+          //
+          // Return the previous one
+          else if (return_last_existing) {
+            return {
+              obj,
+              last_accessor_names: accessors.slice(i),
+            };
           } else {
             const msg =
               prop_name +
@@ -165,7 +176,7 @@ export function get_reference(
     }
   }
 
-  if (stop_from_end === 0) {
+  if (stop_from_end === 0 && !return_last_existing) {
     return obj;
   }
 
