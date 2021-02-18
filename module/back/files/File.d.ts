@@ -52,7 +52,7 @@ export declare class File extends File_props {
      * @return {Promise}  Success
      *                    Reject: {string} err
      */
-    write(): Promise<void>;
+    write(data?: any): Promise<void>;
     /**
      * Apply this.output_updates => write file
      *

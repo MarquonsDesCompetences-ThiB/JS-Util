@@ -217,7 +217,7 @@ export class Json_File extends Json_File_props {
             }));
         });
     }
-    write() {
+    write(data) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((success, reject) => {
                 const full_path = this.full_path;
@@ -232,11 +232,14 @@ export class Json_File extends Json_File_props {
                 // Json
                 {
                     fs_extra.ensureFileSync(full_path);
-                    json_file.writeFile(full_path, this.content, (err) => {
+                    json_file.writeFile(full_path, data ? data : this.content, (err) => {
                         if (err) {
                             const msg = "Error writing file " + full_path + " : " + err;
                             logger.error = msg;
                             return reject(msg);
+                        }
+                        if (data) {
+                            this.content = data;
                         }
                         logger.log = "File " + full_path + " is written";
                         success();

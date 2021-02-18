@@ -222,7 +222,7 @@ export class File extends File_props {
    * @return {Promise}  Success
    *                    Reject: {string} err
    */
-  async write() {
+  async write(data?) {
     return new Promise<void>((success, reject) => {
       const full_path = this.full_path;
       if (

@@ -201,7 +201,7 @@ export class File extends File_props {
      * @return {Promise}  Success
      *                    Reject: {string} err
      */
-    write() {
+    write(data) {
         return __awaiter(this, void 0, void 0, function* () {
             return new Promise((success, reject) => {
                 const full_path = this.full_path;
