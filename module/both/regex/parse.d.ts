@@ -29,9 +29,15 @@ export default function parse(reg_str: string, out_regex_vals?: array_elmt.iIden
  * Every string element containing a RegExp is converted to RegExp
  *
  * @param reg_str
- * @param out_regex_vals?
+ * @param out_regex_vals? If set, fulfilled as :
+ *                          returned_strs.length = out_regex_vals.length
+ *                          returned_strs[i] instanceof RegExpr :
+ *                            out_regex_vals[i].length
+ *                              = returned_strs[i].nb_regexes
+ *
+ * @return {(string|RegExpr)[]}
  */
-export declare function parse_accessor(reg_str: string, out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]): (string | RegExp)[];
+export declare function parse_accessor(reg_str: string, out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[][]): (string | RegExp)[];
 /**
  * Parse numbers forumlas in regex string to convert them
  * to a RegExp compatible digits form

@@ -66,16 +66,33 @@ export default function parse(reg_str, out_regex_vals) {
  * Every string element containing a RegExp is converted to RegExp
  *
  * @param reg_str
- * @param out_regex_vals?
+ * @param out_regex_vals? If set, fulfilled as :
+ *                          returned_strs.length = out_regex_vals.length
+ *                          returned_strs[i] instanceof RegExpr :
+ *                            out_regex_vals[i].length
+ *                              = returned_strs[i].nb_regexes
+ *
+ * @return {(string|RegExpr)[]}
  */
 export function parse_accessor(reg_str, out_regex_vals) {
-    const parsed_str = parse(reg_str, out_regex_vals);
+    let regex_vals = out_regex_vals ? [] : undefined;
+    const parsed_str = parse(reg_str, regex_vals);
     const has_reg = regexes.string_regex;
     const strs = parsed_str.split(`\.`);
     strs.forEach((str, idx) => {
-        if (has_reg.test(str)) {
+        const matches = str.match(has_reg);
+        if (matches) {
             //
-            // remove regex delimiters+convert string to RegExp
+            // set out_regex_vals[idx] from regex_vals
+            {
+                if (regex_vals) {
+                    out_regex_vals[idx] = regex_vals.slice(0, matches.length);
+                    regex_vals = regex_vals.slice(matches.length);
+                }
+            }
+            //
+            // remove regex delimiters
+            // + convert string to RegExp
             strs[idx] = string_to_regex(str);
         }
     });
