@@ -1,10 +1,9 @@
-"use strict";
 /**
  * An array which guarantees elements unicity
  * Set does not allow to add another set to it
  * and does not provide Array's methods
  */
-class Set_Array extends Array {
+export class Set_Array extends Array {
     constructor() {
         super(...arguments);
     }
@@ -29,8 +28,5 @@ class Set_Array extends Array {
         });
         return super.unshift(...new_elmts);
     }
-}
-if (typeof process !== undefined) {
-    module.exports = Set_Array;
 }
 //# sourceMappingURL=Set_Array.js.map
