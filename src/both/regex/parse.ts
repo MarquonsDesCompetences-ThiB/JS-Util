@@ -31,7 +31,10 @@ const regexes = {
   },
 
   wildcards: {
-    all: new RegExp(tString_regex_identifier_reg`(*)`, "g"),
+    all: new RegExp(
+      tString_regex_identifier_reg`(*)` + `|(?<=[^\\])()(\*)`,
+      "g"
+    ),
   },
 };
 
