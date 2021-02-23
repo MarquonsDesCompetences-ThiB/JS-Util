@@ -535,7 +535,7 @@ export class Directory_Tree extends Directory_Tree_props {
     return ret;
   }
 
-  load(json_dir_tree) {
+  load(json_dir_tree: any) {
     if (json_dir_tree.stats) {
       this.stats = json_dir_tree.stats;
     }

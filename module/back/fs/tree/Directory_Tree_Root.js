@@ -109,17 +109,39 @@ export class Directory_Tree_Root extends Directory_Tree {
     }
     //
     // === STORE FILE ===
+    /**
+     * Set file_or_fullPath if different from the already set one
+     */
     set store_file(file_or_fullPath) {
+        //
+        // file_or_fullPath is a Json file
         if (file_or_fullPath) {
+            // ignore if already set
+            if (this._store === file_or_fullPath) {
+                return;
+            }
             this._store = file_or_fullPath;
+            return;
+        }
+        //
+        // Else file_or_fullPath is a string full_path
+        // ignore if already set
+        if (this._store.full_path === file_or_fullPath) {
             return;
         }
         this._store = new file.Json({
             full_path: file_or_fullPath,
         });
     }
-    load() {
+    /**
+     *
+     * @param file_or_fullPath If set, set it to this._store with store_file setter
+     */
+    load(file_or_fullPath) {
         return new Promise((success) => {
+            if (file_or_fullPath) {
+                this.store_file = file_or_fullPath;
+            }
             if (!this._store) {
                 throw ReferenceError("No store file in Directory_Tree_Root of " + this.path + this.name);
             }
@@ -129,8 +151,15 @@ export class Directory_Tree_Root extends Directory_Tree {
             });
         });
     }
-    store() {
+    /**
+     *
+     * @param file_or_fullPath If set, set it to this._store with store_file setter
+     */
+    store(file_or_fullPath) {
         return new Promise((success) => {
+            if (file_or_fullPath) {
+                this.store_file = file_or_fullPath;
+            }
             if (!this._store) {
                 throw ReferenceError("No store file in Directory_Tree_Root of " + this.path + this.name);
             }

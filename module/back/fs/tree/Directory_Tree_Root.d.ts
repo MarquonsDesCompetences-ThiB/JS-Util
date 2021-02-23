@@ -23,7 +23,18 @@ export declare class Directory_Tree_Root extends Directory_Tree {
      * @param get_stats If stats must also be set in the returned value
      */
     scan(dir_path?: string, entries_matching_path?: string, get_stats?: boolean): Promise<Directory_Tree_Root>;
+    /**
+     * Set file_or_fullPath if different from the already set one
+     */
     set store_file(file_or_fullPath: file.Json | string);
-    load(): Promise<unknown>;
-    store(): Promise<unknown>;
+    /**
+     *
+     * @param file_or_fullPath If set, set it to this._store with store_file setter
+     */
+    load(file_or_fullPath?: file.Json | string): Promise<unknown>;
+    /**
+     *
+     * @param file_or_fullPath If set, set it to this._store with store_file setter
+     */
+    store(file_or_fullPath?: file.Json | string): Promise<unknown>;
 }
