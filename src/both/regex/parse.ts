@@ -11,6 +11,12 @@ import {
 const regex_delimiter = `:`;
 const escaped_regex_delimiter = `\\${regex_delimiter}`;
 const regexes = {
+  string_regex: new RegExp(
+    // any character between delimiters, non-greedy
+    `(${escaped_regex_delimiter})(.+?)(${escaped_regex_delimiter})`,
+    "g"
+  ),
+
   numbers: {
     conditions: {
       less_than: new RegExp(tString_regex_identifier_reg`<(\d+)`, "g"),
@@ -63,14 +69,43 @@ export function tString_regex_identifier_reg(strings, regex_str?) {
  *
  * 'All wildcard' are replaced by their RegExpr equivalent '.'
  *  Others are replaced by their RegExpr equivalent surounded by columns ':'
+ *
+ * @param reg_str
+ * @param out_regex_vals
  */
-export function parse(
+export default function parse(
   reg_str: string,
   out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]
 ): string {
   reg_str = parse_numbers_expressions(reg_str, out_regex_vals);
   reg_str = parse_wildcards(reg_str, out_regex_vals);
   return reg_str;
+}
+
+/**
+ * Same as parse(...) but returning an array splitted by '.'
+ * Every string element containing a RegExp is converted to RegExp
+ *
+ * @param reg_str
+ * @param out_regex_vals?
+ */
+export function parse_accessor(
+  reg_str: string,
+  out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]
+): (string | RegExp)[] {
+  const parsed_str = parse(reg_str, out_regex_vals);
+
+  const has_reg = regexes.string_regex;
+  const strs: (string | RegExp)[] = parsed_str.split(`\.`);
+  strs.forEach((str: string, idx) => {
+    if (has_reg.test(str)) {
+      //
+      // remove regex delimiters+convert string to RegExp
+      strs[idx] = new RegExp(str.replace(has_reg, "$2"));
+    }
+  });
+
+  return strs;
 }
 
 /**
@@ -119,11 +154,13 @@ export function parse_numbers_expressions(
  */
 export function parse_wildcards(
   reg_str: string,
-  regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]
+  regex_vals?: array_elmt.iIdentified_Elmt<string, string>[],
+  not_escape_dots?: boolean
 ): string {
-  //
-  // Add backslash to dots which are not preceded by one
-  const str = reg_str.replace(/(?<=[^\\])\./, `\.`);
+  const str = not_escape_dots
+    ? reg_str
+    : // Add backslash to dots which are not preceded by one
+      reg_str.replace(/(?<=[^\\])\./, `\.`);
 
   const reg = regexes.wildcards.all;
   if (regex_vals) {
@@ -137,7 +174,7 @@ export function parse_wildcards(
 
   //
   // Replace every all wildcards '*' by the RegExp's all wildcard '.'
-  return str.replace(reg, ".");
+  return str.replace(reg, `${regex_delimiter}.${regex_delimiter}`);
 }
 
 /**

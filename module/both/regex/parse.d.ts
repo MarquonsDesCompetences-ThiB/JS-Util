@@ -19,8 +19,19 @@ export declare function tString_regex_identifier_reg(strings: any, regex_str?: a
  *
  * 'All wildcard' are replaced by their RegExpr equivalent '.'
  *  Others are replaced by their RegExpr equivalent surounded by columns ':'
+ *
+ * @param reg_str
+ * @param out_regex_vals
  */
-export declare function parse(reg_str: string, out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]): string;
+export default function parse(reg_str: string, out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]): string;
+/**
+ * Same as parse(...) but returning an array splitted by '.'
+ * Every string element containing a RegExp is converted to RegExp
+ *
+ * @param reg_str
+ * @param out_regex_vals?
+ */
+export declare function parse_accessor(reg_str: string, out_regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]): (string | RegExp)[];
 /**
  * Parse numbers forumlas in regex string to convert them
  * to a RegExp compatible digits form
@@ -48,4 +59,4 @@ export declare function parse_numbers_expressions(reg_str: string, regex_vals?: 
  *
  * @param reg_str
  */
-export declare function parse_wildcards(reg_str: string, regex_vals?: array_elmt.iIdentified_Elmt<string, string>[]): string;
+export declare function parse_wildcards(reg_str: string, regex_vals?: array_elmt.iIdentified_Elmt<string, string>[], not_escape_dots?: boolean): string;
