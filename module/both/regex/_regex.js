@@ -1,4 +1,8 @@
 "use strict";
+export * as nested from "./nested.js";
+export * as numbers from "./numbers.js";
+export * as parse from "./parse.js";
+export * as string from "./string.js";
 /**
     Useful regex
 */
