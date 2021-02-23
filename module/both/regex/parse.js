@@ -76,10 +76,26 @@ export function parse_accessor(reg_str, out_regex_vals) {
         if (has_reg.test(str)) {
             //
             // remove regex delimiters+convert string to RegExp
-            strs[idx] = new RegExp(str.replace(has_reg, "$2"));
+            strs[idx] = string_to_regex(str);
         }
     });
     return strs;
+}
+/**
+ * Construct a RegExp from the specified string,
+ * escaping existing not-escaped parenthesis
+ * and replacing columns by parenthesis
+ *
+ * @param str
+ */
+function string_to_regex(str, regex_flags) {
+    //
+    // Escape parenthesis
+    {
+        str = str.replace(/(?<=[^\\])\(/g, `\(`);
+        str = str.replace(/(?<=[^\\])\)/g, `\)`);
+    }
+    return new RegExp(str.replace(regexes.string_regex, "($2)"), regex_flags);
 }
 /**
  * Parse numbers forumlas in regex string to convert them
@@ -134,7 +150,7 @@ export function parse_wildcards(reg_str, regex_vals, not_escape_dots) {
     }
     //
     // Replace every all wildcards '*' by the RegExp's all wildcard '.'
-    return str.replace(reg, `${regex_delimiter}.${regex_delimiter}`);
+    return str.replace(reg, `${regex_delimiter}(.)${regex_delimiter}`);
 }
 /**
  *
