@@ -1,21 +1,12 @@
+//
+// === NUMBERS STRINGS REGEXES
 export const even_str = `\d*[02468]`;
 export const odd_str = `\d*[13579]`;
+export const int_str = `\d+`;
+export const float_str = `[(\d+\.\d*)|(\d*\.\d+)]`;
+export const number_str = `${float_str}|${int_str}`;
 //
 // === LESS THAN X ===
-function units_less_than_digit(digit) {
-    //
-    // Check preconds
-    {
-        if (digit > 9) {
-            throw Error("Digit argument must be an unique digit (in [0;9])");
-        }
-    }
-    let str = "[";
-    for (let i = 0; i < digit; i++) {
-        str += i;
-    }
-    return str + "]";
-}
 export function less_than(x) {
     let units = x;
     let nb_max_digits = 0;
@@ -46,9 +37,7 @@ export function less_than(x) {
         return `[\d{${nb_max_digits}}${units_less_than_digit(units)}]`;
     }
 }
-//
-// === GREATER THAN X ===
-function units_greater_than_digit(digit) {
+function units_less_than_digit(digit) {
     //
     // Check preconds
     {
@@ -57,11 +46,13 @@ function units_greater_than_digit(digit) {
         }
     }
     let str = "[";
-    for (let i = digit + 1; i < 10; i++) {
+    for (let i = 0; i < digit; i++) {
         str += i;
     }
     return str + "]";
 }
+//
+// === GREATER THAN X ===
 export function greater_than(x) {
     let units = x;
     let nb_min_digits = 0;
@@ -91,5 +82,19 @@ export function greater_than(x) {
         // OR nb_max_digits and 1 digit >unit(x)
         return `[\d{${nb_min_digits + 1},}|\d{${nb_min_digits}}${units_greater_than_digit(units)}]`;
     }
+}
+function units_greater_than_digit(digit) {
+    //
+    // Check preconds
+    {
+        if (digit > 9) {
+            throw Error("Digit argument must be an unique digit (in [0;9])");
+        }
+    }
+    let str = "[";
+    for (let i = digit + 1; i < 10; i++) {
+        str += i;
+    }
+    return str + "]";
 }
 //# sourceMappingURL=numbers.js.map
