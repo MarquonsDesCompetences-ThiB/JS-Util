@@ -50,7 +50,7 @@ export declare class Obj extends Obj_props {
      *                          Properties failed to be converted
      *                          to string are null
      */
-    toJSON(include_not_enumerable_props?: boolean, as_string?: boolean): {};
+    toJSON(exclude_jsonify?: boolean, include_not_enumerable_props?: boolean, include_cyclic?: boolean, as_string?: boolean): {};
     /**
      * Clone every enumerable members in this but functions
      *
@@ -58,7 +58,7 @@ export declare class Obj extends Obj_props {
      *  => their reference is returned as is
      * @return {json}
      */
-    get_cloned_JSON(include_not_enumerable_props?: boolean): {};
+    get_cloned_JSON(exclude_jsonify?: boolean, include_not_enumerable_props?: boolean, include_cyclic?: boolean, as_string?: boolean): {};
     define_property(name: any, params: any): void;
     /**
      * Shorthand to logger.debug

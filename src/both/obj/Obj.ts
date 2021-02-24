@@ -3,6 +3,7 @@ import { json } from "@src/both/_both.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "@src/both/_both.js";
 import { is_primitive } from "../types/type.js";
+import * as props from "./properties/_properties.js";
 
 /**
  * Preconds
@@ -297,38 +298,38 @@ export class Obj extends Obj_props {
    *                          Properties failed to be converted
    *                          to string are null
    */
-  toJSON(include_not_enumerable_props = false, as_string = false) {
+  toJSON(
+    exclude_jsonify?: boolean,
+    include_not_enumerable_props?: boolean,
+    include_cyclic?: boolean,
+    as_string?: boolean
+  ) {
+    let specs_flags = props.eProp_Spec.ENUM;
+    //
+    // Init specs_flags from arguments
+    {
+      if (include_cyclic) {
+        specs_flags |= props.eProp_Spec.CYCLIC;
+      }
+
+      if (!exclude_jsonify) {
+        specs_flags |= props.eProp_Spec.JSONIFY;
+      }
+
+      if (include_not_enumerable_props) {
+        specs_flags |= props.eProp_Spec.NOT_ENUM;
+      }
+    }
+
     let ret = {};
 
-    //
-    // Only enumerable properties
-    {
-      if (!include_not_enumerable_props) {
-        const props = get_parsable_keys<this>(this); // Object.keys(this);
-        for (const prop_name in props) {
-          ret[prop_name] = json.to_json_value(this[prop_name]);
+    props.entries(this, specs_flags).forEach(([key, val]) => {
+      ret[key] = json.to_json_value(val);
 
-          if (as_string) {
-            ret[prop_name] = text.string.to(ret[prop_name]);
-          }
-        }
-        return true;
+      if (as_string) {
+        ret[key] = text.string.to(ret[key]);
       }
-    }
-
-    //
-    // Process both enumerable and not enumerable properties
-    {
-      const props = get_parsable_keys<this>(this); //Object.keys(this);
-      for (let i = 0; i < props.length; i++) {
-        const prop_name = props[i];
-        ret[prop_name] = json.to_json_value(this[prop_name]);
-
-        if (as_string) {
-          ret[prop_name] = text.string.to(ret[prop_name]);
-        }
-      }
-    }
+    });
 
     return ret;
   }
@@ -340,37 +341,37 @@ export class Obj extends Obj_props {
    *  => their reference is returned as is
    * @return {json}
    */
-  get_cloned_JSON(include_not_enumerable_props = true) {
+  get_cloned_JSON(
+    exclude_jsonify?: boolean,
+    include_not_enumerable_props?: boolean,
+    include_cyclic?: boolean,
+    as_string?: boolean
+  ) {
+    let specs_flags = props.eProp_Spec.ENUM;
+    //
+    // Init specs_flags from arguments
+    {
+      if (include_cyclic) {
+        specs_flags |= props.eProp_Spec.CYCLIC;
+      }
+      if (!exclude_jsonify) {
+        specs_flags |= props.eProp_Spec.JSONIFY;
+      }
+
+      if (include_not_enumerable_props) {
+        specs_flags |= props.eProp_Spec.NOT_ENUM;
+      }
+    }
+
     let ret = {};
-    //
-    // Only enumerable properties
-    {
-      if (!include_not_enumerable_props) {
-        const props = Object.keys(this);
-        for (let key in props) {
-          ret[key] = json.clone_value(this[key]);
 
-          /*const type = typeof ret[key];
-      if (type !== "undefined") {
-        ret.nb_cloned++;
-      }
-      //type = undefined
-      else if (typeof this[key] !== "function") {
-        ret.nb_not_cloned++;
-      }*/
-        }
-      }
-    }
+    props.entries(this, specs_flags).forEach(([key, val]) => {
+      ret[key] = json.clone_value(val);
 
-    //
-    // Process both enumerable and not enumerable properties
-    {
-      const props = Object.keys(this);
-      for (let i = 0; i < props.length; i++) {
-        const prop_name = props[i];
-        ret[prop_name] = json.clone_value(this[prop_name]);
+      if (as_string) {
+        ret[key] = text.string.to(ret[key]);
       }
-    }
+    });
 
     return ret;
   }
