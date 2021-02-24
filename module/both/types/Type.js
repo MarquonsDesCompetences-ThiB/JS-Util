@@ -1,5 +1,5 @@
 "use strict";
-import * as bool from "./Bool.js";
+import * as bool from "./bool.js";
 import { number } from "../_both.js";
 import { text } from "../_both.js";
 /**
@@ -21,11 +21,20 @@ export function is(type_name, obj, strict = false) {
         return text.string.is(obj);
     }
     const obj_type = typeof obj;
+    if (obj_type === "object") {
+        return is_instance(obj, obj_type);
+    }
     if (type_name === obj_type) {
         return true;
     }
-    if (obj_type === "object") {
-        return obj.constructor.name === obj_type;
+    return false;
+}
+export function is_instance(obj, type) {
+    let proto;
+    while ((proto = Object.getPrototypeOf(obj)) != null) {
+        if (proto.constructor.name === type) {
+            return true;
+        }
     }
     return false;
 }
@@ -35,4 +44,4 @@ export function is_primitive(type) {
         type === "string" ||
         type === "Symbol");
 }
-//# sourceMappingURL=Type.js.map
+//# sourceMappingURL=type.js.map

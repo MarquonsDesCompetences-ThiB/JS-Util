@@ -1,12 +1,12 @@
 export * as array from "./array/_array.js";
 
-export * as bool from "./types/Bool.js";
+export * as bool from "./types/bool.js";
 export * as json from "./obj/Json.js";
 
 export * as text from "./text/_text.js";
 export * as number from "./number/_number.js";
 
-export * as types from "./types/Type.js";
+export * as types from "./types/type.js";
 
 export * as obj from "./obj/_obj.js";
 

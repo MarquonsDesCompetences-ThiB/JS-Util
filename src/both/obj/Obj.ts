@@ -2,7 +2,7 @@
 import { json } from "@src/both/_both.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "@src/both/_both.js";
-import { is_primitive } from "../types/Type.js";
+import { is_primitive } from "../types/type.js";
 
 /**
  * Preconds

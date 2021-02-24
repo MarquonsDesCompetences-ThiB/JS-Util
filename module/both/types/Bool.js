@@ -29,4 +29,4 @@ export function is(obj, strict = false) {
     }
     return false;
 }
-//# sourceMappingURL=Bool.js.map
+//# sourceMappingURL=bool.js.map

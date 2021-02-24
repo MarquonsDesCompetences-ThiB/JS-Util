@@ -7,4 +7,5 @@
  * @param {bool} strict
  */
 export declare function is(type_name: any, obj: any, strict?: boolean): boolean;
+export declare function is_instance(obj: unknown, type: string): boolean;
 export declare function is_primitive(type: string): boolean;
