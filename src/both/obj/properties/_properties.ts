@@ -10,6 +10,7 @@ import * as jsonified from "./jsonified.js";
 import * as not_enum from "./not_enum.js";
 export const decorators = {
   cyclic: cyclic.cyclic,
+  jsonified: jsonified.jsonified,
   jsonify: jsonify.jsonify,
   not_enum: not_enum.not_enum,
 };

@@ -5,9 +5,11 @@ export * as jsonified from "./jsonified.js";
 export * as not_enum from "./not_enum.js";
 import * as cyclic from "./cyclic.js";
 import * as jsonify from "./jsonify.js";
+import * as jsonified from "./jsonified.js";
 import * as not_enum from "./not_enum.js";
 export declare const decorators: {
     cyclic: typeof cyclic.cyclic;
+    jsonified: typeof jsonified.jsonified;
     jsonify: typeof jsonify.jsonify;
     not_enum: typeof not_enum.not_enum;
 };

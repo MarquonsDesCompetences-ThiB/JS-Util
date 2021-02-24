@@ -9,9 +9,8 @@ const jsonified_props = new Map<string, string[]>();
  *
  * @param target class the object is an instance of
  * @param key property name to set as cyclic
- * @param descriptor property’s descriptor object
  */
-export function jsonified(target: any, key, descriptor) {
+export function jsonified(target: any, key) {
   const class_name = target.constructor.name;
   const class_stored = jsonified_props.has(class_name);
 
@@ -25,8 +24,6 @@ export function jsonified(target: any, key, descriptor) {
       jsonified_props.set(class_name, props);
     }
   }
-
-  return descriptor;
 }
 
 //

@@ -11,7 +11,7 @@ const cyclic_props = new Map<string, string[]>();
  * @param key property name to set as cyclic
  * @param descriptor property’s descriptor object
  */
-export function cyclic(target: any, key, descriptor) {
+export function cyclic(target: any, key, descriptor?) {
   const class_name = target.constructor.name;
   const class_stored = cyclic_props.has(class_name);
 

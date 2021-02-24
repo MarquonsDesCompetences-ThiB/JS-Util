@@ -8,9 +8,8 @@ const not_enum_props = new Map();
  *
  * @param target class the object is an instance of
  * @param key property name to set as cyclic
- * @param descriptor property’s descriptor object
  */
-export function not_enum(target, key, descriptor) {
+export function not_enum(target, key) {
     const class_name = target.constructor.name;
     const class_stored = not_enum_props.has(class_name);
     const props = class_stored ? not_enum_props.get(class_name) : [];
@@ -22,7 +21,6 @@ export function not_enum(target, key, descriptor) {
             not_enum_props.set(class_name, props);
         }
     }
-    return descriptor;
 }
 //
 // === KEYS / VALUES / ENTRIES
