@@ -37,6 +37,10 @@ export function is(type_name, obj, strict = false) {
 }
 
 export function is_instance(obj: unknown, type: string) {
+  if (typeof obj !== "object") {
+    return false;
+  }
+
   let proto;
   while ((proto = Object.getPrototypeOf(obj)) != null) {
     if (proto.constructor.name === type) {
