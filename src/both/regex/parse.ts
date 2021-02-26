@@ -1,10 +1,10 @@
-import { elmt as array_elmt } from "../array/_array";
+import { elmt as array_elmt } from "../array/_array.js";
 import {
   even_str as even_numbers,
   odd_str as odd_numbers,
   less_than,
   greater_than,
-} from "./numbers";
+} from "./numbers.js";
 
 //
 // === REGEXES ===

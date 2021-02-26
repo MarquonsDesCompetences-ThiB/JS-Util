@@ -1,4 +1,4 @@
-import { even_str as even_numbers, odd_str as odd_numbers, less_than, greater_than, } from "./numbers";
+import { even_str as even_numbers, odd_str as odd_numbers, less_than, greater_than, } from "./numbers.js";
 //
 // === REGEXES ===
 const regex_delimiter = `:`;

@@ -1,4 +1,4 @@
-import { elmt as array_elmt } from "../array/_array";
+import { elmt as array_elmt } from "../array/_array.js";
 export declare function tString_regex(strings: any, regex_str?: any): string;
 /**
  * Tag function for creating regex with identifier
