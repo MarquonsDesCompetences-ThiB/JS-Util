@@ -16,8 +16,15 @@ export class Directory_Tree_Root extends Directory_Tree {
    */
   protected _store: file.Json;
 
-  constructor(dirent: Dirent) {
-    super(null, dirent);
+  constructor(dirent_or_path: Dirent | string) {
+    super(
+      null,
+      (dirent_or_path as Dirent) ? <Dirent>dirent_or_path : undefined
+    );
+
+    if (dirent_or_path as string) {
+      this.path = <string>dirent_or_path;
+    }
   }
 
   //

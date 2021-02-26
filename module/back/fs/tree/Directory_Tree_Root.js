@@ -12,8 +12,11 @@ import { Directory_Tree } from "./Directory_Tree.js";
 import { sep as os_path_separator } from "path";
 import { file } from "../../_back.js";
 export class Directory_Tree_Root extends Directory_Tree {
-    constructor(dirent) {
-        super(null, dirent);
+    constructor(dirent_or_path) {
+        super(null, dirent_or_path ? dirent_or_path : undefined);
+        if (dirent_or_path) {
+            this.path = dirent_or_path;
+        }
     }
     //
     // === PATH ===
