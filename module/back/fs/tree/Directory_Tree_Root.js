@@ -56,11 +56,10 @@ export class Directory_Tree_Root extends Directory_Tree {
             //
             // Directly call super.scan
             if (!get_stats) {
-                return super
-                    .scan(this.path, entries_matching_path, get_stats)
-                    .then(() => {
+                this.super_scan(entries_matching_path, get_stats).then(() => {
                     success(this);
                 });
+                return;
             }
             //
             // Else first get parent' stats as requested
@@ -106,9 +105,22 @@ export class Directory_Tree_Root extends Directory_Tree {
                 }
             }
             Promise.all(proms).then(() => {
-                super.scan(this.path, entries_matching_path, get_stats);
+                this.super_scan(entries_matching_path, get_stats).then(() => {
+                    success(this);
+                });
             });
         }));
+    }
+    /**
+     * To call super.scan from scan's promises
+     * Needed because of a V8 bug
+     * Cf. https://stackoverflow.com/questions/32932699/calling-super-method-inside-promise-super-keyword-unexpected-here
+     *
+     * @param entries_matching_path
+     * @param get_stats
+     */
+    super_scan(entries_matching_path, get_stats) {
+        return super.scan(this.path, entries_matching_path, get_stats);
     }
     //
     // === STORE FILE ===

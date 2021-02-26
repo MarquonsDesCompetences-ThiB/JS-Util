@@ -24,6 +24,15 @@ export declare class Directory_Tree_Root extends Directory_Tree {
      */
     scan(dir_path?: string, entries_matching_path?: string, get_stats?: boolean): Promise<Directory_Tree_Root>;
     /**
+     * To call super.scan from scan's promises
+     * Needed because of a V8 bug
+     * Cf. https://stackoverflow.com/questions/32932699/calling-super-method-inside-promise-super-keyword-unexpected-here
+     *
+     * @param entries_matching_path
+     * @param get_stats
+     */
+    protected super_scan(entries_matching_path?: string, get_stats?: boolean): Promise<Directory_Tree>;
+    /**
      * Set file_or_fullPath if different from the already set one
      */
     set store_file(file_or_fullPath: file.Json | string);
