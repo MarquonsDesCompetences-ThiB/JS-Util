@@ -18,7 +18,7 @@ declare const _default: {
     both: typeof both;
 };
 export default _default;
-export declare const bool: typeof both.bool, json: typeof both.json;
+export declare const bool: typeof both.types.bool, json: typeof both.types.json, string: typeof both.types.string;
 export declare const text: typeof both.text, number: typeof both.number;
 export declare const types: typeof both.types, obj: typeof both.obj;
 export declare const geo: typeof both.geo, graphic: typeof both.graphic;

@@ -1,5 +1,6 @@
 "use strict";
-import { json, obj } from "@src/both/_both.js";
+import { Obj } from "@obj/_obj.js";
+import { json } from "@type/_types.js";
 import { Languages } from "../../Languages.js";
 import { default_lang, texts_dir } from "../localization.js";
 import fs_extra from "fs-extra";
@@ -7,7 +8,7 @@ const { pathExistsSync } = fs_extra;
 import { file } from "@src/back/_back.js";
 import { ELanguage_Code } from "../../language_codes.js";
 
-export abstract class Texts_props extends obj.Obj {
+export abstract class Texts_props extends Obj {
   constructor(accessor?: string | (string | number)[]) {
     super();
     if (accessor) {

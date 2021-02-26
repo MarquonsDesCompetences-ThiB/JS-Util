@@ -1,5 +1,6 @@
 "use strict";
-import { number, text } from "../_both.js";
+import { number } from "./_types.js";
+import { text } from "../_both.js";
 /**
  * Return if obj is a boolean/Boolean or not, strictly or not
  * @param {*} obj

@@ -1,7 +1,7 @@
 "use strict";
 import * as bool from "./bool.js";
-import { number } from "@src/both/_both.js";
-import { text } from "@src/both/_both.js";
+import * as number from "./number.js";
+import * as string from "./string.js";
 
 /**
  * Return if obj is of specified type
@@ -21,7 +21,7 @@ export function is(type_name, obj, strict = false) {
   }
 
   if (/^\s*(string|String)\s*/.test(type_name)) {
-    return text.string.is(obj);
+    return string.is(obj);
   }
 
   const obj_type = typeof obj;

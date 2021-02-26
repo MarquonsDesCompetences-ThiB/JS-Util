@@ -1,6 +1,5 @@
 "use strict";
-import { number } from "@src/both/_both.js";
-
+import * as number from "./number.js";
 import randomstring from "randomstring";
 
 /**

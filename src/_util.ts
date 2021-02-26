@@ -28,7 +28,7 @@ import * as both from "./both/_both.js";
 export default { both };
 
 // direct access
-export const { bool, json } = both;
+export const { bool, json, string } = both.types;
 
 export const { text, number } = both;
 

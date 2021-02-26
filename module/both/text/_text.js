@@ -1,4 +1,4 @@
-export * as string from "./string.js";
+export * as string from "../types/string.js";
 export { Crypt } from "./Crypt.js";
 export { Languages } from "./Languages.js";
 export * as localization from "./localization/localization.js";

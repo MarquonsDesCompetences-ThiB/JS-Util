@@ -18,13 +18,53 @@
       "@src/*": ["./*"],
       "@config/*": ["./config/*"],
 
-      "#back": ["./back/back.js"],
+      "#back": ["./back/_back.js"],
       "@back/*": ["./back/*"],
 
-      "#both": ["./both/both.js"],
+      //
+      // === BOTH FOLDER ===
+      "#both": ["./both/_both.js"],
       "@both/*": ["./both/*"],
 
-      "#front": ["./front/front.js"],
+      "#array": ["./both/array/_array.js"],
+      "@array/*": ["./both/array/*"],
+
+      "#errors": ["./both/errors/_errors.js"],
+      "@errors/*": ["./both/errors/*"],
+
+      "#geo": ["./both/geo/_geo.js"],
+      "@geo/*": ["./both/geo/*"],
+
+      "#graphic": ["./both/graphic/_graphic.js"],
+      "@graphic/*": ["./both/graphic/*"],
+
+      "#ids": ["./both/ids/_ids.js"],
+      "@ids/*": ["./both/ids/*"],
+
+      "#number": ["./both/number/_number.js"],
+      "@number/*": ["./both/number/*"],
+
+      "#obj": ["./both/obj/_obj.js"],
+      "@obj/*": ["./both/obj/*"],
+
+      "#queue": ["./both/queue/_queue.js"],
+      "@queue/*": ["./both/queue/*"],
+
+      "#regex": ["./both/regex/_regex.js"],
+      "@regex/*": ["./both/regex/*"],
+
+      "#text": ["./both/text/_text.js"],
+      "@text/*": ["./both/text/*"],
+
+      "#time": ["./both/time/_time.js"],
+      "@time/*": ["./both/time/*"],
+
+      "#type": ["./both/types/_types.js"],
+      "@type/*": ["./both/types/*"],
+
+      //
+      // === FRONT FOLDER ===
+      "#front": ["./front/_front.js"],
       "@front/*": ["./front/*"]
     },
 

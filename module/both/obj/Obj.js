@@ -1,5 +1,5 @@
 "use strict";
-import { json } from "../_both.js";
+import { json } from "../types/_types.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "../_both.js";
 import { is_primitive } from "../types/type.js";

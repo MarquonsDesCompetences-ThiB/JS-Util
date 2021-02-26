@@ -1,8 +1,8 @@
 "use strict";
-import { json } from "@src/both/_both.js";
+import { json } from "@type/_types.js";
 import { file } from "@src/back/_back.js";
 import { default_lang } from "./localization.js";
-import * as string from "../string.js";
+import * as string from "../../types/string.js";
 import { Texts_props } from "./_props/Texts_props.js";
 import fs_extra from "fs-extra";
 const { pathExistsSync, readJsonSync } = fs_extra;

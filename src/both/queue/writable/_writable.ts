@@ -1,4 +1,4 @@
-import { obj } from "@src/_util.js";
+import * as obj from "@obj/_obj.js";
 import { createWriteStream } from "fs";
 
 /**
