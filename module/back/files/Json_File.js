@@ -61,17 +61,17 @@ export class Json_File extends Json_File_props {
                 function new_chars_delimiters_regex() {
                     //
                     // Scopes
-                    const brace_open = `[^\\]\{`;
-                    const brace_close = `[^\\]\}`;
-                    const bracket_open = `[^\\]\[`;
-                    const bracket_close = `[^\\]\]`;
-                    const parenthese_open = `[^\\]\(`;
-                    const parenthese_close = `[^\\]\)`;
+                    const brace_open = `[^\\\\]\{`;
+                    const brace_close = `[^\\\\]\}`;
+                    const bracket_open = `[^\\\\]\[`;
+                    const bracket_close = `[^\\\\]\]`;
+                    const parenthese_open = `[^\\\\]\(`;
+                    const parenthese_close = `[^\\\\]\)`;
                     //
                     // Strings
-                    const quote = `[^\\]\'`;
-                    const double_quotes = `[^\\]\"`;
-                    const template_quote = `[^\\]\``;
+                    const quote = `[^\\\\]\'`;
+                    const double_quotes = `[^\\\\]\"`;
+                    const template_quote = `[^\\\\]\``;
                     const comma = `,`;
                     return new RegExp(`${brace_open}|${brace_close}|${bracket_open}|${bracket_close}|${parenthese_open}|${parenthese_close}|${quote}|${double_quotes}|${template_quote}|${comma}`);
                 }

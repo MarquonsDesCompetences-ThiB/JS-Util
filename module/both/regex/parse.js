@@ -19,7 +19,7 @@ const regexes = {
         },
     },
     wildcards: {
-        all: new RegExp(tString_regex_identifier_reg `(*)` + `|(?<=[^\\])()(\*)`, "g"),
+        all: new RegExp(tString_regex_identifier_reg `(\\*)` + `|(?<=[^\\\\])()(\\*)`, "g"),
     },
 };
 export function tString_regex(strings, regex_str) {
@@ -37,9 +37,9 @@ export function tString_regex(strings, regex_str) {
  */
 export function tString_regex_identifier_reg(strings, regex_str) {
     if (regex_str) {
-        return `(?<=[^\\])${escaped_regex_delimiter}([\w_\d]*)${regex_str}(?<=[^\\])${escaped_regex_delimiter}`;
+        return `(?<=[^\\\\])${escaped_regex_delimiter}([\w_\d]*)${regex_str}(?<=[^\\\\])${escaped_regex_delimiter}`;
     }
-    return `(?<=[^\\])${escaped_regex_delimiter}([\w_\d]*)${strings[0]}(?<=[^\\])${escaped_regex_delimiter}`;
+    return `(?<=[^\\\\])${escaped_regex_delimiter}([\w_\d]*)${strings[0]}(?<=[^\\\\])${escaped_regex_delimiter}`;
 }
 /**
  * To parse strings containing an expression to switch to RegExp
@@ -109,8 +109,8 @@ function string_to_regex(str, regex_flags) {
     //
     // Escape parenthesis
     {
-        str = str.replace(/(?<=[^\\])\(/g, `\(`);
-        str = str.replace(/(?<=[^\\])\)/g, `\)`);
+        str = str.replace(/(?<=[^\\\\])\(/g, `\(`);
+        str = str.replace(/(?<=[^\\\\])\)/g, `\)`);
     }
     return new RegExp(str.replace(regexes.string_regex, "($2)"), regex_flags);
 }
@@ -156,7 +156,7 @@ export function parse_wildcards(reg_str, regex_vals, not_escape_dots) {
     const str = not_escape_dots
         ? reg_str
         : // Add backslash to dots which are not preceded by one
-            reg_str.replace(/(?<=[^\\])\./, `\.`);
+            reg_str.replace(/(?<=[^\\\\])\./, `\.`);
     const reg = regexes.wildcards.all;
     if (regex_vals) {
         const matches = str.match(reg);
