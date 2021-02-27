@@ -3,9 +3,9 @@ import {
   Entry_Stats_intf,
 } from "./_props/Directory_Tree_props.js";
 import { Dirent, promises as fs_promises, Stats } from "fs";
-import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 import { equal as stats_equal } from "../stats.js";
 import { sanitize_regex_path } from "../fs.js";
+//import * as decl from "./directory_tree_slave/declaration.js";
 
 export class Directory_Tree extends Directory_Tree_props {
   //
@@ -66,116 +66,6 @@ export class Directory_Tree extends Directory_Tree_props {
       return undefined;
     }
     return map;
-  }
-
-  /**
-   * Construct a slave tree
-   * of directories and files (from this.dirs and this.files)
-   * matching entries_matching_path or file_in_each_dir_matching_pattern
-   *
-   * @param entries_matching_path Directories/full file path
-   *                              of entries to retrieve
-   * @param file_in_each_dir_matching_pattern Files to retrieve
-   *                                          from every directory
-   * @param parent_dir_path Path of the parent directory
-   */
-  select(
-    entries_matching_path: string | string[],
-    file_in_each_dir_matching_pattern?: RegExp,
-    parent_dir_path?: string
-  ): Directory_Tree_Slave {
-    const tree = new Directory_Tree_Slave(this.master, undefined);
-
-    //
-    // Fetch requested files through file_in_each_dir_matching_pattern
-    {
-      if (file_in_each_dir_matching_pattern) {
-        tree.files = this.get_files_matching_pattern(
-          file_in_each_dir_matching_pattern
-        );
-      }
-    }
-
-    //
-    // Format requested path
-    {
-      entries_matching_path = sanitize_regex_path(entries_matching_path);
-    }
-    /*
-      entries_matching_path is now null or its length is>0
-      If entries_matching_path[0]='**', its length is >1
-    */
-
-    //
-    // Fetch requested dirs through entries_matching_path
-    {
-      const fetch = {
-        // if entries_matching_path[0] === "**"
-        bAll_wilcard: false,
-
-        /*
-        If !bAll_wilcard :  entries_matching_path[0] as regex
-        Otherwise : entries_matching_path[1] as regex
-
-        If no entries_matching_path, regex matching everything
-      */
-        requested_match: undefined,
-      };
-      const dir_path = parent_dir_path + this.name + "/";
-
-      //
-      // Fill fetch to be as requested
-      {
-        if (entries_matching_path) {
-          if (entries_matching_path[0] === "**") {
-            fetch.bAll_wilcard = true;
-          }
-
-          fetch.requested_match = fetch.bAll_wilcard
-            ? new RegExp(entries_matching_path[1])
-            : new RegExp(entries_matching_path[1]);
-        } else {
-          fetch.requested_match = /^.+$/;
-        }
-      }
-
-      //
-      // Fetch directories that match fetch
-      {
-        // path to give to children
-        const sub_matching = entries_matching_path
-          ? fetch.bAll_wilcard
-            ? //slice handled in loop
-              entries_matching_path
-            : //slice now
-              entries_matching_path.slice(1)
-          : undefined;
-
-        this.dirs.forEach((subdir_tree, name) => {
-          if (fetch.bAll_wilcard || fetch.requested_match.test(name)) {
-            const subtree = subdir_tree.select(
-              fetch.bAll_wilcard && fetch.requested_match.test(name)
-                ? sub_matching.slice(2)
-                : sub_matching,
-              file_in_each_dir_matching_pattern,
-              dir_path
-            );
-
-            if (subtree) {
-              tree.subdir = subtree;
-            }
-          }
-        });
-      }
-    }
-
-    //
-    // If no dirs or files added
-    if (tree.is_empty) {
-      return undefined;
-    } else {
-      return tree;
-    }
   }
 
   /**
@@ -601,4 +491,43 @@ function get_path_request(path?: string | string[]): Path_Request_intf {
   }
 
   return ret;
+}
+
+//
+// === DECLARATION OF Directory_Tree_Slave ===
+declare class Directory_Tree_Slave extends Directory_Tree {
+  //
+  // === PROPERTIES ===
+  protected _master: Directory_Tree;
+
+  //
+  // === Directory_Tree OVERRIDES ===
+  //
+  // === If not root only
+  protected _parent: Directory_Tree_Slave;
+
+  dirs?: Map<string, Directory_Tree_Slave>;
+
+  //
+  // === METHODS ===
+  constructor(master: Directory_Tree, slave_parent: Directory_Tree_Slave);
+
+  get master(): Directory_Tree;
+  get path(): string;
+
+  get_map(
+    full_parent_path?: string,
+    recursive?: boolean
+  ): Map<string, Directory_Tree_Slave | Entry_Stats_intf>;
+  ensure_dirs_map(): void;
+
+  get_slave_subdir(dir_name: string): Directory_Tree_Slave;
+
+  set slave_subdirs(dirs_trees: Directory_Tree_Slave[]);
+
+  set slave_subdir(dir_tree: Directory_Tree_Slave);
+
+  set_stats_to_master(recursive_to_children?: boolean): void;
+
+  delete(dir_name: string): void;
 }

@@ -25,7 +25,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
 
   //
   // === PATH ===
-  get path() {
+  get path(): string {
     return this.master.path;
   }
 
@@ -45,7 +45,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
   /**
    * Ensure the map this.dirs exist ; if not, create it
    */
-  ensure_dirs_map() {
+  ensure_dirs_map(): void {
     if (!this.dirs) {
       this.dirs = new Map<string, Directory_Tree_Slave>();
     }
@@ -99,7 +99,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
    * @param recursive_to_children To also set sub directories trees' stats
    *                              to their master
    */
-  set_stats_to_master(recursive_to_children?: boolean) {
+  set_stats_to_master(recursive_to_children?: boolean): void {
     this.master.stats = this.stats;
 
     if (this.files) {
@@ -130,7 +130,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
    * Delete the specified tree directory from this.dirs
    * If this is now empty, call parent.delete(this.name)
    */
-  delete(dir_name: string) {
+  delete(dir_name: string): void {
     this.dirs.delete(dir_name);
 
     if (this.is_empty && this.parent) {

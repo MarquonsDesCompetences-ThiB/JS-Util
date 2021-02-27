@@ -3,6 +3,11 @@ export * as array from "./array/_array.js";
 //
 // === TYPES ===
 export * as types from "./types/_types.js";
+//
+// === Direct accesses ===
+export { bool } from "./types/_types.js";
+export { string } from "./types/_types.js";
+export { json } from "./types/_types.js";
 
 export * as obj from "./obj/_obj.js";
 

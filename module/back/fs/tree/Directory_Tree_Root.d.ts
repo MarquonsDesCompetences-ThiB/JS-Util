@@ -2,7 +2,6 @@
 import { Dirent, Stats } from "fs";
 import { Directory_Tree } from "./Directory_Tree.js";
 import { file } from "../../_back.js";
-import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 export declare class Directory_Tree_Root extends Directory_Tree {
     parent_stats?: Stats;
     /**
@@ -16,7 +15,6 @@ export declare class Directory_Tree_Root extends Directory_Tree {
     constructor(dirent_or_path: Dirent | string);
     get path(): string;
     set path(path: string);
-    select(entries_matching_path: string | string[], file_in_each_dir_matching_pattern?: RegExp): Directory_Tree_Slave;
     /**
      *
      * @param entries_matching_path

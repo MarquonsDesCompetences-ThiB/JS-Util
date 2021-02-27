@@ -1,5 +1,4 @@
 import { Directory_Tree_props, Entry_Stats_intf } from "./_props/Directory_Tree_props.js";
-import { Directory_Tree_Slave } from "./slave/Directory_Tree_Slave.js";
 export declare class Directory_Tree extends Directory_Tree_props {
     get master(): Directory_Tree;
     set subdirs(dirs_trees: Directory_Tree[]);
@@ -11,18 +10,6 @@ export declare class Directory_Tree extends Directory_Tree_props {
      */
     set subdir(dir_tree: Directory_Tree);
     get_files_matching_pattern(pattern: RegExp): Map<string, Entry_Stats_intf>;
-    /**
-     * Construct a slave tree
-     * of directories and files (from this.dirs and this.files)
-     * matching entries_matching_path or file_in_each_dir_matching_pattern
-     *
-     * @param entries_matching_path Directories/full file path
-     *                              of entries to retrieve
-     * @param file_in_each_dir_matching_pattern Files to retrieve
-     *                                          from every directory
-     * @param parent_dir_path Path of the parent directory
-     */
-    select(entries_matching_path: string | string[], file_in_each_dir_matching_pattern?: RegExp, parent_dir_path?: string): Directory_Tree_Slave;
     /**
      * Scan this directory in file system to fill this.dirs and this.files
      * @param dir_path
@@ -45,3 +32,19 @@ export declare class Directory_Tree extends Directory_Tree_props {
     };
     load(json_dir_tree: any): void;
 }
+declare class Directory_Tree_Slave extends Directory_Tree {
+    protected _master: Directory_Tree;
+    protected _parent: Directory_Tree_Slave;
+    dirs?: Map<string, Directory_Tree_Slave>;
+    constructor(master: Directory_Tree, slave_parent: Directory_Tree_Slave);
+    get master(): Directory_Tree;
+    get path(): string;
+    get_map(full_parent_path?: string, recursive?: boolean): Map<string, Directory_Tree_Slave | Entry_Stats_intf>;
+    ensure_dirs_map(): void;
+    get_slave_subdir(dir_name: string): Directory_Tree_Slave;
+    set slave_subdirs(dirs_trees: Directory_Tree_Slave[]);
+    set slave_subdir(dir_tree: Directory_Tree_Slave);
+    set_stats_to_master(recursive_to_children?: boolean): void;
+    delete(dir_name: string): void;
+}
+export {};

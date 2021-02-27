@@ -40,9 +40,6 @@ export class Directory_Tree_Root extends Directory_Tree {
         }
         this._path = path;
     }
-    select(entries_matching_path, file_in_each_dir_matching_pattern) {
-        return super.select(entries_matching_path, file_in_each_dir_matching_pattern, this.path);
-    }
     /**
      *
      * @param entries_matching_path
