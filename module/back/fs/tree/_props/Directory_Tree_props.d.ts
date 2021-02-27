@@ -1,15 +1,14 @@
 /// <reference types="node" />
 import { Dirent, Stats } from "fs";
-import { Directory_Tree } from "../Directory_Tree.js";
 export interface Entry_Stats_intf extends Dirent {
     stats?: Stats;
 }
 export declare abstract class Directory_Tree_props extends Dirent implements Entry_Stats_intf {
     stats?: Stats;
-    dirs?: Map<string, Directory_Tree>;
+    dirs?: Map<string, Directory_Tree_props>;
     files?: Map<string, Entry_Stats_intf>;
-    protected parent: Directory_Tree;
-    constructor(parent: Directory_Tree, dirent?: Dirent);
+    parent: Directory_Tree_props;
+    constructor(parent: Directory_Tree_props, dirent?: Dirent);
     set dirent(dirent: Dirent);
     get path(): string;
     get is_empty(): boolean;
@@ -17,12 +16,12 @@ export declare abstract class Directory_Tree_props extends Dirent implements Ent
      * Get a map of subdirs' trees and files,
      * as map whose keys are the full_path
      */
-    get_map(full_parent_path?: string, recursive?: boolean): Map<string, Directory_Tree | Entry_Stats_intf>;
+    get_map(full_parent_path?: string, recursive?: boolean): Map<string, Directory_Tree_props | Entry_Stats_intf>;
     /**
      * Ensure the map this.dirs exist ; if not, create it
      */
     ensure_dirs_map(): void;
-    get_subdir(dir_name: string): Directory_Tree;
+    get_subdir(dir_name: string): Directory_Tree_props;
     /**
      * Ensure the map this.files exist ; if not, create it
      */

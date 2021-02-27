@@ -16,9 +16,8 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 import { Directory_Tree_props, } from "./_props/Directory_Tree_props.js";
 import { promises as fs_promises } from "fs";
-import { equal as stats_equal } from "../stats.js";
 import { sanitize_regex_path } from "../fs.js";
-//import * as decl from "./directory_tree_slave/declaration.js";
+import { get_path_request } from "../path/path_request.js";
 export class Directory_Tree extends Directory_Tree_props {
     //
     // === MASTER ===
@@ -280,96 +279,6 @@ export class Directory_Tree extends Directory_Tree_props {
             }
         });
     }
-    /**
-     * Fetch a slave tree of only entries having any updated stats in file system
-     *
-     * @param parent_path Required for calls to non root parent,
-     *                    as they have not their full path
-     */
-    get_fs_updates(parent_path) {
-        return new Promise((success) => {
-            //
-            // Check preconds
-            {
-                if ((!parent_path || parent_path.length === 0) && !this.path) {
-                    throw TypeError("This Directory_Tree is not a root thus has no path, and no one is set as argument");
-                }
-            }
-            if (!parent_path) {
-                parent_path = this.path;
-            }
-            const entry_full_path = parent_path + this.name;
-            fs_promises.stat(entry_full_path).then((stats) => {
-                //
-                // If no change in file system
-                {
-                    if (stats_equal(this.stats, stats)) {
-                        return success(undefined);
-                    }
-                }
-                /**
-                 * Create a Directory_Tree_Slave with the specified stats
-                 * and look for updates in files and subdirs
-                 */
-                {
-                    const tree_slave = new Directory_Tree_Slave(this.master, undefined);
-                    const proms = [];
-                    //
-                    // Look for files updates
-                    {
-                        this.files.forEach((entry_stats) => {
-                            const prom = fs_promises.stat(entry_full_path + "/" + entry_stats.name);
-                            proms.push(prom);
-                            prom.then((stats) => {
-                                //
-                                // No fs update
-                                {
-                                    if (stats_equal(entry_stats.stats, stats)) {
-                                        return;
-                                    }
-                                }
-                                //
-                                // else add to tree slave
-                                tree_slave.file_entry = Object.assign(stats, {
-                                    name: entry_stats.name,
-                                });
-                            });
-                        });
-                    }
-                    //
-                    // Look for directories updates
-                    {
-                        this.dirs.forEach((subdir_tree) => {
-                            const prom = subdir_tree.get_fs_updates(entry_full_path + "/");
-                            proms.push(prom);
-                            prom.then((subdir_tree_slave) => {
-                                //
-                                // No fs update
-                                {
-                                    if (!subdir_tree_slave) {
-                                        return;
-                                    }
-                                }
-                                //
-                                // else add to tree slave
-                                {
-                                    subdir_tree_slave.parent = tree_slave;
-                                    tree_slave.slave_subdir = subdir_tree_slave;
-                                }
-                            });
-                        });
-                    }
-                    //
-                    // Wait for promises
-                    {
-                        Promise.all(proms).then(() => {
-                            success(tree_slave);
-                        });
-                    }
-                }
-            });
-        });
-    }
     //
     // === LOAD/GET AS JSON ===
     getJson() {
@@ -412,36 +321,5 @@ export class Directory_Tree extends Directory_Tree_props {
             });
         }
     }
-}
-function get_path_request(path) {
-    const ret = {
-        /**
-         * True if path starts with an all wildcard (**) and has others dirs/files following it
-         */
-        bAll_wildcard: false,
-        entry_to_find_reg: undefined,
-        bEntry_to_find_is_dir: undefined,
-        bIterate_subdirs: undefined,
-    };
-    if (path) {
-        if (path[0] === "**") {
-            ret.bAll_wildcard = true;
-            ret.entry_to_find_reg = new RegExp("^" + path[1] + "$");
-            ret.bEntry_to_find_is_dir = path.length > 2;
-        }
-        else {
-            ret.entry_to_find_reg = new RegExp("^" + path[0] + "$");
-            ret.bEntry_to_find_is_dir = path.length > 1;
-        }
-        ret.bIterate_subdirs =
-            ret.bEntry_to_find_is_dir &&
-                // path[1] could be empty if slash only used
-                // to specify path[0] is a directory (bEntry_is_dir)
-                path[1] !== "";
-    }
-    else {
-        ret.bIterate_subdirs = true;
-    }
-    return ret;
 }
 //# sourceMappingURL=Directory_Tree.js.map

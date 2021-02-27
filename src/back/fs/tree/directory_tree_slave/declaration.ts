@@ -10,7 +10,7 @@ export interface iDirectory_Tree_Slave extends Directory_Tree {
   // === Directory_Tree OVERRIDES ===
   //
   // === If not root only
-  //protected _parent: iDirectory_Tree_Slave;
+  parent: iDirectory_Tree_Slave;
 
   dirs?: Map<string, iDirectory_Tree_Slave>;
 

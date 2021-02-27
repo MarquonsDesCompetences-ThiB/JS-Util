@@ -1,8 +1,8 @@
-import { Directory_Tree_Slave } from "./Directory_Tree_Slave.js";
-import { sanitize_regex_path } from "../../fs.js";
-import { equal as stats_equal } from "../../stats.js";
+import { Directory_Tree_Slave } from "./directory_tree_slave/Directory_Tree_Slave.js";
+import { sanitize_regex_path } from "../fs.js";
+import { equal as stats_equal } from "../stats.js";
 import { promises as fs_promises } from "fs";
-import { Directory_Tree_Root } from "../Directory_Tree_Root.js";
+import { Directory_Tree_Root } from "./Directory_Tree_Root.js";
 /**
  * Construct a slave tree
  * of directories and files (from directory_tree.dirs and directory_tree.files)
@@ -188,4 +188,4 @@ export function get_fs_updates(directory_tree, parent_path) {
         });
     });
 }
-//# sourceMappingURL=slave_statics.js.map
+//# sourceMappingURL=util.js.map

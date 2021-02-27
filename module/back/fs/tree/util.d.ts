@@ -1,5 +1,5 @@
-import { Directory_Tree } from "../Directory_Tree.js";
-import { Directory_Tree_Slave } from "./Directory_Tree_Slave.js";
+import { Directory_Tree } from "./Directory_Tree.js";
+import { Directory_Tree_Slave } from "./directory_tree_slave/Directory_Tree_Slave.js";
 /**
  * Construct a slave tree
  * of directories and files (from directory_tree.dirs and directory_tree.files)

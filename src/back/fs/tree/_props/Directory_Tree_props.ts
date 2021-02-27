@@ -1,5 +1,4 @@
 import { Dirent, Stats } from "fs";
-import { Directory_Tree } from "../Directory_Tree.js";
 
 export interface Entry_Stats_intf extends Dirent {
   stats?: Stats;
@@ -10,14 +9,14 @@ export abstract class Directory_Tree_props
   implements Entry_Stats_intf {
   stats?: Stats;
 
-  dirs?: Map<string, Directory_Tree>;
+  dirs?: Map<string, Directory_Tree_props>;
   files?: Map<string, Entry_Stats_intf>;
 
   //
   // === Children only
-  protected parent: Directory_Tree;
+  parent: Directory_Tree_props;
 
-  constructor(parent: Directory_Tree, dirent?: Dirent) {
+  constructor(parent: Directory_Tree_props, dirent?: Dirent) {
     super();
 
     this.parent = parent;
@@ -57,7 +56,7 @@ export abstract class Directory_Tree_props
   get_map(
     full_parent_path?: string,
     recursive?: boolean
-  ): Map<string, Directory_Tree | Entry_Stats_intf> {
+  ): Map<string, Directory_Tree_props | Entry_Stats_intf> {
     //
     // Sanitize arguments
     {
@@ -68,7 +67,7 @@ export abstract class Directory_Tree_props
       }
     }
 
-    const map = new Map<string, Directory_Tree | Entry_Stats_intf>();
+    const map = new Map<string, Directory_Tree_props | Entry_Stats_intf>();
 
     //
     // Add subdirs
@@ -113,11 +112,11 @@ export abstract class Directory_Tree_props
    */
   ensure_dirs_map() {
     if (!this.dirs) {
-      this.dirs = new Map<string, Directory_Tree>();
+      this.dirs = new Map<string, Directory_Tree_props>();
     }
   }
 
-  get_subdir(dir_name: string): Directory_Tree {
+  get_subdir(dir_name: string): Directory_Tree_props {
     if (!this.dirs) {
       return undefined;
     }

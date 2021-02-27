@@ -1,4 +1,4 @@
-import { Directory_Tree } from "../Directory_Tree.js";
+import { Directory_Tree_props } from "../_props/Directory_Tree_props.js";
 export class Directory_Tree_Slave extends Directory_Tree {
     constructor(master, slave_parent) {
         super(slave_parent);
@@ -95,7 +95,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
             }
         }
         if (this.is_empty && this.parent) {
-            this._parent.delete(this.name);
+            this.parent.delete(this.name);
         }
     }
     /**
@@ -105,7 +105,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
     delete(dir_name) {
         this.dirs.delete(dir_name);
         if (this.is_empty && this.parent) {
-            this._parent.delete(this.name);
+            this.parent.delete(this.name);
         }
     }
 }
