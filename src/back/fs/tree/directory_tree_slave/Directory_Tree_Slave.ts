@@ -1,18 +1,21 @@
 import { Directory_Tree } from "../Directory_Tree.js";
 import { Entry_Stats_intf } from "../_props/Directory_Tree_props.js";
+import { iDirectory_Tree_Slave } from "./declaration.js";
 
-export class Directory_Tree_Slave extends Directory_Tree {
+export class Directory_Tree_Slave
+  extends Directory_Tree
+  implements iDirectory_Tree_Slave {
   protected _master: Directory_Tree;
 
   //
   // === Directory_Tree OVERRIDES ===
   //
   // === If not root only
-  protected _parent: Directory_Tree_Slave;
+  protected _parent: iDirectory_Tree_Slave;
 
-  dirs?: Map<string, Directory_Tree_Slave>;
+  dirs?: Map<string, iDirectory_Tree_Slave>;
 
-  constructor(master: Directory_Tree, slave_parent: Directory_Tree_Slave) {
+  constructor(master: Directory_Tree, slave_parent: iDirectory_Tree_Slave) {
     super(slave_parent);
     this._master = master;
   }
@@ -47,15 +50,15 @@ export class Directory_Tree_Slave extends Directory_Tree {
    */
   ensure_dirs_map(): void {
     if (!this.dirs) {
-      this.dirs = new Map<string, Directory_Tree_Slave>();
+      this.dirs = new Map<string, iDirectory_Tree_Slave>();
     }
   }
 
-  get_slave_subdir(dir_name: string): Directory_Tree_Slave {
-    return <Directory_Tree_Slave>super.get_subdir(dir_name);
+  get_slave_subdir(dir_name: string): iDirectory_Tree_Slave {
+    return <iDirectory_Tree_Slave>super.get_subdir(dir_name);
   }
 
-  set slave_subdirs(dirs_trees: Directory_Tree_Slave[]) {
+  set slave_subdirs(dirs_trees: iDirectory_Tree_Slave[]) {
     this.ensure_dirs_map();
     dirs_trees.forEach((tree) => {
       this.dirs.set(tree.name, tree);
@@ -68,7 +71,7 @@ export class Directory_Tree_Slave extends Directory_Tree {
    * values with those in dir_tree
    * => enable slaves to keep their value up to date
    */
-  set slave_subdir(dir_tree: Directory_Tree_Slave) {
+  set slave_subdir(dir_tree: iDirectory_Tree_Slave) {
     this.ensure_dirs_map();
 
     const dir_set = this.dirs.get(dir_tree.name);

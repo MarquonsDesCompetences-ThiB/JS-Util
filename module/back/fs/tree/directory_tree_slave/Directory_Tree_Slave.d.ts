@@ -1,10 +1,11 @@
 import { Directory_Tree } from "../Directory_Tree.js";
 import { Entry_Stats_intf } from "../_props/Directory_Tree_props.js";
-export declare class Directory_Tree_Slave extends Directory_Tree {
+import { iDirectory_Tree_Slave } from "./declaration.js";
+export declare class Directory_Tree_Slave extends Directory_Tree implements iDirectory_Tree_Slave {
     protected _master: Directory_Tree;
-    protected _parent: Directory_Tree_Slave;
-    dirs?: Map<string, Directory_Tree_Slave>;
-    constructor(master: Directory_Tree, slave_parent: Directory_Tree_Slave);
+    protected _parent: iDirectory_Tree_Slave;
+    dirs?: Map<string, iDirectory_Tree_Slave>;
+    constructor(master: Directory_Tree, slave_parent: iDirectory_Tree_Slave);
     get master(): Directory_Tree;
     get path(): string;
     /**
@@ -16,15 +17,15 @@ export declare class Directory_Tree_Slave extends Directory_Tree {
      * Ensure the map this.dirs exist ; if not, create it
      */
     ensure_dirs_map(): void;
-    get_slave_subdir(dir_name: string): Directory_Tree_Slave;
-    set slave_subdirs(dirs_trees: Directory_Tree_Slave[]);
+    get_slave_subdir(dir_name: string): iDirectory_Tree_Slave;
+    set slave_subdirs(dirs_trees: iDirectory_Tree_Slave[]);
     /**
      * Add the specified directory tree to this.dirs
      * If one with this name already exists, update its
      * values with those in dir_tree
      * => enable slaves to keep their value up to date
      */
-    set slave_subdir(dir_tree: Directory_Tree_Slave);
+    set slave_subdir(dir_tree: iDirectory_Tree_Slave);
     /**
      * Set this' stats to its master
      * Recursive by default : also this' files and dirs
