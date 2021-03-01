@@ -41,4 +41,8 @@ export function import_files_async(...file_path) {
         return modules;
     });
 }
+export function get_root_dir_path() {
+    //return dirname(fileURLToPath(import.meta.url));
+    return process.env.INIT_CWD;
+}
 //# sourceMappingURL=Ems_from_Cjs.js.map

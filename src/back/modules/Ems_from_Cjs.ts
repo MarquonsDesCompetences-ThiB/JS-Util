@@ -1,5 +1,6 @@
 "use strict";
-import { pathToFileURL } from "url";
+import { pathToFileURL, fileURLToPath } from "url";
+import { dirname } from "path";
 
 export function import_file(file_path) {
   return import(pathToFileURL(file_path).toString());
@@ -36,4 +37,9 @@ export async function import_files_async(...file_path) {
   });
 
   return modules;
+}
+
+export function get_root_dir_path() {
+  //return dirname(fileURLToPath(import.meta.url));
+  return process.env.INIT_CWD;
 }
