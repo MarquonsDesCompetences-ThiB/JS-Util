@@ -261,7 +261,7 @@ export class Obj extends Obj_props {
      *                          to string are null
      */
     toJSON(exclude_jsonify, include_not_enumerable_props, include_cyclic, as_string) {
-        let specs_flags = prop_specs.eSpec.ENUM;
+        let specs_flags = prop_specs.eSpec.DESCR_ENUMERABLE;
         //
         // Init specs_flags from arguments
         {
@@ -272,7 +272,7 @@ export class Obj extends Obj_props {
                 specs_flags |= prop_specs.eSpec.JSONIFY;
             }
             if (include_not_enumerable_props) {
-                specs_flags |= prop_specs.eSpec.NOT_ENUM;
+                specs_flags |= prop_specs.eSpec.ENUM;
             }
         }
         let ret = {};
@@ -292,7 +292,7 @@ export class Obj extends Obj_props {
      * @return {json}
      */
     get_cloned_JSON(exclude_jsonify, include_not_enumerable_props, include_cyclic, as_string) {
-        let specs_flags = prop_specs.eSpec.ENUM;
+        let specs_flags = prop_specs.eSpec.DESCR_ENUMERABLE;
         //
         // Init specs_flags from arguments
         {
@@ -303,7 +303,7 @@ export class Obj extends Obj_props {
                 specs_flags |= prop_specs.eSpec.JSONIFY;
             }
             if (include_not_enumerable_props) {
-                specs_flags |= prop_specs.eSpec.NOT_ENUM;
+                specs_flags |= prop_specs.eSpec.ENUM;
             }
         }
         let ret = {};

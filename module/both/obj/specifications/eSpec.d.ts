@@ -1,24 +1,32 @@
 export declare enum eSpec {
     /**
-     * @cyclic
+     * descriptor.enumerable = true
      */
-    CYCLIC = 1,
+    DESCR_CONFIGURABLE = 1,
     /**
      * descriptor.enumerable = true
      */
-    ENUM = 2,
+    DESCR_ENUMERABLE = 2,
+    /**
+     * descriptor.enumerable = true
+     */
+    DESCR_WRITABLE = 4,
+    /**
+     * @cyclic
+     */
+    CYCLIC = 8,
     /**
      * descriptor.enumerable = false
-     * AND @not_enum
+     * AND @enum
      */
-    NOT_ENUM = 4,
+    ENUM = 16,
     /**
      * @jsonify
      */
-    JSONIFY = 8,
+    JSONIFY = 32,
     /**
      * @jsonified
      */
-    JSONIFIED = 16,
-    ALL = 31
+    JSONIFIED = 64,
+    ALL = 127
 }

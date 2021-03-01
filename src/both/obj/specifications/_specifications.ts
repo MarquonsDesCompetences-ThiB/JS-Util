@@ -4,7 +4,9 @@ export * as meths from "./methods/_methods.js";
 
 import { eSpec } from "./eSpec.js";
 import * as properties from "./properties/_properties.js";
+const props_enums = properties.enumerable;
 import * as methods from "./methods/_methods.js";
+const meths_enums = methods.enumerable;
 
 //
 // === DECORATORS DIRECT ACCESS ===
@@ -17,17 +19,15 @@ export const decs = {
 // === KEYS / VALUES / ENTRIES combining both properties and methods ===
 export const not_enum = {
   keys: function (obj: any) {
-    return properties.not_enum.keys(obj).concat(methods.not_enum.keys(obj));
+    return props_enums.keys(obj).concat(meths_enums.keys(obj));
   },
 
   values: function (obj: any) {
-    return properties.not_enum.values(obj).concat(methods.not_enum.values(obj));
+    return props_enums.values(obj).concat(meths_enums.values(obj));
   },
 
   entries: function (obj: any): [string, any][] {
-    return properties.not_enum
-      .entries(obj)
-      .concat(methods.not_enum.entries(obj));
+    return props_enums.entries(obj).concat(meths_enums.entries(obj));
   },
 };
 
@@ -74,17 +74,17 @@ export function own_keys(obj: any, ...specs_flags: number[]) {
     for (let flag = 0; flag < specs_flag; flag *= 2) {
       if (flag & specs_flag) {
         switch (flag) {
+          case eSpec.DESCR_ENUMERABLE:
+            // not_enum exists both for properties and methods
+            props.concat(not_enum.keys(obj));
+            break;
+
           case eSpec.CYCLIC:
             props.concat(properties.cyclic.keys(obj));
             break;
 
           case eSpec.ENUM:
             props.concat(Object.keys(obj));
-            break;
-
-          case eSpec.NOT_ENUM:
-            // not_enum exists both for properties and methods
-            props.concat(not_enum.keys(obj));
             break;
 
           case eSpec.JSONIFIED:
@@ -147,17 +147,17 @@ export function own_values(obj: any, ...specs_flags: number[]) {
     for (let flag = 0; flag < specs_flag; flag *= 2) {
       if (flag & specs_flag) {
         switch (flag) {
+          case eSpec.DESCR_ENUMERABLE:
+            // not_enum exists both for properties and methods
+            props.concat(not_enum.values(obj));
+            break;
+
           case eSpec.CYCLIC:
             props.concat(properties.cyclic.values(obj));
             break;
 
           case eSpec.ENUM:
             props.concat(Object.values(obj));
-            break;
-
-          case eSpec.NOT_ENUM:
-            // not_enum exists both for properties and methods
-            props.concat(not_enum.values(obj));
             break;
 
           case eSpec.JSONIFIED:
@@ -220,17 +220,17 @@ export function own_entries(obj: any, ...specs_flags: number[]) {
     for (let flag = 0; flag < specs_flag; flag *= 2) {
       if (flag & specs_flag) {
         switch (flag) {
+          case eSpec.DESCR_ENUMERABLE:
+            //not_enum exists both for properties and methods
+            props.concat(not_enum.entries(obj));
+            break;
+
           case eSpec.CYCLIC:
             props.concat(properties.cyclic.entries(obj));
             break;
 
           case eSpec.ENUM:
             props.concat(Object.entries(obj));
-            break;
-
-          case eSpec.NOT_ENUM:
-            //not_enum exists both for properties and methods
-            props.concat(not_enum.entries(obj));
             break;
 
           case eSpec.JSONIFIED:

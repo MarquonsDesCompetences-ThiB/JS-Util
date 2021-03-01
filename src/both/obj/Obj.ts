@@ -304,7 +304,7 @@ export class Obj extends Obj_props {
     include_cyclic?: boolean,
     as_string?: boolean
   ) {
-    let specs_flags = prop_specs.eSpec.ENUM;
+    let specs_flags = prop_specs.eSpec.DESCR_ENUMERABLE;
     //
     // Init specs_flags from arguments
     {
@@ -317,7 +317,7 @@ export class Obj extends Obj_props {
       }
 
       if (include_not_enumerable_props) {
-        specs_flags |= prop_specs.eSpec.NOT_ENUM;
+        specs_flags |= prop_specs.eSpec.ENUM;
       }
     }
 
@@ -347,7 +347,7 @@ export class Obj extends Obj_props {
     include_cyclic?: boolean,
     as_string?: boolean
   ) {
-    let specs_flags = prop_specs.eSpec.ENUM;
+    let specs_flags = prop_specs.eSpec.DESCR_ENUMERABLE;
     //
     // Init specs_flags from arguments
     {
@@ -359,7 +359,7 @@ export class Obj extends Obj_props {
       }
 
       if (include_not_enumerable_props) {
-        specs_flags |= prop_specs.eSpec.NOT_ENUM;
+        specs_flags |= prop_specs.eSpec.ENUM;
       }
     }
 

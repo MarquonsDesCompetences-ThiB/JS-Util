@@ -1,11 +1,11 @@
 export * as jsonify from "./jsonify.js";
-export * as not_enum from "./not_enum.js";
+export * as enumerable from "./enumerable.js";
 
 //
 // === DECORATORS DIRECT ACCESS ===
 import { jsonify } from "./jsonify.js";
-import { not_enum } from "./not_enum.js";
+import { enumerable } from "./enumerable.js";
 export const decs = {
   jsonify,
-  not_enum,
+  enum: enumerable,
 };

@@ -7,11 +7,11 @@ export declare const decs: {
     props: {
         cyclic: typeof properties.cyclic.cyclic;
         jsonified: typeof properties.jsonified.jsonified;
-        not_enum: typeof properties.not_enum.not_enum;
+        enum: typeof properties.enumerable.enumerable;
     };
     meths: {
         jsonify: typeof methods.jsonify.jsonify;
-        not_enum: typeof methods.not_enum.not_enum;
+        enum: typeof methods.enumerable.enumerable;
     };
 };
 export declare const not_enum: {

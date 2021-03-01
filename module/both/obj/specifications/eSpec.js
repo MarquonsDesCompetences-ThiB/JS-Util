@@ -1,26 +1,34 @@
 export var eSpec;
 (function (eSpec) {
     /**
-     * @cyclic
+     * descriptor.enumerable = true
      */
-    eSpec[eSpec["CYCLIC"] = 1] = "CYCLIC";
+    eSpec[eSpec["DESCR_CONFIGURABLE"] = 1] = "DESCR_CONFIGURABLE";
     /**
      * descriptor.enumerable = true
      */
-    eSpec[eSpec["ENUM"] = 2] = "ENUM";
+    eSpec[eSpec["DESCR_ENUMERABLE"] = 2] = "DESCR_ENUMERABLE";
+    /**
+     * descriptor.enumerable = true
+     */
+    eSpec[eSpec["DESCR_WRITABLE"] = 4] = "DESCR_WRITABLE";
+    /**
+     * @cyclic
+     */
+    eSpec[eSpec["CYCLIC"] = 8] = "CYCLIC";
     /**
      * descriptor.enumerable = false
-     * AND @not_enum
+     * AND @enum
      */
-    eSpec[eSpec["NOT_ENUM"] = 4] = "NOT_ENUM";
+    eSpec[eSpec["ENUM"] = 16] = "ENUM";
     /**
      * @jsonify
      */
-    eSpec[eSpec["JSONIFY"] = 8] = "JSONIFY";
+    eSpec[eSpec["JSONIFY"] = 32] = "JSONIFY";
     /**
      * @jsonified
      */
-    eSpec[eSpec["JSONIFIED"] = 16] = "JSONIFIED";
-    eSpec[eSpec["ALL"] = 31] = "ALL";
+    eSpec[eSpec["JSONIFIED"] = 64] = "JSONIFIED";
+    eSpec[eSpec["ALL"] = 127] = "ALL";
 })(eSpec || (eSpec = {}));
 //# sourceMappingURL=eSpec.js.map
