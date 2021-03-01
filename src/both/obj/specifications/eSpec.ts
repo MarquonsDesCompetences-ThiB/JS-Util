@@ -1,4 +1,4 @@
-export enum eProp_Spec {
+export enum eSpec {
   /**
    * @cyclic
    */

@@ -1,6 +1,7 @@
 /**
- * Associate class names to their properties declared as enumerable
- * with the decorator @enum
+ * Associate class names to their properties declared as
+ * having a "jsonifying method"
+ * with the decorator @jsonified
  */
 const jsonified_props = new Map<string, string[]>();
 

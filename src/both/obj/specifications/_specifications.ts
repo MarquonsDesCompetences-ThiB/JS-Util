@@ -1,28 +1,43 @@
-export { eProp_Spec } from "./specs.js";
-export * as cyclic from "./cyclic.js";
-export * as jsonify from "./jsonify.js";
-export * as jsonified from "./jsonified.js";
-export * as not_enum from "./not_enum.js";
+export { eSpec } from "./eSpec.js";
+export * as props from "./properties/_properties.js";
+export * as meths from "./methods/_methods.js";
 
-import * as cyclic from "./cyclic.js";
-import * as jsonify from "./jsonify.js";
-import * as jsonified from "./jsonified.js";
-import * as not_enum from "./not_enum.js";
-export const decorators = {
-  cyclic: cyclic.cyclic,
-  jsonified: jsonified.jsonified,
-  jsonify: jsonify.jsonify,
-  not_enum: not_enum.not_enum,
+import { eSpec } from "./eSpec.js";
+import * as properties from "./properties/_properties.js";
+import * as methods from "./methods/_methods.js";
+
+//
+// === DECORATORS DIRECT ACCESS ===
+export const decs = {
+  props: properties.decs,
+  meths: methods.decs,
 };
 
-import { eProp_Spec } from "./specs.js";
+//
+// === KEYS / VALUES / ENTRIES combining both properties and methods ===
+export const not_enum = {
+  keys: function (obj: any) {
+    return properties.not_enum.keys(obj).concat(methods.not_enum.keys(obj));
+  },
+
+  values: function (obj: any) {
+    return properties.not_enum.values(obj).concat(methods.not_enum.values(obj));
+  },
+
+  entries: function (obj: any): [string, any][] {
+    return properties.not_enum
+      .entries(obj)
+      .concat(methods.not_enum.entries(obj));
+  },
+};
+
 import { Set_Array } from "@src/both/array/_array.js";
 
 //
 // === KEYS ===
 /**
  * Return all the obj's properties (even obj's parents ones)
- * according to specs_flags
+ * according to specs_flags {eSpec}
  *
  * @param obj
  * @param specs_flags
@@ -43,7 +58,7 @@ export function keys(obj: any, ...specs_flags: number[]) {
 }
 
 /**
- * Return the requested properties (specified by specs_flags)
+ * Return the requested properties (specified by specs_flags {eSpec})
  * owned by obj
  *
  * @param obj
@@ -59,24 +74,25 @@ export function own_keys(obj: any, ...specs_flags: number[]) {
     for (let flag = 0; flag < specs_flag; flag *= 2) {
       if (flag & specs_flag) {
         switch (flag) {
-          case eProp_Spec.CYCLIC:
-            props.concat(cyclic.keys(obj));
+          case eSpec.CYCLIC:
+            props.concat(properties.cyclic.keys(obj));
             break;
 
-          case eProp_Spec.ENUM:
+          case eSpec.ENUM:
             props.concat(Object.keys(obj));
             break;
 
-          case eProp_Spec.NOT_ENUM:
+          case eSpec.NOT_ENUM:
+            // not_enum exists both for properties and methods
             props.concat(not_enum.keys(obj));
             break;
 
-          case eProp_Spec.JSONIFIED:
-            props.concat(jsonified.keys(obj));
+          case eSpec.JSONIFIED:
+            props.concat(properties.jsonified.keys(obj));
             break;
 
-          case eProp_Spec.JSONIFY:
-            props.concat(jsonify.keys(obj));
+          case eSpec.JSONIFY:
+            props.concat(methods.jsonify.keys(obj));
             break;
 
           default:
@@ -131,24 +147,25 @@ export function own_values(obj: any, ...specs_flags: number[]) {
     for (let flag = 0; flag < specs_flag; flag *= 2) {
       if (flag & specs_flag) {
         switch (flag) {
-          case eProp_Spec.CYCLIC:
-            props.concat(cyclic.values(obj));
+          case eSpec.CYCLIC:
+            props.concat(properties.cyclic.values(obj));
             break;
 
-          case eProp_Spec.ENUM:
+          case eSpec.ENUM:
             props.concat(Object.values(obj));
             break;
 
-          case eProp_Spec.NOT_ENUM:
+          case eSpec.NOT_ENUM:
+            // not_enum exists both for properties and methods
             props.concat(not_enum.values(obj));
             break;
 
-          case eProp_Spec.JSONIFIED:
-            props.concat(jsonified.values(obj));
+          case eSpec.JSONIFIED:
+            props.concat(properties.jsonified.values(obj));
             break;
 
-          case eProp_Spec.JSONIFY:
-            props.concat(jsonify.values(obj));
+          case eSpec.JSONIFY:
+            props.concat(methods.jsonify.values(obj));
             break;
 
           default:
@@ -203,24 +220,25 @@ export function own_entries(obj: any, ...specs_flags: number[]) {
     for (let flag = 0; flag < specs_flag; flag *= 2) {
       if (flag & specs_flag) {
         switch (flag) {
-          case eProp_Spec.CYCLIC:
-            props.concat(cyclic.entries(obj));
+          case eSpec.CYCLIC:
+            props.concat(properties.cyclic.entries(obj));
             break;
 
-          case eProp_Spec.ENUM:
+          case eSpec.ENUM:
             props.concat(Object.entries(obj));
             break;
 
-          case eProp_Spec.NOT_ENUM:
+          case eSpec.NOT_ENUM:
+            //not_enum exists both for properties and methods
             props.concat(not_enum.entries(obj));
             break;
 
-          case eProp_Spec.JSONIFIED:
-            props.concat(jsonified.entries(obj));
+          case eSpec.JSONIFIED:
+            props.concat(properties.jsonified.entries(obj));
             break;
 
-          case eProp_Spec.JSONIFY:
-            props.concat(jsonify.entries(obj));
+          case eSpec.JSONIFY:
+            props.concat(methods.jsonify.entries(obj));
             break;
 
           default:

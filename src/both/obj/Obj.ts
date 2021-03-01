@@ -3,7 +3,7 @@ import { json } from "@type/_types.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "@src/both/_both.js";
 import { is_primitive } from "../types/type.js";
-import * as props from "./properties/_properties.js";
+import * as prop_specs from "./specifications/_specifications.js";
 
 /**
  * Preconds
@@ -304,26 +304,26 @@ export class Obj extends Obj_props {
     include_cyclic?: boolean,
     as_string?: boolean
   ) {
-    let specs_flags = props.eProp_Spec.ENUM;
+    let specs_flags = prop_specs.eSpec.ENUM;
     //
     // Init specs_flags from arguments
     {
       if (include_cyclic) {
-        specs_flags |= props.eProp_Spec.CYCLIC;
+        specs_flags |= prop_specs.eSpec.CYCLIC;
       }
 
       if (!exclude_jsonify) {
-        specs_flags |= props.eProp_Spec.JSONIFY;
+        specs_flags |= prop_specs.eSpec.JSONIFY;
       }
 
       if (include_not_enumerable_props) {
-        specs_flags |= props.eProp_Spec.NOT_ENUM;
+        specs_flags |= prop_specs.eSpec.NOT_ENUM;
       }
     }
 
     let ret = {};
 
-    props.entries(this, specs_flags).forEach(([key, val]) => {
+    prop_specs.entries(this, specs_flags).forEach(([key, val]) => {
       ret[key] = json.to_json_value(val);
 
       if (as_string) {
@@ -347,25 +347,25 @@ export class Obj extends Obj_props {
     include_cyclic?: boolean,
     as_string?: boolean
   ) {
-    let specs_flags = props.eProp_Spec.ENUM;
+    let specs_flags = prop_specs.eSpec.ENUM;
     //
     // Init specs_flags from arguments
     {
       if (include_cyclic) {
-        specs_flags |= props.eProp_Spec.CYCLIC;
+        specs_flags |= prop_specs.eSpec.CYCLIC;
       }
       if (!exclude_jsonify) {
-        specs_flags |= props.eProp_Spec.JSONIFY;
+        specs_flags |= prop_specs.eSpec.JSONIFY;
       }
 
       if (include_not_enumerable_props) {
-        specs_flags |= props.eProp_Spec.NOT_ENUM;
+        specs_flags |= prop_specs.eSpec.NOT_ENUM;
       }
     }
 
     let ret = {};
 
-    props.entries(this, specs_flags).forEach(([key, val]) => {
+    prop_specs.entries(this, specs_flags).forEach(([key, val]) => {
       ret[key] = json.clone_value(val);
 
       if (as_string) {
