@@ -1,6 +1,7 @@
 "use strict";
 import { obj, text } from "@src/both/_both.js";
 import { sep as os_path_separator } from "path";
+import { specs as obj_specs } from "@obj/_obj.js";
 
 export abstract class File_props extends obj.Obj {
   //
@@ -27,6 +28,7 @@ export abstract class File_props extends obj.Obj {
   // === Content setter
   protected _content_set_;
 
+  @obj_specs.decs.meths.enum
   set content(content: string | any[][]) {
     if (content as string) {
       this.#_cntnt_str = <string>content;
@@ -48,7 +50,7 @@ export abstract class File_props extends obj.Obj {
     return this.#_xt;
   }
 
-  protected _ext_set_;
+  @obj_specs.decs.meths.enum
   set ext(ext) {
     //
     // Remove forbidden characters from name and set
@@ -69,7 +71,7 @@ export abstract class File_props extends obj.Obj {
   /**
    * Parse the specified name to split name and extension
    */
-  protected _full_name_set_;
+  @obj_specs.decs.meths.enum
   set full_name(full_name: string) {
     const last_dot_idx = full_name.lastIndexOf(".");
     if (last_dot_idx < 0) {
@@ -92,7 +94,7 @@ export abstract class File_props extends obj.Obj {
    * Parse the specified path to split directories path,
    * file's name and extension
    */
-  protected _full_path_set_;
+  @obj_specs.decs.meths.enum
   set full_path(full_path: string) {
     const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\/)/);
     if (last_delimiter_idx < 0) {
@@ -112,7 +114,7 @@ export abstract class File_props extends obj.Obj {
     return this.#_n;
   }
 
-  protected _name_set_;
+  @obj_specs.decs.meths.enum
   set name(name) {
     //
     // Remove forbidden characters from name and set
@@ -132,7 +134,7 @@ export abstract class File_props extends obj.Obj {
     return this.#_p;
   }
 
-  protected _path_set_;
+  @obj_specs.decs.meths.enum
   set path(path) {
     //
     // Remove forbidden characters from path and set
@@ -191,7 +193,7 @@ export abstract class File_props extends obj.Obj {
     }
   }
 
-  protected _nb_set_;
+  @obj_specs.decs.meths.enum
   set nb(nb) {
     const symb = Symbol.for("_nb_rws");
 

@@ -1,4 +1,10 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, privateMap) {
     if (!privateMap.has(receiver)) {
         throw new TypeError("attempted to get private field on non-instance");
@@ -15,6 +21,7 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __cntnt_2rr, __cntnt_str, __xt, __n, __p;
 import { obj, text } from "../../../both/_both.js";
 import { sep as os_path_separator } from "path";
+import { specs as obj_specs } from "../../../both/obj/_obj.js";
 export class File_props extends obj.Obj {
     constructor() {
         super(...arguments);
@@ -78,6 +85,9 @@ export class File_props extends obj.Obj {
     get full_name() {
         return this.name + (this.ext != null ? "." + this.ext : "");
     }
+    /**
+     * Parse the specified name to split name and extension
+     */
     set full_name(full_name) {
         const last_dot_idx = full_name.lastIndexOf(".");
         if (last_dot_idx < 0) {
@@ -93,6 +103,10 @@ export class File_props extends obj.Obj {
     get full_path() {
         return this.path + this.full_name;
     }
+    /**
+     * Parse the specified path to split directories path,
+     * file's name and extension
+     */
     set full_path(full_path) {
         const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\/)/);
         if (last_delimiter_idx < 0) {
@@ -182,4 +196,25 @@ export class File_props extends obj.Obj {
     }
 }
 __cntnt_2rr = new WeakMap(), __cntnt_str = new WeakMap(), __xt = new WeakMap(), __n = new WeakMap(), __p = new WeakMap();
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "content", null);
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "ext", null);
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "full_name", null);
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "full_path", null);
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "name", null);
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "path", null);
+__decorate([
+    obj_specs.decs.meths.enum
+], File_props.prototype, "nb", null);
 //# sourceMappingURL=File_props.js.map
