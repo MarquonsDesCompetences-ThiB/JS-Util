@@ -1,9 +1,15 @@
+export * as request from "./path_request.js";
+export * as split from "./split.js";
+
+import { string } from "@both_types/_types.js";
+
 /**
- * Functions returning the :
- *  - OS' temporary directory (tmp_dir_path)
- *  - user's directory (user_dir_path)
+ * Return the delimiter (/ or \\) used in the specified path
+ * @param path
  */
-export { tmpdir as tmp_dir_path, homedir as user_dir_path } from "os";
+export function delimiter(path: string) {
+  return /\//.test(path) ? "/" : "\\";
+}
 
 /**
  * Convert the specified path to a regex :
@@ -32,10 +38,14 @@ export function path_to_regex(path: string) {
 export function sanitize_regex_path(
   path: string | string[]
 ): string[] | undefined {
+  if (path == null) {
+    return undefined;
+  }
+
   //
   // Convert path to string[] if is a string
   {
-    if (path as string) {
+    if (string.is(path)) {
       //
       // Split by slash or backslash
       if (/\//.test(<string>path)) {
