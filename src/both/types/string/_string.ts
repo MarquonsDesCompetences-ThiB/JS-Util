@@ -1,5 +1,6 @@
 "use strict";
-import * as number from "./number.js";
+export * as format from "./format.js";
+
 import randomstring from "randomstring";
 
 /**
@@ -58,13 +59,33 @@ export function nb_occurences(regex: RegExp, str: string): number {
   return nb;
 }
 
+const whitespaces_regex_start = /^\s*/;
+const whitespaces_regex_end = /\s*$/;
+export function remove_starting_whitespaces(str: string) {
+  return str.replace(whitespaces_regex_start, "");
+}
+
+export function remove_ending_whitespaces(str: string) {
+  return str.replace(whitespaces_regex_end, "");
+}
+
 /**
  * Remove starting and ending spaces in str and return the result
  * @param str
  */
 export function remove_enclosing_spaces(str: string): string {
-  const formatted = str.replace(/^\s*/, ""); //start spaces
-  return formatted.replace(/\s*$/, ""); //end spaces
+  return remove_starting_whitespaces(remove_ending_whitespaces(str));
+}
+
+export function repeat(
+  nb_repeat: number,
+  char: string = "\t",
+  str: string = ""
+): string {
+  for (let i = 0; i < nb_repeat; i++) {
+    str += char;
+  }
+  return str;
 }
 
 /**
@@ -82,10 +103,11 @@ export function to(obj: any): string {
     }
   }
 
+  const type = typeof obj;
   //
-  // Number
+  // Number|number
   {
-    if (number.is(obj)) {
+    if (type === "number" || obj instanceof Number) {
       return obj + "";
     }
   }
@@ -93,7 +115,7 @@ export function to(obj: any): string {
   //
   // Object with toString method
   {
-    if (typeof obj === "object" && typeof obj.toString === "function") {
+    if (type === "object" && typeof obj.toString === "function") {
       return obj.toString();
     }
   }
@@ -104,7 +126,6 @@ export function to(obj: any): string {
     try {
       return new String(obj) + "";
     } catch (ex) {
-      const type = typeof obj;
       const msg =
         "Could not convert variable of type " +
         type +

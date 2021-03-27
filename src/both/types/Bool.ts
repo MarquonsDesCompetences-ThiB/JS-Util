@@ -1,6 +1,6 @@
 "use strict";
-import { number } from "./_types.js";
-import { text } from "@both/_both.js";
+import * as number from "./number.js";
+import * as string from "./string/_string.js";
 
 /**
  * Return if obj is a boolean/Boolean or not, strictly or not
@@ -24,7 +24,7 @@ export function is(obj, strict = false) {
   }
 
   {
-    if (text.string.is(obj)) {
+    if (string.is(obj)) {
       return /^\s*(true|false)\s*$/.test(obj);
     }
 

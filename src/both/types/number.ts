@@ -1,5 +1,5 @@
-import * as string from "./string.js";
 import random from "random";
+import * as string from "./string/_string.js";
 
 /**
  * Return val if it is a number or Number,

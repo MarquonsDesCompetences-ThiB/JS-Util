@@ -1,5 +1,5 @@
 "use strict";
-import { text } from "@src/both/_both.js";
+import * as string from "./string/_string.js";
 
 //
 // === CLONE ===
@@ -239,7 +239,7 @@ export function escape_values(obj) {
   for (const prop_name in obj) {
     //
     // Escape string
-    if (text.string.is(obj[prop_name])) {
+    if (string.is(obj[prop_name])) {
       obj[prop_name] = encodeURIComponent(obj[prop_name]);
     }
     //
@@ -491,7 +491,7 @@ export function merge(
  */
 export function to_json_value(val, include_not_enumerable_props = false) {
   //if val does not exist, is not an empty string
-  if (!val && !text.string.is(val)) {
+  if (!val && !string.is(val)) {
     return undefined;
   }
 
