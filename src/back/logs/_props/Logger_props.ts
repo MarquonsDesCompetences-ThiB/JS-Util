@@ -4,6 +4,7 @@ import fs_extra from "fs-extra";
 //import File_  from process.env.SRC_ROOT + "dist/js/util/files/File.js";
 import output from "output-manager";
 import { Logger } from "../Logger.js";
+import { join as join_path } from "path";
 
 export class Logger_props extends stream.Writable /*implements NodeJS.WriteStream*/ {
   public static logger: Logger;
@@ -32,6 +33,10 @@ export class Logger_props extends stream.Writable /*implements NodeJS.WriteStrea
    * @param writable_stream_opts
    */
   constructor(
+    path: string = join_path(
+      process.env.SRC_ROOT ? process.env.SRC_ROOT : "",
+      "logs"
+    ),
     file_name_prefix = "",
     other_stream_to_call?: stream.Writable,
     writable_stream_opts?: stream.WritableOptions
@@ -55,18 +60,17 @@ export class Logger_props extends stream.Writable /*implements NodeJS.WriteStrea
         file_name_prefix + (file_name_prefix.length > 0 ? "-" : "");
 
       this.file_desc = undefined;
-      this.file_path =
-        process.env.SRC_ROOT +
-        "\\logs\\" +
+      this.file_path = join_path(
+        path,
         prefix +
-        this.logs.level_str +
-        "-" +
-        new Date().toLocaleTimeString() +
-        ".log";
+          this.logs.level_str +
+          "-" +
+          new Date().toLocaleTimeString() +
+          ".log"
+      );
     }
 
     {
-      let that = this;
       this.logs.output = (msg) => {
         this.write(msg, (error_or_null) => {
           if (error_or_null) {

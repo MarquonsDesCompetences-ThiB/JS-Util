@@ -1,7 +1,7 @@
 "use strict";
 import fs from "fs";
 //import File_  from process.env.SRC_ROOT + "dist/js/util/files/File.js";
-import * as logs_util from "./_logger.js";
+import * as log_infos from "./infos.js";
 import { Logger_props } from "./_props/Logger_props.js";
 
 export class Logger extends Logger_props {
@@ -83,14 +83,14 @@ export class Logger extends Logger_props {
    * Class name is prefixed to log
    */
   set debug(message) {
-    const formatted = logs_util.add_debug_infos(message);
+    const formatted = log_infos.add_debug_infos(message);
 
     console.debug(formatted);
     this.logs.d(formatted); //Writte to file
   }
 
   set info(message) {
-    const formatted = logs_util.add_debug_infos(message);
+    const formatted = log_infos.add_debug_infos(message);
 
     console.info(formatted);
     this.logs.i(formatted); //Writte to file
@@ -101,7 +101,7 @@ export class Logger extends Logger_props {
    * Class name is prefixed to log
    */
   set error(message) {
-    const formatted = logs_util.add_debug_infos(
+    const formatted = log_infos.add_debug_infos(
       message,
       true, //file infos
       true // stack trace
@@ -131,7 +131,7 @@ export class Logger extends Logger_props {
       const formatted = format_error(ex);
       /*
       "manually" displays the error instead of using this.err
-      otherwise the wrong row is fetched from logs_util.add_debug_infos
+      otherwise the wrong row is fetched from log_infos.add_debug_infos
       */
       console.error(formatted);
       this.logs.e(formatted); //Writte to file
@@ -142,7 +142,7 @@ export class Logger extends Logger_props {
         ex instanceof Error
           ? ex.name + " : " + ex.message + "\n" + ex.stack
           : ex;
-      return logs_util.add_debug_infos(
+      return log_infos.add_debug_infos(
         msg,
         true,
         false,
@@ -152,7 +152,7 @@ export class Logger extends Logger_props {
   }
 
   set fatal(message) {
-    const formatted = logs_util.add_debug_infos(message);
+    const formatted = log_infos.add_debug_infos(message);
 
     console.error(formatted);
     this.logs.f(formatted); //Writte to file
@@ -163,7 +163,7 @@ export class Logger extends Logger_props {
    * Class name is prefixed to log
    */
   set log(message) {
-    const formatted = logs_util.add_debug_infos(message);
+    const formatted = log_infos.add_debug_infos(message);
 
     console.log(formatted);
     this.logs.i(formatted); //Writte to file
@@ -174,7 +174,7 @@ export class Logger extends Logger_props {
    */
   set table(array) {
     if (typeof array[0] === "string" || array[0] instanceof String) {
-      const formatted = logs_util.add_debug_infos(array[0]);
+      const formatted = log_infos.add_debug_infos(array[0]);
       console.log(formatted);
       this.logs.i(formatted); //Writte to file
 
@@ -190,7 +190,7 @@ export class Logger extends Logger_props {
    * Class name is prefixed to log
    */
   set trace(message) {
-    const formatted = logs_util.add_debug_infos(message);
+    const formatted = log_infos.add_debug_infos(message);
 
     console.trace(formatted);
     this.logs.t(formatted); //Writte to file
@@ -201,7 +201,7 @@ export class Logger extends Logger_props {
    * Class name is prefixed to log
    */
   set warn(message) {
-    const formatted = logs_util.add_debug_infos(message);
+    const formatted = log_infos.add_debug_infos(message);
 
     console.warn(formatted);
     this.logs.w(formatted); //Writte to file
