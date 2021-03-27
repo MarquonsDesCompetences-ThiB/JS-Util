@@ -4,6 +4,10 @@ export function equal(stats1: Stats, stats2: Stats): boolean {
 }
 
 export function equal_metas(stats1: Stats, stats2: Stats): boolean {
+  if (!stats1 || !stats2) {
+    return false;
+  }
+
   return (
     stats1.dev === stats2.dev &&
     stats1.ino === stats2.ino &&
@@ -27,6 +31,10 @@ export function equal_metas(stats1: Stats, stats2: Stats): boolean {
 }
 
 export function equal_type(stats1: Stats, stats2: Stats): boolean {
+  if (!stats1 || !stats2) {
+    return false;
+  }
+
   return (
     stats1.isFile() === stats2.isFile() &&
     stats1.isDirectory() === stats2.isDirectory() &&
