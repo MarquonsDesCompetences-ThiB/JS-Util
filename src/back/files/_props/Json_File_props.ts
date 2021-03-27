@@ -35,4 +35,11 @@ export abstract class Json_File_props extends File {
 
     throw ReferenceError("File not read");
   }
+
+  constructor(obj = undefined) {
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
+  }
 }

@@ -218,78 +218,73 @@ export class Json_File extends Json_File_props {
   }
 
   async read() {
-    return new Promise<any>(async (success, reject) => {
-      const full_path = this.full_path;
-      {
-        if (
-          full_path == null ||
-          // because full_path is the cocnatenation of both below
-          this.path == null ||
-          this.name == null
-        ) {
-          const msg =
-            "Undefined full path ; path : " +
-            this.path +
-            " name : " +
-            this.name;
-          logger.error = msg;
-          return reject(msg);
-        }
-
-        if (!fs_extra.pathExistsSync(full_path)) {
-          const msg = "Unexisting file " + full_path;
-          logger.error = msg;
-          return reject(msg);
-        }
-      }
-
-      json_file.readFile(full_path, function (err, obj) {
-        if (err) {
-          logger.error =
-            "Error reading file " + full_path + " as json : " + err;
-          this.content = undefined;
-          return reject(err);
-        }
-
-        logger.info = "Json file " + this.name + " parsed";
-        this.content = obj;
-        success(this.content);
-      });
-    });
-  }
-
-  async write(data?) {
-    return new Promise<void>((success, reject) => {
-      const full_path = this.full_path;
+    const full_path = this.full_path;
+    {
       if (
         full_path == null ||
-        //because full_path is the concatenation of both below
-        this.name == null ||
-        this.path == null
+        // because full_path is the cocnatenation of both below
+        this.path == null ||
+        this.name == null
       ) {
         const msg =
           "Undefined full path ; path : " + this.path + " name : " + this.name;
-        return reject(msg);
+        logger.error = msg;
+        throw new ReferenceError(msg);
       }
 
-      //
-      // Json
-      {
-        fs_extra.ensureFileSync(full_path);
-        json_file.writeFile(full_path, data ? data : this.content, (err) => {
-          if (err) {
-            const msg = "Error writing file " + full_path + " : " + err;
-            logger.error = msg;
-            return reject(msg);
-          }
+      if (!fs_extra.pathExistsSync(full_path)) {
+        const msg = "Unexisting file " + full_path;
+        logger.error = msg;
+        throw new ReferenceError(msg);
+      }
+    }
 
+    return json_file
+      .readFile(full_path)
+      .then((obj) => {
+        logger.info = "Json file " + this.name + " parsed";
+        this.content = obj;
+        return this.content;
+      })
+      .catch((err) => {
+        err.message = "Error reading file " + full_path + " as json : " + err;
+        logger.error = err.message;
+
+        this.content = undefined;
+        throw err;
+      });
+  }
+
+  async write(data?): Promise<any> {
+    const full_path = this.full_path;
+    if (
+      full_path == null ||
+      //because full_path is the concatenation of both below
+      this.name == null ||
+      this.path == null
+    ) {
+      const msg =
+        "Undefined full path ; path : " + this.path + " name : " + this.name;
+      logger.error = msg;
+      throw new ReferenceError(msg);
+    }
+
+    //
+    // Json
+    {
+      fs_extra.ensureFileSync(full_path);
+      return json_file
+        .writeFile(full_path, data ? data : this.content)
+        .then(() => {
           if (data) {
             this.content = data;
           }
           logger.log = "File " + full_path + " is written";
-          success();
+        })
+        .catch((err) => {
+          err.message = "Error writing file " + full_path + " : " + err;
+          throw err;
         });
-      }
-    });
+    }
   }
 }

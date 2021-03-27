@@ -1,6 +1,6 @@
 "use strict";
 import { Csv_File_props } from "./_props/Csv_File_props.js";
-import { text } from "@src/both/_both.js";
+import { string } from "@both_types/_types.js";
 import $ from "jquery";
 
 export class Csv_File extends Csv_File_props {
@@ -44,7 +44,10 @@ export class Csv_File extends Csv_File_props {
     return next_letters;
   }
   constructor(obj = undefined) {
-    super(obj);
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
 
     /**
      * All column names asociated to their index
@@ -163,7 +166,7 @@ export class Csv_File extends Csv_File_props {
       return undefined;
     }
 
-    if (text.string.is(this.content)) {
+    if (string.is(this.content)) {
       let all_columns = this.content.split(",");
       if (all_columns.length % this.nb_cols !== 0) {
         logger.error =
@@ -197,7 +200,7 @@ export class Csv_File extends Csv_File_props {
       return this.content;
     }
 
-    if (text.string.is(this.content)) {
+    if (string.is(this.content)) {
       return converted.call(this);
     }
 

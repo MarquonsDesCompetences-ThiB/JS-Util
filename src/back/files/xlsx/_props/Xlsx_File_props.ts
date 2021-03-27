@@ -1,15 +1,27 @@
 "use strict";
-import { File } from "../File.js";
-import { text } from "@src/both/_both.js";
+import { File } from "../../File.js";
+import { string } from "@both_types/_types.js";
+import Excel from "exceljs";
+
+export interface iUpdates_Res {
+  errs: any[];
+  nb_sheets_succeed: number;
+
+  /* coordinates of updated cells/cells tried to be update
+      by sheet :
+        [sheet_id][row_id][col_id]
+  */
+  updated_cells: number[][];
+}
 
 export abstract class Xlsx_File_props extends File {
   /**
    * xlsx
    */
-  protected excel: any;
+  protected excel: Excel.Workbook;
 
-  get_sheet(id_or_name: number | Number | string | String): any {
-    const sheet_name = text.string.if_is(id_or_name);
+  get_sheet(id_or_name: number | string): any {
+    const sheet_name = string.if_is(id_or_name);
     return this.excel.getWorksheet(
       sheet_name
         ? this.get_sheet_id(sheet_name) // by name
@@ -24,7 +36,7 @@ export abstract class Xlsx_File_props extends File {
       return -2;
     }
 
-    const sheet = this.excel._worksheets.find((worksheet) => {
+    const sheet = this.excel.worksheets.find((worksheet) => {
       return worksheet.name === sheet_name;
     });
 

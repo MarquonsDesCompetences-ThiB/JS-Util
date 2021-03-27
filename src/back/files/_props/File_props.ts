@@ -1,9 +1,44 @@
 "use strict";
-import { obj, text } from "@src/both/_both.js";
-import { sep as os_path_separator } from "path";
-import { specs as obj_specs } from "@obj/_obj.js";
+import { obj, string } from "../../../both/types/_types.js";
+import { join as join_path, sep as os_path_separator } from "path";
+import { specs as obj_specs } from "@src/both/types/obj/_obj.js";
+import { eMode } from "../enums";
+import * as fs from "fs";
 
 export abstract class File_props extends obj.Obj {
+  //
+  // === FILE ===
+  /**
+   * Default is READ_EXISTING ('r')
+   * https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fspromises_open_path_flags_mode
+   */
+  protected _mode: eMode;
+  /**
+   * File handle
+   * https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_class_filehandle
+   */
+  protected file_handle: fs.promises.FileHandle;
+
+  /**
+   * Write stream
+   * https://nodejs.org/dist/latest-v15.x/docs/api/stream.html#stream_class_stream_writable
+   */
+  protected write_stream: fs.WriteStream;
+
+  //
+  // === STATE ===
+  get is_open() {
+    return this.file_handle != null || this.write_stream != null;
+  }
+
+  get is_closed() {
+    return !this.is_open;
+  }
+
+  get mode() {
+    return this._mode;
+  }
+
   //
   // === CONTENT ===
   /**
@@ -26,8 +61,6 @@ export abstract class File_props extends obj.Obj {
 
   //
   // === Content setter
-  protected _content_set_;
-
   @obj_specs.decs.meths.enum
   set content(content: string | any[][]) {
     if (content as string) {
@@ -39,6 +72,15 @@ export abstract class File_props extends obj.Obj {
       this.#_cntnt_2rr = content;
       return;
     }
+  }
+
+  set append_content(data: string) {
+    if (!this.#_cntnt_str) {
+      this.#_cntnt_str = data;
+      return;
+    }
+
+    this.#_cntnt_str += data;
   }
 
   /**
@@ -80,14 +122,25 @@ export abstract class File_props extends obj.Obj {
     }
 
     this.#_n = full_name.slice(0, last_dot_idx);
-    this.#_xt = full_name.slice(last_dot_idx);
+    this.#_xt = full_name.slice(last_dot_idx + 1);
   }
 
   /**
    * === Full path : full_name + path ===
    */
   get full_path() {
-    return this.path + this.full_name;
+    const path = this.path;
+    const full_name = this.full_name;
+
+    if (path) {
+      if (full_name) {
+        return join_path(path, full_name);
+      }
+
+      return path;
+    }
+
+    return full_name;
   }
 
   /**
@@ -96,7 +149,7 @@ export abstract class File_props extends obj.Obj {
    */
   @obj_specs.decs.meths.enum
   set full_path(full_path: string) {
-    const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\/)/);
+    const last_delimiter_idx = full_path.lastIndexOf(os_path_separator);
     if (last_delimiter_idx < 0) {
       this.#_p = full_path;
       return;
@@ -142,9 +195,10 @@ export abstract class File_props extends obj.Obj {
       /*
             Keep ':' preceded by a drive letter
             Keep everything else which is not : * ? " < > |
-          */
-      const formatted = path.match(/(?<=[A-Z]):|[^:\*\?"\<\>\|]/g).join("");
-      this.#_p = formatted;
+          
+      const formatted = path.match(/(?<=[A-Z]):|[^:\*\?"\<\>\|]/g).join("");*/
+
+      this.#_p = path;
       //
       // No ending slash or backslash
       if (!/(\/|\\)$/.test(this.#_p)) {
@@ -176,7 +230,7 @@ export abstract class File_props extends obj.Obj {
     //
     // If must be computed
     {
-      if (text.string.is(this.content) || this.content instanceof Array) {
+      if (string.is(this.content) || this.content instanceof Array) {
         return this.content.length;
       }
 

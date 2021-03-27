@@ -1,7 +1,10 @@
 "use strict";
+import { eMode, to_mode_letters } from "./enums.js";
 import { File_props } from "./_props/File_props.js";
-import { json } from "@type/_types.js";
+import { json } from "@both_types/_types.js";
 
+import * as fs from "fs";
+import fs_prom = fs.promises;
 import fs_extra from "fs-extra";
 import file_string_reader from "read-file-string";
 
@@ -10,7 +13,76 @@ import file_string_reader from "read-file-string";
  */
 export class File extends File_props {
   constructor(obj = undefined) {
-    super(obj);
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
+  }
+
+  //
+  // === FILE HANDLE ===
+  /**
+   *
+   * https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fspromises_open_path_flags_mode
+   * http://man7.org/linux/man-pages/man2/open.2.html
+   *
+   * @returns
+   */
+  open(mode?: eMode, use_stream?: boolean): Promise<File> {
+    if (use_stream) {
+      return this.open_stream(mode);
+    }
+
+    if (this.file_handle) {
+      return Promise.resolve(this);
+    }
+
+    if (mode) {
+      this._mode = mode;
+    }
+
+    fs_prom.open(this.path, to_mode_letters(this.mode)).then((handle) => {
+      this.file_handle = handle;
+      return this;
+    });
+  }
+
+  open_stream(mode?: eMode): Promise<File> {
+    if (this.write_stream) {
+      return Promise.resolve(this);
+    }
+
+    if (mode) {
+      this._mode = mode;
+    }
+
+    //https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_createwritestream_path_options
+    this.write_stream = fs.createWriteStream(this.path, {
+      flags: to_mode_letters(this.mode),
+    });
+
+    return Promise.resolve(this);
+  }
+
+  close(): Promise<boolean> {
+    if (this.write_stream) {
+      this.write_stream.close();
+    }
+
+    if (this.file_handle) {
+      return new Promise<boolean>((success) => {
+        fs.close(this.file_handle.fd, (err) => {
+          if (err) {
+            throw err;
+          }
+
+          this.file_handle = undefined;
+          success(true);
+        });
+      });
+    }
+
+    return Promise.resolve(true);
   }
 
   /**
@@ -20,48 +92,46 @@ export class File extends File_props {
    * @return {Promise}
    */
   async merge_file(other_file) {
-    return new Promise((success, reject) => {
+    //
+    // Read this file if needed
+    {
+      if (!this.content) {
+        return this.read().then(
+          () => {
+            return on_read1.call(this);
+          },
+          (error) => {
+            return Promise.reject(error);
+          }
+        );
+      }
+    }
+
+    return on_read1.call(this);
+    function on_read1() {
       //
-      // Read this file if needed
+      // Read other file if needed
       {
-        if (!this.content) {
-          return this.read().then(
+        if (!other_file.content) {
+          return other_file.read().then(
             () => {
-              on_read1.apply(this);
+              return on_read2.call(this);
             },
             (error) => {
-              reject(error);
+              return Promise.reject(error);
             }
           );
         }
       }
 
-      on_read1.apply(this);
-      function on_read1() {
+      return on_read2.call(this);
+      function on_read2() {
         //
-        // Read other file if needed
-        {
-          if (!other_file.content) {
-            return other_file.read().then(
-              () => {
-                on_read2.apply(this);
-              },
-              (error) => {
-                reject(error);
-              }
-            );
-          }
-        }
-
-        on_read2.apply(this);
-        function on_read2() {
-          //
-          // Merge
-          json.merge(this.content, other_file.content);
-          this.write().then(success, reject);
-        }
+        // Merge
+        json.merge(this.content, other_file.content);
+        return this.write();
       }
-    });
+    }
   }
 
   clone() {
@@ -89,64 +159,62 @@ export class File extends File_props {
    * @return {Promise}
    */
   async merge(other_file) {
-    return new Promise((success, reject) => {
-      if (!this.content) {
-        return this.read().then(
-          () => on_read_file1.apply(this),
+    if (!this.content) {
+      return this.read().then(
+        () => on_read_file1.call(this),
+        (error) => {
+          return Promise.reject(error);
+        }
+      );
+    }
+
+    return on_read_file1.call(this);
+    function on_read_file1() {
+      if (!other_file.content) {
+        return other_file.read().then(
+          () => {
+            return on_read_file2.call(this);
+          },
           (error) => {
-            reject(error);
+            return Promise.reject(error);
           }
         );
       }
 
-      on_read_file1.apply(this);
-      function on_read_file1() {
-        if (!other_file.content) {
-          return other_file.read().then(
-            () => {
-              on_read_file2.apply(this);
-            },
-            (error) => {
-              reject(error);
-            }
-          );
-        }
-
-        on_read_file2.apply(this);
-        function on_read_file2() {
-          Object.assign(this.content, other_file.content);
-          this.write().then(success, reject);
-        }
+      return on_read_file2.call(this);
+      function on_read_file2() {
+        Object.assign(this.content, other_file.content);
+        return this.write();
       }
-    });
+    }
   }
 
-  async read_sequential() {
-    return new Promise(async (success, reject) => {
-      const full_path = this.full_path;
-      if (
-        full_path == null ||
-        // because full_path is the cocnatenation of both below
-        this.path == null ||
-        this.name == null
-      ) {
-        const msg =
-          "Undefined full path ; path : " + this.path + " name : " + this.name;
-        logger.error = msg;
-        return reject(msg);
-      }
+  async read_sequential(): Promise<any> {
+    const full_path = this.full_path;
+    if (
+      full_path == null ||
+      // because full_path is the cocnatenation of both below
+      this.path == null ||
+      this.name == null
+    ) {
+      const msg =
+        "Undefined full path ; path : " + this.path + " name : " + this.name;
+      logger.error = msg;
+      return Promise.reject(msg);
+    }
 
-      if (!fs_extra.pathExistsSync(full_path)) {
-        const msg = "Unexisting file " + full_path;
-        logger.error = msg;
-        return reject(msg);
-      }
+    if (!fs_extra.pathExistsSync(full_path)) {
+      const msg = "Unexisting file " + full_path;
+      logger.error = msg;
+      return Promise.reject(msg);
+    }
 
-      //
-      // Read file
-      {
-      }
-    });
+    //
+    // Read file
+    {
+      // TODO
+      return;
+    }
   }
 
   /**
@@ -154,44 +222,42 @@ export class File extends File_props {
    * @return {Promise}  Success: {string|string[]|object} content
    *                    Reject: {string} err
    */
-  async read() {
-    return new Promise(async (success, reject) => {
-      const full_path = this.full_path;
-      if (
-        full_path == null ||
-        // because full_path is the cocnatenation of both below
-        this.path == null ||
-        this.name == null
-      ) {
-        const msg =
-          "Undefined full path ; path : " + this.path + " name : " + this.name;
-        logger.error = msg;
-        return reject(msg);
-      }
+  async read(): Promise<string | any | (string | number)[][]> {
+    const full_path = this.full_path;
+    if (
+      full_path == null ||
+      // because full_path is the cocnatenation of both below
+      this.path == null ||
+      this.name == null
+    ) {
+      const msg =
+        "Undefined full path ; path : " + this.path + " name : " + this.name;
+      logger.error = msg;
+      return Promise.reject(msg);
+    }
 
-      if (!fs_extra.pathExistsSync(full_path)) {
-        const msg = "Unexisting file " + full_path;
-        logger.error = msg;
-        return reject(msg);
-      }
+    if (!fs_extra.pathExistsSync(full_path)) {
+      const msg = "Unexisting file " + full_path;
+      logger.error = msg;
+      return Promise.reject(msg);
+    }
 
-      //
-      // Read file
-      {
-        file_string_reader(full_path).then((result) => {
-          if (!result) {
-            const msg = "Error reading file " + full_path + " as text";
-            logger.error = msg;
-            this.content = undefined;
-            return reject(msg);
-          }
+    //
+    // Read file
+    {
+      return file_string_reader(full_path).then((result) => {
+        if (!result) {
+          const msg = "Error reading file " + full_path + " as text";
+          logger.error = msg;
+          this.content = undefined;
+          return Promise.reject(msg);
+        }
 
-          this.content = result;
-          logger.info = result.length + " characters parsed in " + this.name;
-          return success(this.content);
-        });
-      }
-    });
+        this.content = result;
+        logger.info = result.length + " characters parsed in " + this.name;
+        return this.content;
+      });
+    }
   }
 
   /**
@@ -219,26 +285,116 @@ export class File extends File_props {
 
   /**
    *
+   * @param{boolean} use_stream If a WriteStream must be used to write
+   *                              When not used, fs.write is directly used
+   *                              => we have to wait for the
+   *                                  writing promise
+   *                              If previously used, will always be used
+   *                              as long as the stream is not closed
+   *
+   *                              WriteStream: https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_createwritestream_path_options
+   *
+   * @param{number} cursor_fileHandle Position where to write in file
+   *                                  Works only when not using a write stream,
+   *                                  eg use_stream = false
+   *
    * @return {Promise}  Success
    *                    Reject: {string} err
    */
-  async write(data?) {
-    return new Promise<void>((success, reject) => {
-      const full_path = this.full_path;
-      if (
-        full_path == null ||
-        //because full_path is the concatenation of both below
-        this.name == null ||
-        this.path == null
-      ) {
-        const msg =
-          "Undefined full path ; path : " + this.path + " name : " + this.name;
-        return reject(msg);
-      }
+  async write(data?, use_stream?, cursor_fileHandle?: number): Promise<number> {
+    const full_path = this.full_path;
+    if (
+      full_path == null ||
+      //because full_path is the concatenation of both below
+      this.name == null ||
+      this.path == null
+    ) {
+      const msg =
+        "Undefined full path ; path : " + this.path + " name : " + this.name;
+      return Promise.reject(msg);
+    }
 
+    if (data) {
+      this.content = data;
+    }
+
+    //
+    // Write Stream
+    {
+      if (use_stream) {
+        if (this.write_stream) {
+          return write_stream.call(this);
+        }
+        //
+        // Open the stream
+        return this.open_stream().then(() => {
+          return write_stream.call(this);
+        });
+
+        function write_stream() {
+          return new Promise<any>((success) => {
+            (<File>this).write_stream.write(this.content, (err) => {
+              if (err) {
+                throw err;
+              }
+
+              success(this.content.length);
+            });
+          });
+        }
+      }
+    }
+
+    //
+    // else file handle
+    {
+      if (this.file_handle) {
+        return write_handle.call(this);
+      }
       //
-      // TODO
-    });
+      // Open the handle
+      return this.open().then(() => {
+        return write_handle.call(this);
+      });
+
+      function write_handle() {
+        return fs_prom
+          .write(
+            (<File>this).file_handle,
+            this.content,
+            undefined,
+            undefined,
+            cursor_fileHandle
+          )
+          .then(({ bytesWritten }) => {
+            return Promise.resolve(bytesWritten);
+          });
+      }
+    }
+  }
+
+  /**
+   * ppend the specified data to the file
+   * @param data
+   */
+  async append(data, options?) {
+    this.append_content = data;
+
+    return fs_prom.appendFile(
+      this.file_handle ? this.file_handle : this.path,
+      data,
+      options
+    );
+  }
+
+  /**
+   * Flush the writing
+   */
+  async flush() {
+    //https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_filehandle_sync
+    if (this.file_handle) {
+      this.file_handle.sync();
+    }
   }
 
   /**
@@ -249,13 +405,15 @@ export class File extends File_props {
    *                                    xlsx : Nb cells
    */
   async apply_updates() {
-    return new Promise<number>((success, reject) => {
+    return new Promise<any>((success, reject) => {
       {
         const msg =
           "Unimplemented format " + this.ext + " (file " + this.name + ")";
         logger.error = msg;
         reject(msg);
       }
+
+      //TODO
     });
   }
 
@@ -263,11 +421,37 @@ export class File extends File_props {
    * @return {Promise} Cf. this.apply_updates
    */
   async release() {
-    return new Promise<number>((success, reject) => {
-      this.apply_updates().then((nb_elmts_updated) => {
-        this.content = undefined;
-        success(nb_elmts_updated);
-      }, reject);
+    return this.apply_updates().then((updated_elmts) => {
+      this.content = undefined;
+      return updated_elmts;
     });
+  }
+
+  //
+  // === LOGS ===
+  // Preconds : global.Logger loaded
+  set error(ex: string | Error) {
+    if (ex instanceof Error) {
+      ex.message = "File " + this.name + " : " + ex.message;
+      logger.error = ex;
+    } else {
+      logger.error = "File " + this.name + " : " + ex;
+    }
+  }
+
+  set info(msg: string) {
+    logger.info = "File " + this.name + " : " + msg;
+  }
+
+  set log(msg: string) {
+    logger.log = "File " + this.name + " : " + msg;
+  }
+
+  set trace(msg: string) {
+    logger.trace = "File " + this.name + " : " + msg;
+  }
+
+  set warn(msg: string) {
+    logger.warn = "File " + this.name + " : " + msg;
   }
 }
