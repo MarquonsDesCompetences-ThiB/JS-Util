@@ -1,5 +1,5 @@
+import { Entry_Stats_intf } from "../directory_intfs.js";
 import { Directory_Tree } from "../Directory_Tree.js";
-import { Entry_Stats_intf } from "../_props/Directory_Tree_props.js";
 
 export interface iDirectory_Tree_Slave extends Directory_Tree {
   //
@@ -12,7 +12,7 @@ export interface iDirectory_Tree_Slave extends Directory_Tree {
   // === If not root only
   parent: iDirectory_Tree_Slave;
 
-  dirs?: Map<string, iDirectory_Tree_Slave>;
+  dirs: Map<string, iDirectory_Tree_Slave>;
 
   //
   // === METHODS ===
