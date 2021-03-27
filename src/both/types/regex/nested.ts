@@ -1,4 +1,4 @@
-import { search_multi } from "./String.js";
+import { search_multi } from "./string.js";
 
 /**
  * Return true if in in_string chars are nested into scopes chars

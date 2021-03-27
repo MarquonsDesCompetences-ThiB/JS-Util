@@ -1,4 +1,4 @@
-import { elmt as array_elmt } from "../array/_array.js";
+import { elmt as array_elmt } from "@both_array/_array.js";
 import {
   even_str as even_numbers,
   odd_str as odd_numbers,
