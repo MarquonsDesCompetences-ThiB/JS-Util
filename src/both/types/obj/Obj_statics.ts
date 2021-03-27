@@ -201,7 +201,7 @@ export function dynamic_extends(oChildChain, oExtendsProto) {
 
   if (oExtendsProto.constructor === String) {
     oNewProto = Function.prototype;
-    oReturn = Function.apply(null, Array.prototype.slice.call(arguments, 1));
+    oReturn = Function.call(null, Array.prototype.slice.call(arguments, 1));
     Object.setPrototypeOf(oReturn, oLast);
   }
 

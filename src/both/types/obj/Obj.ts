@@ -1,17 +1,38 @@
 "use strict";
-import { json } from "@type/_types.js";
+import * as json from "@both_types/json.js";
+import * as string from "@both_types/string/_string.js";
 import { Obj_props } from "./_props/Obj_props.js";
 import { text } from "@src/both/_both.js";
-import { is_primitive } from "../types/type.js";
-import * as prop_specs from "./specifications/_specifications.js";
+import { is_primitive } from "../type.js";
+import * as props_specs from "./specifications/_specifications.js";
 
 /**
  * Preconds
  *  util.obj.Errors = Obj_Errors
  *  json = json
- *  text.string = String
+ *  string = String
  */
 export class Obj extends Obj_props {
+  //
+  // === OBJECT LIKE STATIC FUNCTIONS ===
+  static keys(object: Obj, props_flags = props_specs.eSpec.ALL_NOT_JSONIFYING) {
+    return props_specs.keys(object, props_flags);
+  }
+
+  static values(
+    object: Obj,
+    props_flags = props_specs.eSpec.ALL_NOT_JSONIFYING
+  ) {
+    return props_specs.values(object, props_flags);
+  }
+
+  static entries(
+    object: Obj,
+    props_flags = props_specs.eSpec.ALL_NOT_JSONIFYING
+  ) {
+    return props_specs.entries(object, props_flags);
+  }
+
   /**
    * To export depending on environment
    * Must be called by the child class
@@ -158,13 +179,13 @@ export class Obj extends Obj_props {
    * Must be called by the Obj child class to test values on
    * @param {*} values
    */
-  static get_property_values_errors(values) {
+  static get_property_values_errors(class_constructor, values) {
     let errs = {};
 
     {
       for (let key in values) {
         try {
-          new this({
+          new class_constructor({
             [key]: values[key],
           });
         } catch (ex) {
@@ -190,10 +211,9 @@ export class Obj extends Obj_props {
    * Children must call super after defining their enumerable properties
    * @throws {Object { <prop_name : <err> }} If this.set raises error(s)
    */
-  constructor(values = undefined) {
+  constructor() {
     super();
     //this.init_properties();
-    this.set(values);
   }
 
   //
@@ -239,8 +259,9 @@ export class Obj extends Obj_props {
     }
   }
 
-  clone() {
-    return new (Object.getPrototypeOf(this).class.ctor)(this.get_cloned_JSON());
+  clone(props_flags = props_specs.eSpec.ALL_JSONIFYING, explicit?: boolean) {
+    const cloned_obj = this.get(props_flags, explicit);
+    return new (Object.getPrototypeOf(this).class.ctor)(cloned_obj);
   }
 
   equals(obj, include_not_enumerable_props = true) {
@@ -299,77 +320,18 @@ export class Obj extends Obj_props {
    *                          to string are null
    */
   toJSON(
-    exclude_jsonify?: boolean,
-    include_not_enumerable_props?: boolean,
-    include_cyclic?: boolean,
+    specs_flags: number = props_specs.eSpec.JSON_PRIVATE,
     as_string?: boolean
   ) {
-    let specs_flags = prop_specs.eSpec.DESCR_ENUMERABLE;
-    //
-    // Init specs_flags from arguments
-    {
-      if (include_cyclic) {
-        specs_flags |= prop_specs.eSpec.CYCLIC;
-      }
-
-      if (!exclude_jsonify) {
-        specs_flags |= prop_specs.eSpec.JSONIFY;
-      }
-
-      if (include_not_enumerable_props) {
-        specs_flags |= prop_specs.eSpec.ENUM;
-      }
-    }
-
     let ret = {};
 
-    prop_specs.entries(this, specs_flags).forEach(([key, val]) => {
-      ret[key] = json.to_json_value(val);
+    const entries = props_specs.entries(this, specs_flags);
+
+    entries.forEach(([key, val]) => {
+      ret[key] = val; //json.to_json_value(val);
 
       if (as_string) {
-        ret[key] = text.string.to(ret[key]);
-      }
-    });
-
-    return ret;
-  }
-
-  /**
-   * Clone every enumerable members in this but functions
-   *
-   * Not enumerable properties are not cloned
-   *  => their reference is returned as is
-   * @return {json}
-   */
-  get_cloned_JSON(
-    exclude_jsonify?: boolean,
-    include_not_enumerable_props?: boolean,
-    include_cyclic?: boolean,
-    as_string?: boolean
-  ) {
-    let specs_flags = prop_specs.eSpec.DESCR_ENUMERABLE;
-    //
-    // Init specs_flags from arguments
-    {
-      if (include_cyclic) {
-        specs_flags |= prop_specs.eSpec.CYCLIC;
-      }
-      if (!exclude_jsonify) {
-        specs_flags |= prop_specs.eSpec.JSONIFY;
-      }
-
-      if (include_not_enumerable_props) {
-        specs_flags |= prop_specs.eSpec.ENUM;
-      }
-    }
-
-    let ret = {};
-
-    prop_specs.entries(this, specs_flags).forEach(([key, val]) => {
-      ret[key] = json.clone_value(val);
-
-      if (as_string) {
-        ret[key] = text.string.to(ret[key]);
+        ret[key] = string.to(ret[key]);
       }
     });
 
@@ -470,7 +432,7 @@ export class Obj extends Obj_props {
    * @return{integer}
    */
   get nb_errs() {
-    return this.errs.nb;
+    return this._errs.nb;
   }
 
   /**
@@ -479,7 +441,7 @@ export class Obj extends Obj_props {
    * @return{string}
    */
   get errs_str() {
-    return this.errs.str;
+    return this._errs.str;
   }
 
   /**
@@ -488,7 +450,7 @@ export class Obj extends Obj_props {
    * @return{str}
    */
   get_err_str(prop_name, include_stack = false) {
-    return this.errs.get_str(prop_name, include_stack);
+    return this._errs.get_str(prop_name, include_stack);
   }
 
   //
@@ -504,7 +466,7 @@ export class Obj extends Obj_props {
    * @param {*} value_which_raised  Value which raised the error
    */
   add_error(prop_name, error, value_which_raised = undefined) {
-    this.errs.set_error(prop_name, error, value_which_raised);
+    this._errs.set_error(prop_name, error, value_which_raised);
   }
 
   /**
@@ -530,16 +492,42 @@ export class Obj extends Obj_props {
     global_texts,
     class_texts = global_texts[Object.getPrototypeOf(this).class.name]
   ) {
-    return this.errs.localize(global_texts, class_texts);
+    return this._errs.localize(global_texts, class_texts);
   }
 
   //
   // === GETTERS / SETTERS ===
+  get(props_flags = props_specs.eSpec.ALL_NOT_JSONIFYING, clone?: boolean) {
+    const entries = props_specs.entries(this, props_flags);
+    const obj: any = {};
+
+    if (clone) {
+      entries.forEach(([key, val]) => {
+        obj[key] = typeof val.clone === "function" ? val.clone() : val;
+      });
+    } else {
+      entries.forEach(([key, val]) => {
+        obj[key] = val;
+      });
+    }
+
+    return obj;
+  }
+
   /**
    * Set every members in obj but functions
    *
    * @param {json|object} values
    * @param {object} set_res
+   * @param {boolean} silent_errs If true, when all values are set
+   *                              but any of them have thrown an error,
+   *                              this.errs is thrown
+   *                              Enable constructors calling set to finish
+   *                              without always having to
+   *                              try..catch the set call
+   *
+   *                              Otherwise, failes silently
+   *                              (this.errs can still be read)
    *
    * @return {object} number of set/not set members which are not a function
    *                    3 values :
@@ -556,7 +544,13 @@ export class Obj extends Obj_props {
    * @throws{Obj_Errors} - If setting a property raises an error. Setting all
    *                        properties is attempted before throwing the error
    */
-  set(values, set_res = { nb_set: 0, nb_nset: 0, nb_nset_ro: 0 }) {
+  set(values, props_flags = props_specs.eSpec.ALL, silent_errs?: boolean) {
+    const set_res = {
+      nb_set: 0,
+      nb_already: 0,
+      nb_nset: 0,
+      nb_nset_ro: 0,
+    };
     if (!values) {
       return set_res;
     }
@@ -568,48 +562,39 @@ export class Obj extends Obj_props {
     // Iterate either values or this' keys to identify values to set
     // (=> will be the one which is lower-sized)
     {
-      const values_keys = Object.keys(values); // Array
+      const values_keys = props_specs.keys(values, props_flags);
       const values_length = values_keys.length;
 
-      const this_keys = this.all_keys; // Set
-      const this_size = this_keys.size;
+      const this_keys = props_specs.keys(this, props_flags);
+      const this_length = this_keys.length;
 
       //
       // Iterate values of the lower-sized object (between values and this)
-      if (values_length < this_size) {
+      if (values_length < this_length) {
         //
-        // Iterate values
-        Object.entries(values).forEach((entry) => {
-          const [prop_name, value] = entry;
+        // Iterate set values
+        values_keys.forEach((key) => {
           //
           // If prop_name is an expected by this
-          if (this_keys.has(prop_name)) {
-            if (set_value(prop_name, value)) {
-              set_res.nb_set++;
-            } else {
-              set_res.nb_nset++;
-            }
+          if (this_keys.includes(key)) {
+            set_value(key, values[key]);
           }
         });
       } else {
         //
         // Iterate this' keys
-        this_keys.forEach((prop_name) => {
+        this_keys.forEach((key) => {
           //
           // If prop_name is in values
-          if (values_keys.includes(prop_name)) {
-            if (set_value(prop_name, values[prop_name])) {
-              set_res.nb_set++;
-            } else {
-              set_res.nb_nset++;
-            }
+          if (values_keys.includes(key)) {
+            set_value(key, values[key]);
           }
         });
       }
     }
 
-    if (nb_errs > 0) {
-      throw this.errs;
+    if (!silent_errs && nb_errs > 0) {
+      throw this._errs;
     }
 
     return set_res;
@@ -620,13 +605,19 @@ export class Obj extends Obj_props {
         //
         // Set value and check if any modification occurs
         // to mark prop_name as updated member
-        if (
-          old_val != (that[prop_name] = values[prop_name]) &&
-          //and if not just a new object instance (clone, fetched from DB...)
-          typeof old_val !== "undefined"
-        ) {
-          that.push_updated_member(prop_name);
+        if (old_val !== value) {
+          that[prop_name] = value;
+          set_res.nb_set++;
+
+          //
+          //if not just a new object instance (clone, fetched from DB...)
+          if (typeof old_val !== "undefined") {
+            that.push_updated_member(prop_name);
+          }
+        } else {
+          set_res.nb_already++;
         }
+
         return true;
       } catch (ex) {
         nb_errs++;
@@ -640,11 +631,12 @@ export class Obj extends Obj_props {
             set_res.nb_nset_ro++;
             that.add_error(prop_name, "Read-only", value);
           } else {
+            set_res.nb_nset++;
             that.add_error(prop_name, ex, value);
           }
         }
 
-        that.warn =
+        ex.message =
           "Could not set property " +
           prop_name +
           " to " +
@@ -653,6 +645,9 @@ export class Obj extends Obj_props {
           ex +
           " - Current value : " +
           that[prop_name];
+
+        that.error = ex;
+
         return false;
       }
     }
@@ -689,7 +684,7 @@ let obj = new Sub(10);
 Object.defineProperty(Object.getPrototypeOf(obj), "incr",
 {
 value:function(val){
-	return this.constructor.incr.apply(this, [val]);
+	return this.constructor.incr.call(this, [val]);
 },
 configurable: false,
 writable: false
@@ -698,7 +693,7 @@ writable: false
 Object.defineProperty(obj, "incr",
 {
 value:function(val){
-	return this.constructor.incr.apply(this, [val]);
+	return this.constructor.incr.call(this, [val]);
 },
 configurable: false,
 writable: false

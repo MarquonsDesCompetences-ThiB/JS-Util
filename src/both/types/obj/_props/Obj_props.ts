@@ -1,10 +1,7 @@
 "use strict";
 import * as obj from "../Obj_statics.js";
-
-/**
- * Preconds
- */
 import { Obj_Errors } from "../Obj_Errors.js";
+import * as props_specs from "../specifications/_specifications.js";
 
 /**
  * To quickly initialize Obj with a Properties class
@@ -48,15 +45,21 @@ export abstract class Obj_props {
   // === PROPERTIES ===s
   //
   // To handle set errors
-  protected errs: Obj_Errors = new Obj_Errors();
+  @props_specs.decs.props.meta
+  protected _errs: Obj_Errors = new Obj_Errors();
   set_error(prop_name, error: any, value_which_raised?) {
-    this.errs.set_error(prop_name, error, value_which_raised);
+    this._errs.set_error(prop_name, error, value_which_raised);
+  }
+
+  get errs() {
+    return this._errs;
   }
 
   /*
       Members updated that need to be stored in DB
       string[] : members name
     */
+  @props_specs.decs.props.meta
   public updated_members: string[] = [];
 
   /**
@@ -65,32 +68,8 @@ export abstract class Obj_props {
    *
    * @return {Set}
    */
-  get all_keys(): Set<string> {
-    let keys = new Set<string>();
-    let proto = this;
-    do {
-      //
-      // Enumerable ones
-      {
-        Object.keys(proto).forEach((key) => {
-          keys.add(key);
-        });
-      }
-
-      //
-      // Not enumerable ones
-      {
-        const nenums =
-          proto.constructor[Symbol.for(proto.constructor.name + "_nenums")];
-        if (nenums) {
-          nenums.forEach((key) => {
-            keys.add(key);
-          });
-        }
-      }
-    } while ((proto = Object.getPrototypeOf(proto)) != null);
-
-    return keys;
+  get all_keys(): string[] {
+    return props_specs.keys(this, props_specs.eSpec.ALL);
   }
 
   get non_enumerable_keys() {
