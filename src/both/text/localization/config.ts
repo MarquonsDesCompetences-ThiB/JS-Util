@@ -7,5 +7,3 @@ export const texts_dir = process.env.SRC_ROOT + "lang/.js";
  */
 export const default_lang: ELanguage_Code =
   ELanguage_Code[process.env.default_lang];
-
-export { Texts } from "./Texts.js";

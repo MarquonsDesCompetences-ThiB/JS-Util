@@ -1,6 +1,6 @@
 "use strict";
 import crypto from "crypto";
-import { text } from "@src/both/_both.js";
+import { string } from "@both_types/_types.js";
 
 export interface Crypted_Data {
   iv: string;
@@ -97,19 +97,19 @@ export class Crypt {
   ): string {
     //
     // Fetch iv as buffer
-    if (text.string.is(iv)) {
+    if (string.is(iv)) {
       iv = Buffer.from(<string>iv, "hex");
     }
 
     //
     // Fetch key as buffer
-    if (text.string.is(key)) {
+    if (string.is(key)) {
       key = Buffer.from(<string>key, "hex");
     }
 
     //
     // Fetch text as buffer
-    if (text.string.is(encrypted_text)) {
+    if (string.is(encrypted_text)) {
       encrypted_text = Buffer.from(<string>encrypted_text, "hex");
     }
 

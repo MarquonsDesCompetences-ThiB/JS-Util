@@ -8,7 +8,10 @@ export class Location extends Location_props {
    * @param {*} obj
    */
   constructor(obj = undefined) {
-    super(obj);
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
   }
 
   equals(location) {
@@ -17,18 +20,6 @@ export class Location extends Location_props {
     }
 
     return super.equals(location);
-  }
-
-  /**
-   * Set every members in obj but functions
-   *
-   * @param {json|object} obj
-   *
-   * @return number of set/not set members which are not a function
-   *          3 values : nb_set, nb_not_set, that
-   */
-  set(obj) {
-    return super.set(obj);
   }
 
   to_string() {

@@ -1,5 +1,5 @@
 "use strict";
-import { number } from "@type/_types.js";
+import { number } from "@both_types/_types.js";
 
 /**
  * https://api.bnf.fr/fr/les-identifiants-pivots-entre-les-api

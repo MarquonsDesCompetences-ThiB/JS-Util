@@ -1,8 +1,9 @@
 "use strict";
-import { obj, text } from "@src/both/_both.js";
+import { form_identity } from "@front/form/form_identity.js";
+import { obj, string } from "@both_types/_types.js";
+
 import { address } from "../Address_statics.js";
 import { Location } from "../Location.js";
-import { form_identity } from "@front/form/form_identity.js";
 
 export abstract class Address_props extends obj.Obj {
   #_nm: string;
@@ -60,7 +61,7 @@ export abstract class Address_props extends obj.Obj {
     {
       if (!new RegExp(address.regex.number).test(decodeURI(number))) {
         const nb_chars =
-          number.length - text.string.count_utf8_characters(number) * 2;
+          number.length - string.count_utf8_characters(number) * 2;
         if (nb_chars > address.lengthes.number.max) {
           throw "too_long";
         }

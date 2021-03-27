@@ -1,5 +1,5 @@
 "use strict";
-import { obj } from "@src/both/_both.js";
+import { obj } from "@both_types/_types.js";
 
 export abstract class Image_props extends obj.Obj {
   protected name: string;
@@ -8,7 +8,10 @@ export abstract class Image_props extends obj.Obj {
 
   protected registration_date: Date;
 
-  constructor(obj?) {
-    super(obj);
+  constructor(obj?: any) {
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
   }
 }

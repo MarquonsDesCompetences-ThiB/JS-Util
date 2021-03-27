@@ -1,6 +1,7 @@
 export { ReadableStream_WorkingQueue as Working_Queue } from "./ReadableStream_WorkingQueue.js";
-import * as obj from "@obj/_obj.js";
+
 import { createReadStream } from "fs";
+import { obj } from "@both_types/_types.js";
 
 /**
  * https://nodejs.org/api/fs.html#fs_fs_createreadstream_path_options

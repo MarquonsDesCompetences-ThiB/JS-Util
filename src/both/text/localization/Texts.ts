@@ -1,11 +1,11 @@
 "use strict";
-import { json } from "@type/_types.js";
-import { file } from "@src/back/_back.js";
-import { default_lang } from "./localization.js";
-import * as string from "../../types/string.js";
-import { Texts_props } from "./_props/Texts_props.js";
 import fs_extra from "fs-extra";
 const { pathExistsSync, readJsonSync } = fs_extra;
+import { file } from "@back/_back.js";
+import { json, string } from "@both_types/_types.js";
+
+import { default_lang } from "./config.js";
+import { Texts_props } from "./_props/Texts_props.js";
 import { ELanguage_Code } from "../language_codes.js";
 
 export class Texts extends Texts_props {
@@ -21,7 +21,7 @@ export class Texts extends Texts_props {
     accessors?: string | (string | number)[],
     lang_id?: ELanguage_Code
   ): any {
-    Object.assign(dest_obj, this.get(accessors, lang_id));
+    Object.assign(dest_obj, this.get_localization(accessors, lang_id));
     return dest_obj;
   }
 
@@ -61,7 +61,7 @@ export class Texts extends Texts_props {
       if (access_request.length > 1) {
         access = access_request.slice(1, access_request.length);
       }
-      texts[prop_name] = this.get(access, lang_id);
+      texts[prop_name] = this.get_localization(access, lang_id);
     });
 
     return texts;
@@ -72,7 +72,7 @@ export class Texts extends Texts_props {
    *
    * @param accessors
    */
-  get(
+  get_localization(
     accessors?: string | (string | number)[],
     lang_id: ELanguage_Code = default_lang
   ): any {
@@ -85,7 +85,7 @@ export class Texts extends Texts_props {
           lang_id +
           " ; returning texts from default language : " +
           default_lang;
-        return this.get(accessors);
+        return this.get_localization(accessors);
       }
     }
 
@@ -249,8 +249,7 @@ export class Texts extends Texts_props {
    *                  from texts.default if any,
    *                  otherwise from texts.localized
    */
-  static get_text(texts, property_accessor: string | (string | number)[]) {
-    logger.log = "Localized_Text#get_text ";
+  static get(texts, property_accessor: string | (string | number)[]) {
     logger.log = "get_text ";
 
     //
@@ -258,14 +257,14 @@ export class Texts extends Texts_props {
     {
       if (!texts || !texts.default) {
         const msg = "No texts or texts.default argument";
-        logger.error = "get_text " + msg;
+        logger.error = msg;
         throw msg;
       }
     }
 
     {
       const accessor_parts = json.get_accessor_parts(property_accessor);
-      logger.log = "get_text  accessor_parts " + accessor_parts.join(".");
+      logger.log = "accessor_parts " + accessor_parts.join(".");
 
       //
       // Fetch from texts.localized if any
@@ -306,7 +305,7 @@ export class Texts extends Texts_props {
             " from " +
             property_accessor +
             " is undefined in texts.default";
-          logger.error = "get_text " + msg;
+          logger.error = msg;
           throw msg;
         }
       }
@@ -319,7 +318,10 @@ export class Texts extends Texts_props {
    * @param {*} obj
    */
   constructor(obj = undefined) {
-    super(obj);
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
   }
 
   /**
@@ -348,7 +350,7 @@ export class Texts extends Texts_props {
    *          - If one of array's elements is a wrong type
    */
   replace(to_replace: any, accessors?: string | (number | string)[]): any {
-    const texts_resources = this.get(accessors);
+    const texts_resources = this.get_localization(accessors);
 
     //
     // Iterate obj to replace values

@@ -1,5 +1,5 @@
 "use strict";
-import { obj } from "@src/both/_both.js";
+import { obj } from "@both_types/_types.js";
 
 export class Money extends obj.Obj {
   /**
@@ -16,7 +16,10 @@ export class Money extends obj.Obj {
   protected tax_incl: boolean; //Boolean
 
   constructor(obj = undefined) {
-    super(obj);
+    super();
+    if (obj) {
+      this.set(obj, undefined, true);
+    }
   }
 
   get amount() {

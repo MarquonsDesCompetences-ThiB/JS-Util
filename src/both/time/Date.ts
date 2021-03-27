@@ -1,6 +1,6 @@
 "use strict";
-
-import { Texts } from "../text/localization/Texts.js";
+import { localization } from "@both_text/_text.js";
+import Texts = localization.Texts;
 
 /**
 Utilities
@@ -44,25 +44,25 @@ export function dateToFormatedDate(date) {
 export function get_day_name(weekDayNumber, texts: Texts) {
   switch (weekDayNumber) {
     case 0:
-      return texts.get("Sunday");
+      return texts.get_localization("Sunday");
       break;
     case 1:
-      return texts.get("Monday");
+      return texts.get_localization("Monday");
       break;
     case 2:
-      return texts.get("Tuesday");
+      return texts.get_localization("Tuesday");
       break;
     case 3:
-      return texts.get("Wednesday");
+      return texts.get_localization("Wednesday");
       break;
     case 4:
-      return texts.get("Thursday");
+      return texts.get_localization("Thursday");
       break;
     case 5:
-      return texts.get("Friday");
+      return texts.get_localization("Friday");
       break;
     case 6:
-      return texts.get("Saturday");
+      return texts.get_localization("Saturday");
       break;
   }
 
@@ -72,40 +72,40 @@ export function get_day_name(weekDayNumber, texts: Texts) {
 export function get_month_name(monthNumber, texts: Texts) {
   switch (monthNumber) {
     case 0:
-      return texts.get("January");
+      return texts.get_localization("January");
       break;
     case 1:
-      return texts.get("February");
+      return texts.get_localization("February");
       break;
     case 2:
-      return texts.get("March");
+      return texts.get_localization("March");
       break;
     case 3:
-      return texts.get("April");
+      return texts.get_localization("April");
       break;
     case 4:
-      return texts.get("May");
+      return texts.get_localization("May");
       break;
     case 5:
-      return texts.get("June");
+      return texts.get_localization("June");
       break;
     case 6:
-      return texts.get("July");
+      return texts.get_localization("July");
       break;
     case 7:
-      return texts.get("August");
+      return texts.get_localization("August");
       break;
     case 8:
-      return texts.get("September");
+      return texts.get_localization("September");
       break;
     case 9:
-      return texts.get("October");
+      return texts.get_localization("October");
       break;
     case 10:
-      return texts.get("November");
+      return texts.get_localization("November");
       break;
     case 11:
-      return texts.get("December");
+      return texts.get_localization("December");
       break;
   }
 
