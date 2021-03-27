@@ -1,4 +1,3 @@
-export * from "./fs.js";
+export * as path from "./path/_path.js";
+export * as stats from "./stats.js";
 export * as tree from "./tree/_tree.js";
-
-export { Entry_Stats_intf } from "./tree/_props/Directory_Tree_props.js";
