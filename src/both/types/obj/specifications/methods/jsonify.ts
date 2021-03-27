@@ -5,10 +5,10 @@
 const jsonify_meths = new Map<string, string[]>();
 
 /**
- * Declare and store a cyclic class' property
+ * Declare and store a jsonifying class' method
  *
  * @param target class the object is an instance of
- * @param key property name to set as cyclic
+ * @param key property name to set as jsonifying
  * @param descriptor property’s descriptor object
  */
 export function jsonify(target: any, key) {
@@ -19,7 +19,7 @@ export function jsonify(target: any, key) {
   props.push(key);
 
   //
-  // Store the array if not already in cyclic_props
+  // Store the array if not already in jsonify_meths
   {
     if (!class_stored) {
       jsonify_meths.set(class_name, props);
@@ -30,7 +30,12 @@ export function jsonify(target: any, key) {
 //
 // === KEYS / VALUES / ENTRIES
 export function keys(obj: any) {
-  return jsonify_meths.get(obj.constructor.name);
+  const keys = jsonify_meths.get(obj.constructor.name);
+  if (keys) {
+    return keys;
+  }
+
+  return [];
 }
 
 export function values(obj: any) {

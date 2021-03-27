@@ -1,6 +1,8 @@
 /**
  * Associate class names to their properties declared as enumerable
- * with the decorator @enumerable
+ * with the decorator @enum,
+ * to be able to retrieve them in specifics circumstances
+ * despite of their descriptor specifies enumerable = false
  */
 const not_enum_props = new Map<string, string[]>();
 
@@ -18,7 +20,7 @@ export function enumerable(target: any, key) {
   props.push(key);
 
   //
-  // Store the array if not already in cyclic_props
+  // Store the array if not already in not_enum_props
   {
     if (!class_stored) {
       not_enum_props.set(class_name, props);
@@ -29,7 +31,12 @@ export function enumerable(target: any, key) {
 //
 // === KEYS / VALUES / ENTRIES
 export function keys(obj: any) {
-  return not_enum_props.get(obj.constructor.name);
+  const keys = not_enum_props.get(obj.constructor.name);
+  if (keys) {
+    return keys;
+  }
+
+  return [];
 }
 
 export function values(obj: any) {

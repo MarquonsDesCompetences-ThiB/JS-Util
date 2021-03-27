@@ -1,8 +1,9 @@
 /**
- * Associate class names to their methods declared as not enumerable
- * with the decorator @enum
+ * Associate class names to their properties declared as
+ * having a "jsonifying method"
+ * with the decorator @jsonified
  */
-const not_enums_meths = new Map<string, string[]>();
+const jsonified_props = new Map<string, string[]>();
 
 /**
  * Declare and store a cyclic class' property
@@ -10,18 +11,18 @@ const not_enums_meths = new Map<string, string[]>();
  * @param target class the object is an instance of
  * @param key property name to set as cyclic
  */
-export function enumerable(target: any, key) {
+export function jsonified(target: any, key) {
   const class_name = target.constructor.name;
-  const class_stored = not_enums_meths.has(class_name);
+  const class_stored = jsonified_props.has(class_name);
 
-  const props = class_stored ? not_enums_meths.get(class_name) : [];
+  const props = class_stored ? jsonified_props.get(class_name) : [];
   props.push(key);
 
   //
-  // Store the array if not already in cyclic_props
+  // Store the array if not already in jsonified_props
   {
     if (!class_stored) {
-      not_enums_meths.set(class_name, props);
+      jsonified_props.set(class_name, props);
     }
   }
 }
@@ -29,13 +30,18 @@ export function enumerable(target: any, key) {
 //
 // === KEYS / VALUES / ENTRIES
 export function keys(obj: any) {
-  return not_enums_meths.get(obj.constructor.name);
+  const keys = jsonified_props.get(obj.constructor.name);
+  if (keys) {
+    return keys;
+  }
+
+  return [];
 }
 
 export function values(obj: any) {
   const vals = [];
 
-  const keys = not_enums_meths.get(obj.constructor.name);
+  const keys = jsonified_props.get(obj.constructor.name);
   if (!keys) {
     return vals;
   }
@@ -50,7 +56,7 @@ export function values(obj: any) {
 export function entries(obj: any): [string, any][] {
   const entries = [];
 
-  const keys = not_enums_meths.get(obj.constructor.name);
+  const keys = jsonified_props.get(obj.constructor.name);
   if (!keys) {
     return entries;
   }

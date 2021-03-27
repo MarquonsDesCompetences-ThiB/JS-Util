@@ -32,7 +32,12 @@ export function cyclic(target: any, key, descriptor?) {
 //
 // === KEYS / VALUES / ENTRIES
 export function keys(obj: any) {
-  return cyclic_props.get(obj.constructor.name);
+  const keys = cyclic_props.get(obj.constructor.name);
+  if (keys) {
+    return keys;
+  }
+
+  return [];
 }
 
 export function values(obj: any) {

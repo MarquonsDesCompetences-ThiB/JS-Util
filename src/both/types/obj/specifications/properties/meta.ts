@@ -1,28 +1,28 @@
 /**
  * Associate class names to their properties declared as
- * having a "jsonifying method"
- * with the decorator @jsonified
+ * meta, eg. about the object itself
+ * with the decorator @meta
  */
-const jsonified_props = new Map<string, string[]>();
+const meta_props = new Map<string, string[]>();
 
 /**
- * Declare and store a cyclic class' property
+ * Declare and store a meta class' property
  *
  * @param target class the object is an instance of
- * @param key property name to set as cyclic
+ * @param key property name to set as meta
  */
-export function jsonified(target: any, key) {
+export function meta(target: any, key) {
   const class_name = target.constructor.name;
-  const class_stored = jsonified_props.has(class_name);
+  const class_stored = meta_props.has(class_name);
 
-  const props = class_stored ? jsonified_props.get(class_name) : [];
+  const props = class_stored ? meta_props.get(class_name) : [];
   props.push(key);
 
   //
-  // Store the array if not already in cyclic_props
+  // Store the array if not already in meta_props
   {
     if (!class_stored) {
-      jsonified_props.set(class_name, props);
+      meta_props.set(class_name, props);
     }
   }
 }
@@ -30,13 +30,18 @@ export function jsonified(target: any, key) {
 //
 // === KEYS / VALUES / ENTRIES
 export function keys(obj: any) {
-  return jsonified_props.get(obj.constructor.name);
+  const keys = meta_props.get(obj.constructor.name);
+  if (keys) {
+    return keys;
+  }
+
+  return [];
 }
 
 export function values(obj: any) {
   const vals = [];
 
-  const keys = jsonified_props.get(obj.constructor.name);
+  const keys = meta_props.get(obj.constructor.name);
   if (!keys) {
     return vals;
   }
@@ -51,7 +56,7 @@ export function values(obj: any) {
 export function entries(obj: any): [string, any][] {
   const entries = [];
 
-  const keys = jsonified_props.get(obj.constructor.name);
+  const keys = meta_props.get(obj.constructor.name);
   if (!keys) {
     return entries;
   }
