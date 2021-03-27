@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "module": "es2020",
-    "target": "ES2016",
+    "target": "es2020",
+    "lib": ["es2020"],
+
     "moduleResolution": "node",
     "outDir": "./module",
     "esModuleInterop": true,
@@ -20,6 +22,7 @@
 
       "#back": ["./back/_back.js"],
       "@back/*": ["./back/*"],
+      "@path/*": ["./back/fs/path/*"],
 
       //
       // === BOTH FOLDER ===
@@ -27,40 +30,40 @@
       "@both/*": ["./both/*"],
 
       "#array": ["./both/array/_array.js"],
-      "@array/*": ["./both/array/*"],
+      "@both_array/*": ["./both/array/*"],
 
       "#errors": ["./both/errors/_errors.js"],
-      "@errors/*": ["./both/errors/*"],
+      "@both_errors/*": ["./both/errors/*"],
 
       "#geo": ["./both/geo/_geo.js"],
-      "@geo/*": ["./both/geo/*"],
+      "@both_geo/*": ["./both/geo/*"],
 
       "#graphic": ["./both/graphic/_graphic.js"],
-      "@graphic/*": ["./both/graphic/*"],
+      "@both_graphic/*": ["./both/graphic/*"],
 
       "#ids": ["./both/ids/_ids.js"],
-      "@ids/*": ["./both/ids/*"],
+      "@both_ids/*": ["./both/ids/*"],
 
       "#number": ["./both/number/_number.js"],
-      "@number/*": ["./both/number/*"],
+      "@both_number/*": ["./both/number/*"],
 
-      "#obj": ["./both/obj/_obj.js"],
-      "@obj/*": ["./both/obj/*"],
+      "#obj": ["./both/types/obj/_obj.js"],
+      "@both_obj/*": ["./both/types/obj/*"],
 
       "#queue": ["./both/queue/_queue.js"],
-      "@queue/*": ["./both/queue/*"],
+      "@both_queue/*": ["./both/queue/*"],
 
       "#regex": ["./both/regex/_regex.js"],
-      "@regex/*": ["./both/regex/*"],
+      "@both_regex/*": ["./both/regex/*"],
 
       "#text": ["./both/text/_text.js"],
-      "@text/*": ["./both/text/*"],
+      "@both_text/*": ["./both/text/*"],
 
       "#time": ["./both/time/_time.js"],
-      "@time/*": ["./both/time/*"],
+      "@both_time/*": ["./both/time/*"],
 
-      "#type": ["./both/types/_types.js"],
-      "@type/*": ["./both/types/*"],
+      "#types": ["./both/types/_types.js"],
+      "@both_types/*": ["./both/types/*"],
 
       //
       // === FRONT FOLDER ===
@@ -77,6 +80,5 @@
     ]
   },
   "include": ["src/"],
-  "exclude": [],
-  "lib": ["es2016"]
+  "exclude": []
 }
