@@ -1,23 +1,26 @@
-import { Dirent, Stats } from "fs";
-
 import { obj } from "@both_types/_types.js";
 import { specs as obj_specs } from "@both_types/obj/_obj.js";
 
 import { Directory_Tree } from "../Directory_Tree.js";
-import { Entry_Stats_intf, iDirectory_Tree_Slave } from "../directory_intfs.js";
+import {
+  iDirectory_Tree_Slave,
+  tDirectory_Tree_Slave,
+} from "./iDirectory_Tree_Slave.js";
+import { Entry_Stats_intf, iDirectory_Tree } from "../iDirectory_Tree.js";
+import { Json_File } from "@src/back/files/Json_File.js";
 
-export class Directory_Tree_Slave<Tmaster_tree extends Directory_Tree>
+export class Directory_Tree_Slave<Tmaster_tree extends iDirectory_Tree>
   extends Directory_Tree
   implements iDirectory_Tree_Slave<Tmaster_tree> {
   @obj.specs.decs.props.jsonified
-  protected _master: Tmaster_tree;
+  protected _master: iDirectory_Tree;
 
   /**
    * When no _master, to temporarily create it
    * until its ready/completely validated
    */
   @obj.specs.decs.props.jsonified
-  protected _master_new?: Tmaster_tree;
+  protected _master_new?: iDirectory_Tree;
 
   /**
    * Regex used to genereta this tree
@@ -28,14 +31,18 @@ export class Directory_Tree_Slave<Tmaster_tree extends Directory_Tree>
   // === Directory_Tree OVERRIDES ===
   //
   // === If not root only
-  parent: Directory_Tree_Slave<Tmaster_tree>;
+  parent: iDirectory_Tree_Slave<Tmaster_tree>;
 
-  dirs: Map<string, Directory_Tree_Slave<Directory_Tree>> = new Map<
+  dirs: Map<string, iDirectory_Tree_Slave<Tmaster_tree>> = new Map<
     string,
-    Directory_Tree_Slave<Directory_Tree>
+    iDirectory_Tree_Slave<Tmaster_tree>
   >();
 
-  constructor(obj: iDirectory_Tree_Slave<Tmaster_tree> | any) {
+  constructor(
+    obj:
+      | tDirectory_Tree_Slave<Tmaster_tree>
+      | Directory_Tree_Slave<Tmaster_tree>
+  ) {
     super();
 
     //
@@ -76,26 +83,26 @@ export class Directory_Tree_Slave<Tmaster_tree extends Directory_Tree>
 
   //
   // === MASTER ===
-  get master_or_new(): Tmaster_tree {
+  get master_or_new(): iDirectory_Tree {
     return this._master || this._master_new;
   }
 
   @obj.specs.decs.meths.jsonify
-  get master(): Tmaster_tree {
+  get master(): iDirectory_Tree {
     return this._master;
   }
 
-  set master(master: Tmaster_tree) {
+  set master(master: iDirectory_Tree) {
     this._master = master;
     this.name = master.name;
   }
 
   @obj.specs.decs.meths.jsonify
-  get master_new(): Tmaster_tree {
+  get master_new(): iDirectory_Tree {
     return this._master_new;
   }
 
-  set master_new(master: Tmaster_tree) {
+  set master_new(master: iDirectory_Tree) {
     this._master_new = master;
     this.name = master.name;
   }
@@ -117,7 +124,7 @@ export class Directory_Tree_Slave<Tmaster_tree extends Directory_Tree>
   get_map(
     full_parent_path?: string,
     recursive?: boolean
-  ): Map<string, Directory_Tree_Slave<Tmaster_tree> /*| Entry_Stats_intf*/> {
+  ): Map<string, Directory_Tree_Slave<Tmaster_tree> | Entry_Stats_intf> {
     return <any>super.get_map(full_parent_path, recursive);
   }
 
@@ -301,5 +308,15 @@ export class Directory_Tree_Slave<Tmaster_tree extends Directory_Tree>
       json[dname].parent = this;
       this.dirs.set(dname, new Directory_Tree_Slave(json[dname]));
     }
+  }
+
+  //
+  // === iDIRECTORY_TREE_ROOT ===
+  load(file_or_fullPath?: Json_File | string): Promise<any> {
+    return this.root.load(file_or_fullPath);
+  }
+
+  store(file_or_fullPath?: Json_File | string): Promise<any> {
+    return this.root.store(file_or_fullPath);
   }
 }

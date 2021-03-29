@@ -2,76 +2,62 @@ import { sep as os_path_separator } from "path";
 import { obj } from "@both_types/_types.js";
 import dMeths = obj.specs.meths.decs;
 
-import { Directory_Tree_Root } from "../Directory_Tree_Root.js";
-import { Directory_Tree_Slave } from "../slave/Directory_Tree_Slave.js";
-import { get_fs_updates, select } from "../../util.js";
+import { Directory_Tree_Root } from "../../Directory_Tree_Root.js";
+import { Directory_Tree_Slave } from "../../slave/Directory_Tree_Slave.js";
+import { get_fs_updates, select } from "../../../util.js";
+import { iDirectory_Tree_Root_Slave } from "../../slave/iDirectory_Tree_Slave.js";
 import {
   Entry_Stats_intf,
+  tDirectory_Tree,
   iDirectory_Tree,
-  iDirectory_Tree_props,
-} from "../directory_intfs.js";
+} from "../../iDirectory_Tree.js";
+import { Directory_Tree } from "../../Directory_Tree.js";
 
-export type tDirectroy_Tree_Roots =
-  | Directory_Tree_Root
-  | Directory_Tree_Slave<Directory_Tree_Root>;
-
-export class Virtual_Directory_Tree_props
-  extends obj.Obj
-  implements iDirectory_Tree_props {
+export class Virtual_Directory_Tree_props extends Directory_Tree {
   //
-  // === iDirectory_Tree_Root ===
-  id = undefined;
+  // === iDirectory_Tree ===
+  //id = undefined;
   name = "Virtual Directory";
-  full_path = "/";
-  path = "";
-  root = undefined;
-  relative_path = "/";
 
-  #dirs: Map<string, tDirectroy_Tree_Roots> = new Map<
+  get full_path() {
+    return "/";
+  }
+
+  get path() {
+    return "";
+  }
+
+  get root() {
+    return undefined;
+  }
+  get virtual_root() {
+    return this;
+  }
+
+  get relative_path() {
+    return "/";
+  }
+
+  dirs: Map<string, iDirectory_Tree_Root_Slave> = new Map<
     string,
-    tDirectroy_Tree_Roots
+    iDirectory_Tree_Root_Slave
   >();
 
   /**
    * When a requested path does not start
-   * with a dir name from this.#dirs,
-   * look in directory names of every specified #dirs
+   * with a dir name from this.dirs,
+   * look in directory names of every specified dirs
    *
    */
   search_order: string[] = [];
 
-  get dirs() {
-    return this.#dirs;
-  }
-
-  set dirs(
-    dirs:
-      | (Directory_Tree_Root | Directory_Tree_Slave<Directory_Tree_Root>)[]
-      | Map<
-          string,
-          Directory_Tree_Root | Directory_Tree_Slave<Directory_Tree_Root>
-        >
-  ) {
-    if (dirs instanceof Map) {
-      this.#dirs = dirs;
-      return;
-    }
-
-    dirs.forEach((dir_tree) => {
-      this.#dirs.set(dir_tree.name, dir_tree);
-    });
-  }
-
-  set add_dir(dir_tree: tDirectroy_Tree_Roots) {
-    if (dir_tree instanceof Directory_Tree_Root) {
-      dir_tree.virtual_root = this;
-    }
-
-    this.#dirs.set(dir_tree.name, dir_tree);
+  set add_dir(dir_tree: iDirectory_Tree_Root_Slave) {
+    dir_tree.virtual_root = this;
+    this.dirs.set(dir_tree.name, dir_tree);
   }
 
   @dMeths.jsonify
-  set dirs_json(dir_trees: any[]) {
+  set dirs_json(dir_trees: tDirectory_Tree[]) {
     dir_trees.forEach((dir_tree) => {
       if (
         dir_tree instanceof Directory_Tree_Root ||
@@ -86,25 +72,25 @@ export class Virtual_Directory_Tree_props
     });
   }
 
-  get_dir(dir_name: string): tDirectroy_Tree_Roots {
+  get_dir(dir_name: string): iDirectory_Tree {
     if (!this.dirs) {
       return undefined;
     }
 
-    return this.#dirs.get(dir_name);
+    return this.dirs.get(dir_name);
   }
 
   get_dirs_names(): string[] {
     const names = [];
 
-    for (const key of this.#dirs.keys()) {
+    for (const key of this.dirs.keys()) {
       names.push(key);
     }
     return names;
   }
 
   get_path(path: string | string[]): iDirectory_Tree | Entry_Stats_intf {
-    if (!this.#dirs) {
+    if (!this.dirs) {
       return undefined;
     }
 
@@ -114,7 +100,7 @@ export class Virtual_Directory_Tree_props
 
     const next_access = path[0];
 
-    const dir = this.#dirs.get(next_access);
+    const dir = this.dirs.get(next_access);
 
     if (dir) {
       if (path.length === 0) {
@@ -132,7 +118,7 @@ export class Virtual_Directory_Tree_props
 
       for (let i = 0; i < order_length; i++) {
         const dir_name = this.search_order[i];
-        const dir = this.#dirs.get(dir_name);
+        const dir = this.dirs.get(dir_name);
         if (!dir) {
           logger.error =
             "No directory called " +
@@ -230,7 +216,7 @@ export class Virtual_Directory_Tree_props
   ): Directory_Tree_Slave<Directory_Tree_Root>[] {
     const slaves = [];
 
-    this.#dirs.forEach((dir_tree) => {
+    this.dirs.forEach((dir_tree) => {
       slaves.push(
         select<Directory_Tree_Root>(
           dir_tree,
@@ -273,12 +259,10 @@ export class Virtual_Directory_Tree_props
    */
   async get_fs_updates_from_all(
     path?: string
-  ): Promise<Directory_Tree_Slave<Directory_Tree_Root>[]> {
-    const slaves_proms: Promise<
-      Directory_Tree_Slave<Directory_Tree_Root>
-    >[] = [];
+  ): Promise<iDirectory_Tree_Root_Slave[]> {
+    const slaves_proms: Promise<iDirectory_Tree_Root_Slave>[] = [];
 
-    this.#dirs.forEach((dir_tree) => {
+    this.dirs.forEach((dir_tree) => {
       slaves_proms.push(get_fs_updates<Directory_Tree_Root>(dir_tree, path));
     });
 

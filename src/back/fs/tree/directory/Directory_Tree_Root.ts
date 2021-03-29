@@ -1,8 +1,11 @@
 import { Dirent, promises as fs_promises, Stats } from "fs";
 import { Directory_Tree } from "./Directory_Tree.js";
 import { Json as Json_File } from "@back/files/_files.js";
-import { iDirectory_Tree_Root } from "./directory_intfs.js";
-import { Virtual_Directory_Tree } from "./Virtual_Directory_Tree.js";
+import { Virtual_Directory_Tree } from "./virtual/Virtual_Directory_Tree.js";
+import {
+  iDirectory_Tree_Root,
+  tDirectory_Tree_Root,
+} from "./iDirectory_Tree_Root.js";
 
 export class Directory_Tree_Root
   extends Directory_Tree
@@ -10,7 +13,7 @@ export class Directory_Tree_Root
   #virtual_root: Virtual_Directory_Tree;
 
   /**
-   * === Save file
+   * Saving file
    */
   protected _store: Json_File;
 
@@ -20,7 +23,7 @@ export class Directory_Tree_Root
   scan_regex?: string | string[];
 
   constructor(
-    dirent_or_full_path_or_obj: iDirectory_Tree_Root | Directory_Tree_Root
+    dirent_or_full_path_or_obj: tDirectory_Tree_Root | Directory_Tree_Root
   ) {
     super();
 
@@ -129,6 +132,10 @@ export class Directory_Tree_Root
     this._store = new Json_File({
       full_path: file_or_fullPath,
     });
+  }
+
+  get store_file() {
+    return this._store;
   }
 
   /**

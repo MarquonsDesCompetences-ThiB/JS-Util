@@ -3,11 +3,11 @@ import { Entry } from "../../entry/Entry.js";
 import { specs as obj_specs } from "@src/both/types/obj/_obj.js";
 import { Stats } from "fs";
 import { join as join_path, sep as os_path_separator } from "path";
-import { Entry_Stats_intf, iDirectory_Tree } from "../directory_intfs.js";
+import { Entry_Stats_intf, iDirectory_Tree } from "../iDirectory_Tree.js";
 
 export abstract class Directory_Tree_props
   extends Entry
-  implements Entry_Stats_intf, iDirectory_Tree {
+  implements Entry_Stats_intf {
   #id?: string;
 
   /**
@@ -17,7 +17,8 @@ export abstract class Directory_Tree_props
   @obj_specs.decs.props.enum
   stats?: Stats;
 
-  abstract dirs: Map<string, iDirectory_Tree>;
+  @obj_specs.decs.props.jsonified
+  dirs: Map<string, iDirectory_Tree>;
 
   @obj_specs.decs.props.jsonified
   files: Map<string, Entry_Stats_intf> = new Map<string, Entry_Stats_intf>();
@@ -272,7 +273,7 @@ export abstract class Directory_Tree_props
    */
   ensure_dirs_map() {
     if (!this.dirs) {
-      this.dirs = new Map<string, Directory_Tree_props>();
+      this.dirs = new Map<string, iDirectory_Tree>();
     }
   }
 

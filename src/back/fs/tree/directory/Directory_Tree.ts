@@ -11,27 +11,22 @@ import { Directory_Tree_props } from "./_props/Directory_Tree_props.js";
 import {
   Entry_Stats_intf,
   iDirectory_Tree,
-  iDirectory_Tree_Node_props,
-  iDirectory_Tree_props,
-  iDirent_Directory_Tree,
-} from "./directory_intfs.js";
+  tDirectory_Tree,
+} from "./iDirectory_Tree.js";
 
-export class Directory_Tree extends Directory_Tree_props {
+export class Directory_Tree
+  extends Directory_Tree_props
+  implements iDirectory_Tree {
   //
   // === _PROPS OVERRIDES ===
-  @obj_specs.decs.props.jsonified
-  dirs: Map<string, iDirectory_Tree> = new Map<string, iDirectory_Tree>();
+  //@obj_specs.decs.props.jsonified
+  //dirs: Map<string, iDirectory_Tree> = new Map<string, iDirectory_Tree>();
 
   /**
    *
    * @param obj Required if Directory_Tree is the final class of this
    */
-  constructor(
-    obj?:
-      | iDirent_Directory_Tree
-      | iDirectory_Tree_Node_props
-      | iDirectory_Tree_props
-  ) {
+  constructor(obj?: tDirectory_Tree | Directory_Tree) {
     super();
 
     this.set(obj, undefined, true);
@@ -57,7 +52,7 @@ export class Directory_Tree extends Directory_Tree_props {
 
   //
   // === MASTER ===
-  get master(): Directory_Tree {
+  get master(): iDirectory_Tree {
     return this;
   }
 
@@ -120,7 +115,7 @@ export class Directory_Tree extends Directory_Tree_props {
    * @param dir_path If nt set, fetched from this.path
    * @returns
    */
-  async load_fs_stats(entry_name: string, dir_path?: string) {
+  async load_fs_stats(entry_name: string, dir_path?: string): Promise<Stats> {
     let file = this.files ? this.files.get(entry_name) : undefined;
     let dir = this.dirs ? this.dirs.get(entry_name) : undefined;
 
@@ -213,6 +208,7 @@ export class Directory_Tree extends Directory_Tree_props {
                   const subtree = this.set_subdir(
                     new Directory_Tree({
                       dirent: entry,
+                      path: dir_path,
                       parent: this,
                     })
                   );
@@ -256,6 +252,7 @@ export class Directory_Tree extends Directory_Tree_props {
                       const subtree = this.set_subdir(
                         new Directory_Tree({
                           dirent: entry,
+                          path: dir_path,
                           parent: this,
                         })
                       );
@@ -331,6 +328,7 @@ export class Directory_Tree extends Directory_Tree_props {
                     const subtree = this.set_subdir(
                       new Directory_Tree({
                         dirent: entry,
+                        path: dir_path,
                         parent: this,
                       })
                     );

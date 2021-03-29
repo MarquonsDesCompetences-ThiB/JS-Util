@@ -4,11 +4,8 @@ import { sanitize_regex_path } from "@path/_path.js";
 import { Dirent, promises as fs_promises } from "fs";
 import { Directory_Tree_Root } from "./directory/Directory_Tree_Root.js";
 import { join as join_path, sep as os_path_separator } from "path";
-import {
-  Entry_Stats_intf,
-  iDirectory_Tree,
-  iDirectory_Tree_Slave,
-} from "./directory/directory_intfs.js";
+import { iDirectory_Tree_Slave } from "./directory/slave/iDirectory_Tree_Slave.js";
+import { Entry_Stats_intf, iDirectory_Tree } from "./directory/iDirectory_Tree.js";
 
 /**
  * Construct a slave tree
@@ -32,9 +29,11 @@ export function select<Tmaster_tree extends Directory_Tree>(
   }
 
   const tree = new Directory_Tree_Slave<Tmaster_tree>({
-    master: (<any>directory_tree).master
-      ? (<iDirectory_Tree_Slave<Tmaster_tree>>directory_tree).master
-      : directory_tree,
+    master: <Tmaster_tree>(
+      ((<any>directory_tree).master
+        ? (<any>directory_tree).master
+        : directory_tree)
+    ),
     scan_regex: entries_matching_path,
   });
 
@@ -136,7 +135,7 @@ export function select<Tmaster_tree extends Directory_Tree>(
  *                    as they don't store their full path
  */
 export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
-  directory_Tree_or_Dirent: Directory_Tree | Dirent,
+  directory_Tree_or_Dirent: iDirectory_Tree | Dirent,
   path?: string,
   parent_slave?: Directory_Tree_Slave<Tmaster_tree>
 ): Promise<Directory_Tree_Slave<Tmaster_tree> | undefined> {
@@ -179,14 +178,16 @@ export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
      */
     {
       const tree_slave = new Directory_Tree_Slave<Tmaster_tree>({
-        master:
-          directory_Tree_or_Dirent instanceof Directory_Tree
+        master: <any>(
+          (directory_Tree_or_Dirent instanceof Directory_Tree
             ? directory_Tree_or_Dirent
-            : undefined,
-        dirent:
-          directory_Tree_or_Dirent instanceof Directory_Tree
+            : undefined)
+        ),
+        dirent: <any>(
+          (directory_Tree_or_Dirent instanceof Directory_Tree
             ? undefined
-            : directory_Tree_or_Dirent,
+            : directory_Tree_or_Dirent)
+        ),
 
         parent: parent_slave,
         stats: stats,
