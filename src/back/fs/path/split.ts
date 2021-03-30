@@ -59,7 +59,12 @@ export function full_path(full_path: string): iFull_Path {
     };
   }
 
-  const last_slash_idx = full_path.lastIndexOf(os_path_delimiter);
+  const last_slash_idx = /\//.test(full_path)
+    ? //unix delimiter
+      full_path.lastIndexOf("/")
+    : //windows delimiter
+      full_path.lastIndexOf("\\\\");
+
   if (last_slash_idx < 0) {
     const path_parts: any = full_name(full_path);
     path_parts.path = undefined;
