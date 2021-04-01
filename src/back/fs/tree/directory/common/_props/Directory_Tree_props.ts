@@ -1,13 +1,18 @@
 import { repeat } from "@src/both/types/string/_string.js";
-import { Entry } from "../../entry/Entry.js";
+import { Entry } from "../../../entry/Entry.js";
 import { specs as obj_specs } from "@src/both/types/obj/_obj.js";
 import { Stats } from "fs";
 import { join as join_path, sep as os_path_separator } from "path";
 import { Entry_Stats_intf, iDirectory_Tree } from "../iDirectory_Tree.js";
+import { get_map } from "../../../util.js";
+import { iDirectory_Tree_Node } from "../../iDirectory_Tree_Node.js";
+import { iDirectory_Tree_Root } from "../../iDirectory_Tree_Root.js";
 
 export abstract class Directory_Tree_props
   extends Entry
   implements Entry_Stats_intf {
+  abstract readonly is_root: boolean;
+
   #id?: string;
 
   /**
@@ -28,7 +33,11 @@ export abstract class Directory_Tree_props
   @obj_specs.decs.props.cyclic
   parent?: iDirectory_Tree;
 
-  get root() {
+  get root(): iDirectory_Tree_Root {
+    if (this.is_root) {
+      return <any>this;
+    }
+
     if (this.parent) {
       return this.parent.root;
     }
@@ -218,52 +227,11 @@ export abstract class Directory_Tree_props
     full_parent_path?: string,
     recursive?: boolean
   ): Map<string, iDirectory_Tree | Entry_Stats_intf> {
-    //
-    // Sanitize arguments
-    {
-      if (!full_parent_path) {
-        full_parent_path = this.path;
-      } else {
-        full_parent_path += "/" + this.name;
-      }
-    }
-
-    const map = new Map<string, iDirectory_Tree | Entry_Stats_intf>();
-
-    //
-    // Add subdirs
-    {
-      if (this.dirs) {
-        this.dirs.forEach((dir_tree, name) => {
-          map.set(full_parent_path + "/" + name, dir_tree);
-        });
-      }
-    }
-
-    //
-    // Add files
-    {
-      if (this.files) {
-        this.files.forEach((file_entry, name) => {
-          map.set(full_parent_path + "/" + name, file_entry);
-        });
-      }
-    }
-
-    //
-    // If recursive map requested
-    {
-      if (recursive && this.dirs) {
-        this.dirs.forEach((dir_tree) => {
-          const submap = dir_tree.get_map(full_parent_path, recursive);
-          submap.forEach((subdir_tree, full_path) => {
-            map.set(full_path, subdir_tree);
-          });
-        });
-      }
-    }
-
-    return map;
+    return get_map<iDirectory_Tree, Entry_Stats_intf>(
+      <any>this,
+      full_parent_path,
+      recursive
+    );
   }
 
   //
@@ -273,7 +241,7 @@ export abstract class Directory_Tree_props
    */
   ensure_dirs_map() {
     if (!this.dirs) {
-      this.dirs = new Map<string, iDirectory_Tree>();
+      this.dirs = new Map<string, iDirectory_Tree_Node>();
     }
   }
 

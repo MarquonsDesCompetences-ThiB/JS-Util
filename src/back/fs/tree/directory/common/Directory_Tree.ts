@@ -4,19 +4,47 @@ import { join as join_path } from "path";
 import { string } from "@both_types/_types.js";
 import { specs as obj_specs } from "@both_types/obj/_obj.js";
 import { sanitize_regex_path } from "@path/_path.js";
-import { get_path_request } from "../../path/path_request.js";
+import { get_path_request } from "../../../path/path_request.js";
 
-import { from_Dirent } from "../entry/iDirent.js";
+import { from_Dirent } from "../../entry/iDirent.js";
 import { Directory_Tree_props } from "./_props/Directory_Tree_props.js";
 import {
   Entry_Stats_intf,
   iDirectory_Tree,
   tDirectory_Tree,
 } from "./iDirectory_Tree.js";
+import {
+  iDirectory_Tree_Node,
+  tDirectory_Tree_Node,
+} from "../iDirectory_Tree_Node.js";
+import {
+  iDirectory_Tree_Root,
+  tDirectory_Tree_Root,
+} from "../iDirectory_Tree_Root.js";
 
-export class Directory_Tree
+export abstract class Directory_Tree
   extends Directory_Tree_props
   implements iDirectory_Tree {
+  //
+  // ==== STATIC ===
+  /**
+   * Set by Directory_Tree_Node declaration
+   */
+  static make_node: (
+    node_dir: tDirectory_Tree_Node | iDirectory_Tree_Node
+  ) => iDirectory_Tree_Node;
+
+  /**
+   * Set by Directory_Tree_Root declaration
+   * */
+  static make_root: (
+    dirent_or_full_path_or_obj: tDirectory_Tree_Root | iDirectory_Tree_Root
+  ) => iDirectory_Tree_Root;
+
+  //
+  // ==== INSTANCE ===
+  abstract readonly is_root: boolean;
+
   //
   // === _PROPS OVERRIDES ===
   //@obj_specs.decs.props.jsonified
@@ -24,29 +52,13 @@ export class Directory_Tree
 
   /**
    *
-   * @param obj Required if Directory_Tree is the final class of this
+   *
    */
   constructor(obj?: tDirectory_Tree | Directory_Tree) {
     super();
 
-    this.set(obj, undefined, true);
-
-    //
-    // Check postconds
-    {
-      //
-      // Final Directory_Tree must have an obj and parent argument
-      if (Object.getPrototypeOf(this).constructor.name === "Directory_Tree") {
-        if (!obj) {
-          throw new TypeError("Missing argument obj{iDirectory_Tree_Node}");
-        }
-
-        if (!this.parent) {
-          throw new TypeError(
-            "Directory " + this.name + " : Parent is missing"
-          );
-        }
-      }
+    if (obj) {
+      this.set(obj, undefined, true);
     }
   }
 
@@ -58,10 +70,10 @@ export class Directory_Tree
 
   //
   // === DIRECTORY TREES SETTERS
-  set subdirs(dirs_trees: Directory_Tree[]) {
+  set subdirs(dirs_trees: iDirectory_Tree_Node[]) {
     this.ensure_dirs_map();
     dirs_trees.forEach((tree) => {
-      tree.parent = this;
+      tree.parent = <any>this;
       this.dirs.set(tree.name, tree);
     });
   }
@@ -73,7 +85,7 @@ export class Directory_Tree
    * => enable slaves to keep their value up to date
    */
   set_subdir(dir_tree: iDirectory_Tree): iDirectory_Tree {
-    dir_tree.parent = this;
+    (<iDirectory_Tree_Node>dir_tree).parent = <any>this;
 
     this.ensure_dirs_map();
     const dir_set = this.dirs.get(dir_tree.name);
@@ -88,7 +100,7 @@ export class Directory_Tree
     //
     // Else update the existing one's values
     dir_set.set(dir_tree);
-    return <Directory_Tree>dir_set;
+    return dir_set;
   }
 
   get_files_matching_pattern(pattern?: RegExp) {
@@ -206,10 +218,11 @@ export class Directory_Tree
               if (!entry_to_find_reg) {
                 if (entry.isDirectory()) {
                   const subtree = this.set_subdir(
-                    new Directory_Tree({
+                    Directory_Tree.make_node({
                       dirent: entry,
                       path: dir_path,
-                      parent: this,
+                      parent: <any>this,
+                      root: this.is_root ? <any>this : undefined,
                     })
                   );
 
@@ -250,10 +263,11 @@ export class Directory_Tree
                   if (entry.isDirectory()) {
                     if (bEntry_to_find_is_dir) {
                       const subtree = this.set_subdir(
-                        new Directory_Tree({
+                        Directory_Tree.make_node({
                           dirent: entry,
                           path: dir_path,
-                          parent: this,
+                          parent: <any>this,
+                          root: this.is_root ? <any>this : undefined,
                         })
                       );
                       //
@@ -326,10 +340,11 @@ export class Directory_Tree
                 if (entry.isDirectory()) {
                   if (bEntry_to_find_is_dir) {
                     const subtree = this.set_subdir(
-                      new Directory_Tree({
+                      Directory_Tree.make_node({
                         dirent: entry,
                         path: dir_path,
-                        parent: this,
+                        parent: <any>this,
+                        root: this.is_root ? <any>this : undefined,
                       })
                     );
                     if (bIterate_subdirs) {
@@ -400,7 +415,7 @@ export class Directory_Tree
    */
   get_dirs_files_table_arr(
     recursive?: boolean,
-    other_trees?: Directory_Tree[]
+    other_trees?: iDirectory_Tree[]
   ): any {
     const arr = [];
 
@@ -504,14 +519,23 @@ export class Directory_Tree
     // Init directories if needed
     {
       if (!this.dirs) {
-        this.dirs = new Map<string, Directory_Tree>();
+        this.dirs = new Map<string, iDirectory_Tree_Node>();
       }
     }
 
     for (const dname in json) {
       json[dname].parent = this;
 
-      this.dirs.set(dname, new Directory_Tree(json[dname]));
+      this.dirs.set(
+        dname,
+
+        Directory_Tree.make_node(
+          Object.assign(json[dname], {
+            parent: <any>this,
+            root: this.is_root ? <any>this : undefined,
+          })
+        )
+      );
     }
   }
 
@@ -557,7 +581,7 @@ export class Directory_Tree
 
   //
   // === DISPLAY IN TABLE ===
-  print_dirs_files_table(recursive?: boolean, other_trees?: Directory_Tree[]) {
+  print_dirs_files_table(recursive?: boolean, other_trees?: iDirectory_Tree[]) {
     /*const cols_order = ["path_end", "0"];
 
     if (other_trees) {

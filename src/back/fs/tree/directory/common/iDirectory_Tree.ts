@@ -1,9 +1,10 @@
 import { obj } from "@src/both/_both.js";
 import { Dirent, Stats } from "fs";
-import { Entry } from "../entry/Entry.js";
-import { iDirent_json } from "../entry/iDirent.js";
-import { iDirectory_Tree_Root } from "./iDirectory_Tree_Root.js";
-import { Virtual_Directory_Tree_props } from "./virtual/_props/Virtual_Directory_Tree_props.js";
+import { Entry } from "../../entry/Entry.js";
+import { iDirent_json } from "../../entry/iDirent.js";
+import { iDirectory_Tree_Node } from "../iDirectory_Tree_Node.js";
+import { iDirectory_Tree_Root } from "../iDirectory_Tree_Root.js";
+import { Virtual_Directory_Tree } from "../virtual/Virtual_Directory_Tree.js";
 
 export interface Entry_Stats_intf extends iDirent_json {
   stats?: Stats;
@@ -21,7 +22,7 @@ export interface iDirent_Directory_Tree {
 //
 // === Properties
 export interface iDirectory_Tree_props {
-  parent?: iDirectory_Tree;
+  //parent?: iDirectory_Tree;
 
   id?: string;
   name?: string;
@@ -48,6 +49,13 @@ export interface iDirectory_Tree_props {
 //
 // === Methods
 export interface iDirectory_Tree_meths extends obj.Obj {
+  readonly is_root: boolean;
+
+  //
+  // === CHILDREN ===
+  root: iDirectory_Tree_Root;
+  //virtual_root?: Virtual_Directory_Tree;
+
   //
   // === GETTERS ===
   is_empty: boolean;
@@ -59,6 +67,7 @@ export interface iDirectory_Tree_meths extends obj.Obj {
   ensure_dirs_map(): void;
   get_subdir(dir_name: string): iDirectory_Tree;
   set_subdir(dir_tree: iDirectory_Tree): iDirectory_Tree;
+  //set_subdirs(dir_trees: iDirectory_Tree_Node[]): void;
 
   //
   // === Files
@@ -73,11 +82,6 @@ export interface iDirectory_Tree_meths extends obj.Obj {
     recursive?: boolean,
     other_trees?: iDirectory_Tree[]
   ): any;
-
-  //
-  // === CHILDREN ===
-  root: iDirectory_Tree_Root;
-  virtual_root: Virtual_Directory_Tree_props;
 
   //
   // === Slave

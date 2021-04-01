@@ -1,11 +1,76 @@
-import { Directory_Tree } from "./directory/Directory_Tree.js";
+import { Directory_Tree } from "./directory/common/Directory_Tree.js";
 import { Directory_Tree_Slave } from "./directory/slave/Directory_Tree_Slave.js";
 import { sanitize_regex_path } from "@path/_path.js";
 import { Dirent, promises as fs_promises } from "fs";
 import { Directory_Tree_Root } from "./directory/Directory_Tree_Root.js";
 import { join as join_path, sep as os_path_separator } from "path";
 import { iDirectory_Tree_Slave } from "./directory/slave/iDirectory_Tree_Slave.js";
-import { Entry_Stats_intf, iDirectory_Tree } from "./directory/iDirectory_Tree.js";
+import {
+  Entry_Stats_intf,
+  iDirectory_Tree,
+} from "./directory/common/iDirectory_Tree.js";
+import { iDirectory_Tree_Node } from "./directory/iDirectory_Tree_Node.js";
+import { iDirectory_Tree_Root } from "./directory/iDirectory_Tree_Root.js";
+
+/**
+ * Get a map of subdirs' trees and files,
+ * as map whose keys are the full_path
+ */
+export function get_map<
+  Tdir extends iDirectory_Tree,
+  Tfile extends Entry_Stats_intf
+>(
+  directory_tree: iDirectory_Tree,
+  full_parent_path?: string,
+  recursive?: boolean
+): Map<string, Tdir | Tfile> {
+  //
+  // Sanitize arguments
+  {
+    if (!full_parent_path) {
+      full_parent_path = directory_tree.path;
+    } else {
+      full_parent_path += "/" + directory_tree.name;
+    }
+  }
+
+  const map = new Map<string, Tdir | Tfile>();
+
+  //
+  // Add subdirs
+  {
+    if (directory_tree.dirs) {
+      directory_tree.dirs.forEach((dir_tree, name) => {
+        map.set(full_parent_path + "/" + name, <Tdir>dir_tree);
+      });
+    }
+  }
+
+  //
+  // Add files
+  {
+    if (directory_tree.files) {
+      directory_tree.files.forEach((file_entry, name) => {
+        map.set(full_parent_path + "/" + name, <Tfile>file_entry);
+      });
+    }
+  }
+
+  //
+  // If recursive map requested
+  {
+    if (recursive && directory_tree.dirs) {
+      directory_tree.dirs.forEach((dir_tree) => {
+        const submap = dir_tree.get_map(full_parent_path, recursive);
+        submap.forEach((subdir_tree, full_path) => {
+          map.set(full_path, <Tdir | Tfile>subdir_tree);
+        });
+      });
+    }
+  }
+
+  return map;
+}
 
 /**
  * Construct a slave tree
@@ -18,8 +83,10 @@ import { Entry_Stats_intf, iDirectory_Tree } from "./directory/iDirectory_Tree.j
  *                                          from every directory
  * @param parent_dir_path Path of the parent directory
  */
-export function select<Tmaster_tree extends Directory_Tree>(
-  directory_tree: iDirectory_Tree | iDirectory_Tree_Slave<Tmaster_tree>,
+export function select<
+  Tmaster_tree extends iDirectory_Tree_Root | iDirectory_Tree_Node
+>(
+  directory_tree: Tmaster_tree,
   entries_matching_path: string | string[],
   file_in_each_dir_matching_pattern?: RegExp,
   parent_dir_path?: string
@@ -29,18 +96,15 @@ export function select<Tmaster_tree extends Directory_Tree>(
   }
 
   const tree = new Directory_Tree_Slave<Tmaster_tree>({
-    master: <Tmaster_tree>(
-      ((<any>directory_tree).master
-        ? (<any>directory_tree).master
-        : directory_tree)
-    ),
+    master: directory_tree,
     scan_regex: entries_matching_path,
   });
+  tree.init_slave_from_master();
 
   //
   // Fetch requested files through file_in_each_dir_matching_pattern
   {
-    tree.files = directory_tree.get_files_matching_pattern(
+    tree.slave.files = directory_tree.get_files_matching_pattern(
       file_in_each_dir_matching_pattern
     );
   }
@@ -102,8 +166,8 @@ export function select<Tmaster_tree extends Directory_Tree>(
 
       directory_tree.dirs.forEach((subdir_tree, name) => {
         if (fetch.bAll_wilcard || fetch.requested_match.test(name)) {
-          const subtree = select(
-            subdir_tree,
+          const subtree = select<iDirectory_Tree_Node>(
+            <iDirectory_Tree_Node>subdir_tree,
             fetch.bAll_wilcard && fetch.requested_match.test(name)
               ? sub_matching.slice(2)
               : sub_matching,
@@ -134,10 +198,12 @@ export function select<Tmaster_tree extends Directory_Tree>(
  * @param path Required when directory_tree is not a Directory_Tree_Root,
  *                    as they don't store their full path
  */
-export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
-  directory_Tree_or_Dirent: iDirectory_Tree | Dirent,
+export async function get_fs_updates<
+  Tmaster_tree extends iDirectory_Tree_Root | iDirectory_Tree_Node
+>(
+  directory_Tree_or_Dirent: Tmaster_tree | Dirent,
   path?: string,
-  parent_slave?: Directory_Tree_Slave<Tmaster_tree>
+  parent_slave?: iDirectory_Tree_Slave<Tmaster_tree | iDirectory_Tree_Root>
 ): Promise<Directory_Tree_Slave<Tmaster_tree> | undefined> {
   //
   // Check preconds
@@ -156,7 +222,7 @@ export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
   // According to the precondition above,
   // directoryTree_or_parentSlaveTree is a Directory_Tree_Root
   if (!path) {
-    path = (<Directory_Tree>directory_Tree_or_Dirent).full_path;
+    path = (<Tmaster_tree>directory_Tree_or_Dirent).full_path;
   }
 
   return fs_promises.stat(path).then((stats) => {
@@ -192,6 +258,7 @@ export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
         parent: parent_slave,
         stats: stats,
       });
+      tree_slave.init_slave_from_master();
 
       //
       // Open the directory
@@ -241,8 +308,8 @@ export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
               //
               // Update from the known directory
               if (known_entry_stats) {
-                return get_fs_updates(
-                  <Directory_Tree>known_entry_stats,
+                return get_fs_updates<iDirectory_Tree_Node>(
+                  <iDirectory_Tree_Node>known_entry_stats,
                   entry_path,
                   tree_slave
                 ).then((subdir_tree_slave) => {
@@ -257,7 +324,7 @@ export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
                   //
                   // else add to tree slave
                   {
-                    subdir_tree_slave.parent = tree_slave;
+                    subdir_tree_slave.parent = <any>tree_slave;
                     tree_slave.set_subdir(subdir_tree_slave);
                   }
                 });
@@ -265,7 +332,7 @@ export async function get_fs_updates<Tmaster_tree extends Directory_Tree>(
               //
               // else directory newly created -> scan it
               {
-                return get_fs_updates<Tmaster_tree>(
+                return get_fs_updates<iDirectory_Tree_Node>(
                   dirent,
                   entry_path,
                   tree_slave

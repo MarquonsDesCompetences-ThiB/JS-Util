@@ -1,16 +1,20 @@
 import { Dirent, promises as fs_promises, Stats } from "fs";
-import { Directory_Tree } from "./Directory_Tree.js";
+import { Directory_Tree } from "./common/Directory_Tree.js";
 import { Json as Json_File } from "@back/files/_files.js";
 import { Virtual_Directory_Tree } from "./virtual/Virtual_Directory_Tree.js";
 import {
   iDirectory_Tree_Root,
   tDirectory_Tree_Root,
 } from "./iDirectory_Tree_Root.js";
+import { iDirectory_Tree_Node } from "./iDirectory_Tree_Node.js";
 
 export class Directory_Tree_Root
   extends Directory_Tree
   implements iDirectory_Tree_Root {
+  readonly is_root = true;
+
   #virtual_root: Virtual_Directory_Tree;
+  dirs: Map<string, iDirectory_Tree_Node>;
 
   /**
    * Saving file
@@ -181,3 +185,12 @@ export class Directory_Tree_Root
     return this._store.write();
   }
 }
+
+/**
+ * Set Directory_Tree.make_root
+ */
+Directory_Tree.make_root = function (
+  dirent_or_full_path_or_obj: tDirectory_Tree_Root | iDirectory_Tree_Root
+) {
+  return new Directory_Tree_Root(dirent_or_full_path_or_obj);
+};

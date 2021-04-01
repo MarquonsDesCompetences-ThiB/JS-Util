@@ -10,10 +10,19 @@ import {
   Entry_Stats_intf,
   tDirectory_Tree,
   iDirectory_Tree,
-} from "../../iDirectory_Tree.js";
-import { Directory_Tree } from "../../Directory_Tree.js";
+} from "../../common/iDirectory_Tree.js";
+import { Directory_Tree } from "../../common/Directory_Tree.js";
+import { iVirtual_Directory_Tree_props } from "../iVirtual_Directory_Tree.js";
+import {
+  iDirectory_Tree_Root,
+  iDirectory_Tree_Root_props,
+} from "../../iDirectory_Tree_Root.js";
 
-export class Virtual_Directory_Tree_props extends Directory_Tree {
+export class Virtual_Directory_Tree_props
+  extends Directory_Tree
+  implements iVirtual_Directory_Tree_props {
+  readonly is_root = true;
+
   //
   // === iDirectory_Tree ===
   //id = undefined;
@@ -38,9 +47,9 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
     return "/";
   }
 
-  dirs: Map<string, iDirectory_Tree_Root_Slave> = new Map<
+  dirs: Map<string, iDirectory_Tree_Root> = new Map<
     string,
-    iDirectory_Tree_Root_Slave
+    iDirectory_Tree_Root
   >();
 
   /**
@@ -51,28 +60,29 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
    */
   search_order: string[] = [];
 
-  set add_dir(dir_tree: iDirectory_Tree_Root_Slave) {
+  set add_dir(dir_tree: iDirectory_Tree_Root) {
     dir_tree.virtual_root = this;
     this.dirs.set(dir_tree.name, dir_tree);
   }
 
   @dMeths.jsonify
-  set dirs_json(dir_trees: tDirectory_Tree[]) {
+  set dirs_json(
+    dir_trees: (iDirectory_Tree_Root | iDirectory_Tree_Root_props)[]
+  ) {
     dir_trees.forEach((dir_tree) => {
-      if (
-        dir_tree instanceof Directory_Tree_Root ||
-        dir_tree instanceof Directory_Tree_Slave
-      ) {
+      if (dir_tree instanceof Directory_Tree_Root) {
         this.add_dir = dir_tree;
         return;
       }
       //
       // else construct and add the Directory_Tree_Root
-      this.add_dir = new Directory_Tree_Root(dir_tree);
+      this.add_dir = new Directory_Tree_Root(
+        <iDirectory_Tree_Root_props>dir_tree
+      );
     });
   }
 
-  get_dir(dir_name: string): iDirectory_Tree {
+  get_dir(dir_name: string): iDirectory_Tree_Root_Slave {
     if (!this.dirs) {
       return undefined;
     }
@@ -164,7 +174,7 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
     from_dir: string,
     entries_matching_path: string | string[],
     file_in_each_dir_matching_pattern?: RegExp
-  ): Directory_Tree_Slave<Directory_Tree_Root> {
+  ): Directory_Tree_Slave<iDirectory_Tree_Root> {
     const dir = this.get_dir(from_dir);
     if (!dir) {
       throw new ReferenceError(
@@ -172,8 +182,8 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
       );
     }
 
-    return select<Directory_Tree_Root>(
-      dir,
+    return select<iDirectory_Tree_Root>(
+      <any>dir,
       entries_matching_path,
       file_in_each_dir_matching_pattern
     );
@@ -197,7 +207,7 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
       from_dir,
       entries_matching_path,
       file_in_each_dir_matching_pattern
-    );
+    ).master_or_slave;
   }
 
   /**
@@ -218,8 +228,8 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
 
     this.dirs.forEach((dir_tree) => {
       slaves.push(
-        select<Directory_Tree_Root>(
-          dir_tree,
+        select<iDirectory_Tree_Root>(
+          <any>dir_tree,
           entries_matching_path,
           file_in_each_dir_matching_pattern
         )
@@ -238,7 +248,7 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
   async get_fs_updates(
     from_dir: string,
     path?: string
-  ): Promise<Directory_Tree_Slave<Directory_Tree_Root>> {
+  ): Promise<Directory_Tree_Slave<iDirectory_Tree_Root>> {
     const dir = this.get_dir(from_dir);
     if (!dir) {
       throw new ReferenceError(
@@ -246,7 +256,7 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
       );
     }
 
-    return get_fs_updates<Directory_Tree_Root>(dir, path);
+    return get_fs_updates<iDirectory_Tree_Root>(<any>dir, path);
   }
 
   /**
@@ -263,7 +273,9 @@ export class Virtual_Directory_Tree_props extends Directory_Tree {
     const slaves_proms: Promise<iDirectory_Tree_Root_Slave>[] = [];
 
     this.dirs.forEach((dir_tree) => {
-      slaves_proms.push(get_fs_updates<Directory_Tree_Root>(dir_tree, path));
+      slaves_proms.push(
+        get_fs_updates<iDirectory_Tree_Root>(<any>dir_tree, path)
+      );
     });
 
     return Promise.all(slaves_proms);

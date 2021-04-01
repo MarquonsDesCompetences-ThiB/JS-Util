@@ -4,24 +4,28 @@ import {
   iDirectory_Tree,
   iDirectory_Tree_meths,
   iDirectory_Tree_props,
-} from "../iDirectory_Tree.js";
-import { iDirectory_Tree_Node } from "../iDirectory_Tree_Node.js";
+} from "../common/iDirectory_Tree.js";
+import {
+  iDirectory_Tree_Node,
+  iDirectory_Tree_Root_or_Node,
+} from "../iDirectory_Tree_Node.js";
 import {
   iDirectory_Tree_Root,
   iDirectory_Tree_Root_props,
 } from "../iDirectory_Tree_Root.js";
 
+//
 // === Properties
 export interface iDirectory_Tree_Slave_props<
-  Tmaster_tree extends iDirectory_Tree
-> extends iDirectory_Tree_props {
-  root?: iDirectory_Tree_Slave<iDirectory_Tree_Root>;
+  Tmaster_tree extends iDirectory_Tree_Root_or_Node
+> extends Omit<iDirectory_Tree_props, "parent" | "dirs" | "root"> {
+  root?: iDirectory_Tree_Slave<iDirectory_Tree_Root_or_Node>;
 
-  parent?: iDirectory_Tree_Slave<iDirectory_Tree>;
+  parent?: iDirectory_Tree_Slave<Tmaster_tree | iDirectory_Tree_Root>;
 
-  master?: iDirectory_Tree;
-  master_new?: iDirectory_Tree;
-  master_or_new?: iDirectory_Tree;
+  master?: Tmaster_tree;
+  slave?: Tmaster_tree;
+  master_or_slave?: Tmaster_tree;
 
   scan_regex?: string | string[];
 
@@ -34,14 +38,35 @@ export interface iDirectory_Tree_Slave_props<
 //
 // === Methods
 export interface iDirectory_Tree_Slave_meths<
-  Tmaster_tree extends iDirectory_Tree
-> extends iDirectory_Tree_meths {
+  Tmaster_tree extends iDirectory_Tree_Root_or_Node
+> extends Omit<
+    iDirectory_Tree_meths,
+    "root" | "get_map" | "get_subdir" | "set_subdir"
+  > {
+  readonly is_root: boolean;
+
+  //
+  // === PATH ===
+  readonly path: string;
+  readonly full_path: string;
+  readonly relative_path: string;
+
+  /**
+   * Clone master and set the result to slave
+   * Remove slave.dirs
+   */
+  init_slave_from_master();
+
   get_map(
     full_parent_path?: string,
     recursive?: boolean
-  ): Map<string, iDirectory_Tree_Slave<iDirectory_Tree> | Entry_Stats_intf>;
+  ): Map<string, Tmaster_tree | Entry_Stats_intf>;
   ensure_dirs_map(): void;
 
+  get_subdir(dir_name: string): iDirectory_Tree_Slave<iDirectory_Tree_Node>;
+  set_subdir(
+    dir_tree: iDirectory_Tree_Slave<iDirectory_Tree_Node>
+  ): iDirectory_Tree_Slave<iDirectory_Tree_Node>;
   // get_slave_subdir(dir_name: string): iDirectory_Tree_Slave<Tmaster_tree>;
 
   apply_to_master(recursive_to_children?: boolean): void;
@@ -57,12 +82,14 @@ export interface iDirectory_Tree_Slave_meths<
 }
 
 export type iDirectory_Tree_Slave<
-  Tmaster_tree extends iDirectory_Tree
+  Tmaster_tree extends iDirectory_Tree_Root_or_Node
 > = iDirectory_Tree_Slave_props<Tmaster_tree> &
   iDirectory_Tree_Slave_meths<Tmaster_tree>;
 
 // Slave props only or full object
-export type tDirectory_Tree_Slave<Tmaster_tree extends iDirectory_Tree> =
+export type tDirectory_Tree_Slave<
+  Tmaster_tree extends iDirectory_Tree_Root_or_Node
+> =
   | iDirectory_Tree_Slave_props<Tmaster_tree>
   | iDirectory_Tree_Slave<Tmaster_tree>;
 

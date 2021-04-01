@@ -5,11 +5,16 @@ import {
   iDirectory_Tree,
   iDirectory_Tree_meths,
   iDirectory_Tree_props,
-} from "./iDirectory_Tree.js";
+} from "./common/iDirectory_Tree.js";
+import { iDirectory_Tree_Node } from "./iDirectory_Tree_Node.js";
+import { Virtual_Directory_Tree } from "./virtual/Virtual_Directory_Tree.js";
 
 // === Properties
 export interface iDirectory_Tree_Root_props extends iDirectory_Tree_props {
-  virtual_root?: iDirectory_Tree;
+  //root: iDirectory_Tree_Root;
+  virtual_root?: Virtual_Directory_Tree;
+
+  dirs?: Map<string, iDirectory_Tree_Node>;
 
   /**
    * Saving file
@@ -25,8 +30,6 @@ export interface iDirectory_Tree_Root_props extends iDirectory_Tree_props {
 //
 // === Methods
 export interface iDirectory_Tree_Root_meths extends iDirectory_Tree_meths {
-  root: iDirectory_Tree_Root;
-
   /*super_scan(
     entries_matching_path?: string,
     get_stats?: boolean

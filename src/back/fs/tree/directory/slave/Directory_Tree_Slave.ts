@@ -1,43 +1,31 @@
 import { obj } from "@both_types/_types.js";
 import { specs as obj_specs } from "@both_types/obj/_obj.js";
 
-import { Directory_Tree } from "../Directory_Tree.js";
+import { Directory_Tree } from "../common/Directory_Tree.js";
 import {
   iDirectory_Tree_Slave,
   tDirectory_Tree_Slave,
 } from "./iDirectory_Tree_Slave.js";
-import { Entry_Stats_intf, iDirectory_Tree } from "../iDirectory_Tree.js";
+import {
+  Entry_Stats_intf,
+  iDirectory_Tree,
+} from "../common/iDirectory_Tree.js";
 import { Json_File } from "@src/back/files/Json_File.js";
+import { Directory_Tree_Slave_props } from "./_props/Directory_Tree_Slave_props.js";
+import { iDirectory_Tree_Root } from "../iDirectory_Tree_Root.js";
+import {
+  iDirectory_Tree_Node,
+  iDirectory_Tree_Node_meths,
+  iDirectory_Tree_Root_or_Node,
+} from "../iDirectory_Tree_Node.js";
+import { Directory_Tree_Node } from "../Directory_Tree_Node.js";
 
-export class Directory_Tree_Slave<Tmaster_tree extends iDirectory_Tree>
-  extends Directory_Tree
+export class Directory_Tree_Slave<
+    Tmaster_tree extends iDirectory_Tree_Root_or_Node
+  >
+  //extends Directory_Tree
+  extends Directory_Tree_Slave_props<Tmaster_tree>
   implements iDirectory_Tree_Slave<Tmaster_tree> {
-  @obj.specs.decs.props.jsonified
-  protected _master: iDirectory_Tree;
-
-  /**
-   * When no _master, to temporarily create it
-   * until its ready/completely validated
-   */
-  @obj.specs.decs.props.jsonified
-  protected _master_new?: iDirectory_Tree;
-
-  /**
-   * Regex used to genereta this tree
-   */
-  scan_regex: string | string[];
-
-  //
-  // === Directory_Tree OVERRIDES ===
-  //
-  // === If not root only
-  parent: iDirectory_Tree_Slave<Tmaster_tree>;
-
-  dirs: Map<string, iDirectory_Tree_Slave<Tmaster_tree>> = new Map<
-    string,
-    iDirectory_Tree_Slave<Tmaster_tree>
-  >();
-
   constructor(
     obj:
       | tDirectory_Tree_Slave<Tmaster_tree>
@@ -60,122 +48,120 @@ export class Directory_Tree_Slave<Tmaster_tree extends iDirectory_Tree>
   }
 
   //
-  // === ID ===
-  get id() {
-    if (this.master) {
-      return this.master.id;
+  // === GETTERS/SETTERS ===
+  //
+  // === PATH
+  get path() {
+    return this.master_or_slave.path;
+  }
+
+  get full_path() {
+    return this.master_or_slave.full_path;
+  }
+
+  get relative_path() {
+    return this.master_or_slave.relative_path;
+  }
+
+  @obj_specs.decs.meths.jsonify
+  get dirs_json(): any {
+    const dirs: any = {};
+
+    this.dirs.forEach((dir_tree, dname) => {
+      dirs[dname] = dir_tree.toJSON();
+    });
+
+    return dirs;
+  }
+
+  set dirs_json(json: any) {
+    for (const dname in json) {
+      json[dname].parent = this;
+      this.dirs.set(
+        dname,
+        new Directory_Tree_Slave<Directory_Tree_Node>(json[dname])
+      );
     }
   }
 
   //
   // === ROOT ===
-  get root() {
+  get root(): iDirectory_Tree_Slave<iDirectory_Tree_Root_or_Node> {
     if (this.parent) {
       return this.parent.root;
     }
 
-    return this;
+    return <iDirectory_Tree_Slave<iDirectory_Tree_Root_or_Node>>(<any>this);
   }
 
   get virtual_root() {
-    return this.root.master_or_new.virtual_root;
+    return this.root.master_or_slave.virtual_root;
   }
 
-  //
-  // === MASTER ===
-  get master_or_new(): iDirectory_Tree {
-    return this._master || this._master_new;
-  }
-
-  @obj.specs.decs.meths.jsonify
-  get master(): iDirectory_Tree {
-    return this._master;
-  }
-
-  set master(master: iDirectory_Tree) {
-    this._master = master;
-    this.name = master.name;
-  }
-
-  @obj.specs.decs.meths.jsonify
-  get master_new(): iDirectory_Tree {
-    return this._master_new;
-  }
-
-  set master_new(master: iDirectory_Tree) {
-    this._master_new = master;
-    this.name = master.name;
-  }
-
-  //
-  // === PATH ===
-  get path(): string {
-    if (this.master) {
-      return this.master.path;
-    }
-
-    return undefined;
-  }
-
-  /**
-   * Get a map of subdirs' trees and files,
-   * as map whose keys are the full_path
-   */
-  get_map(
-    full_parent_path?: string,
-    recursive?: boolean
-  ): Map<string, Directory_Tree_Slave<Tmaster_tree> | Entry_Stats_intf> {
-    return <any>super.get_map(full_parent_path, recursive);
-  }
-
-  //
-  // === SUB-DIRECTORIES
-
-  /**
-   * Ensure the map this.dirs exist ; if not, create it
-   */
-  ensure_dirs_map() {
+  get_subdir(dir_name: string): iDirectory_Tree_Slave<iDirectory_Tree_Node> {
     if (!this.dirs) {
-      this.dirs = new Map<string, Directory_Tree_Slave<Tmaster_tree>>();
+      return undefined;
     }
+
+    return this.dirs.get(dir_name);
   }
 
-  /*  get_slave_subdir(dir_name: string): Directory_Tree_Slave {
-    return <Directory_Tree_Slave>super.get_subdir(dir_name);
-  }*/
+  /**
+   * Clone master and set the result to slave
+   * Remove slave.dirs
+   */
+  init_slave_from_master() {
+    if (!this.master) {
+      throw new TypeError("No master to init a slave from");
+    }
 
-  /*set slave_subdirs(dirs_trees: Directory_Tree_Slave[]) {
-    this.ensure_dirs_map();
-    dirs_trees.forEach((tree) => {
-      this.dirs.set(tree.name, tree);
-    });
+    this.slave = this.master.clone();
+    this.slave.dirs = undefined;
   }
 
-  set slave_subdir(dir_tree: Directory_Tree_Slave) {
+  /**
+   * Add the specified directory tree to this.dirs,
+   * and its slave to this.slave.dirs
+   *
+   * If one with this name already exists, update its
+   * values with those in dir_tree
+   * => enable slaves to keep their value up to date
+   */
+  set_subdir(
+    dir_tree: iDirectory_Tree_Slave<iDirectory_Tree_Node>
+  ): iDirectory_Tree_Slave<iDirectory_Tree_Node> {
     dir_tree.parent = this;
 
-    this.ensure_dirs_map();
-    const dir_set = this.dirs.get(dir_tree.name);
     //
-    // Must add the new one
+    // Add the dir_tree's master slave
     {
-      if (!dir_set) {
-        this.dirs.set(dir_tree.name, dir_tree);
-        return;
-      }
+      this.slave.set_subdir(dir_tree.slave);
     }
+
     //
-    // Else update the existing one's values
-    for (const key in dir_tree) {
-      dir_set[key] = dir_tree[key];
+    // Add the slave dir_tree
+    {
+      this.ensure_dirs_map();
+      const dir_set = this.dirs.get(dir_tree.name);
+      //
+      // Must add the new one
+      {
+        if (!dir_set) {
+          this.dirs.set(dir_tree.name, dir_tree);
+          return dir_tree;
+        }
+      }
+      //
+      // Else update the existing one's values
+      dir_set.set(dir_tree);
+      return dir_set;
     }
-  }*/
+  }
 
   /**
    * Process both this.set_new_master and this.set_stats_to_master
    */
   apply_to_master(recursive_to_children?: boolean) {
-    this.set_new_master();
     this.set_stats_to_master();
 
     if (recursive_to_children) {
@@ -194,55 +180,30 @@ export class Directory_Tree_Slave<Tmaster_tree extends iDirectory_Tree>
    *                              to their master
    */
   set_new_master(recursive_to_children?: boolean): void {
-    //
-    // This is a new directory in fs => no master
-    if (!this._master) {
-      //
-      // Apply _master_new or create a new master
-      if (!apply_master_new.call(this)) {
-        this._master = this.parent.make_new(this);
+    if (this.master) {
+      return;
+    }
 
-        // the created master's parent is the slave one
-        // => set the original
-        this._master.parent = this.parent.master;
+    if (recursive_to_children) {
+      this.master = this.slave;
+    } else {
+      this.master = this.slave.clone();
+
+      if (this.master.dirs) {
+        this.master.dirs.clear();
       }
     }
 
-    if (this.files) {
-      this.files.forEach((file_entry, name) => {
-        this.master.file_entry = file_entry;
-        this.files.delete(name);
-      });
+    if (!this.master.is_root) {
+      (<iDirectory_Tree_Node>this.master).parent = this.parent.master;
     }
 
-    //
-    // Recursive call to subtrees
-    {
-      if (recursive_to_children) {
-        if (this.dirs) {
-          this.dirs.forEach((dir_tree) => {
-            dir_tree.set_new_master(recursive_to_children);
-          });
-        }
+    if (recursive_to_children) {
+      if (this.dirs) {
+        this.dirs.forEach((subdir) => {
+          subdir.set_new_master(recursive_to_children);
+        });
       }
-    }
-
-    if (this.is_empty && this.parent) {
-      this.parent.delete(this.name);
-    }
-
-    function apply_master_new() {
-      if (this._master_new) {
-        this._master = this._master_new;
-        this._master_new = undefined;
-
-        // the created master's parent is the slave one
-        // => set the original
-        this._master.parent = this.parent.master;
-        return true;
-      }
-
-      return false;
     }
   }
 
@@ -259,64 +220,22 @@ export class Directory_Tree_Slave<Tmaster_tree extends iDirectory_Tree>
    *                              to their master
    */
   set_stats_to_master(recursive_to_children?: boolean): void {
-    this.master.stats = this.stats;
-
     //
-    // Recursive call to subtrees
+    // Ensure there is a master
     {
-      if (recursive_to_children) {
-        if (this.dirs) {
-          this.dirs.forEach((dir_tree) => {
-            dir_tree.set_stats_to_master(recursive_to_children);
-          });
-        }
+      if (!this.master) {
+        this.set_new_master();
       }
     }
 
-    if (this.is_empty && this.parent) {
-      this.parent.delete(this.name);
+    this.master.stats = this.slave.stats;
+
+    if (recursive_to_children) {
+      if (this.dirs) {
+        this.dirs.forEach((subdir) => {
+          subdir.set_stats_to_master(recursive_to_children);
+        });
+      }
     }
-  }
-
-  /**
-   * Delete the specified tree directory from this.dirs
-   * If this is now empty, call parent.delete(this.name)
-   */
-  delete(dir_name: string): void {
-    this.dirs.delete(dir_name);
-
-    if (this.is_empty && this.parent) {
-      this.parent.delete(this.name);
-    }
-  }
-
-  //
-  // === GETTERS/SETTERS
-  @obj_specs.decs.meths.jsonify
-  get dirs_json(): any {
-    const dirs: any = {};
-
-    this.dirs.forEach((dir_tree, dname) => {
-      dirs[dname] = dir_tree.toJSON();
-    });
-
-    return dirs;
-  }
-
-  set dirs_json(json: any) {
-    for (const dname in json) {
-      json[dname].parent = this;
-      this.dirs.set(dname, new Directory_Tree_Slave(json[dname]));
-    }
-  }
-
-  //
-  // === iDIRECTORY_TREE_ROOT ===
-  load(file_or_fullPath?: Json_File | string): Promise<any> {
-    return this.root.load(file_or_fullPath);
-  }
-
-  store(file_or_fullPath?: Json_File | string): Promise<any> {
-    return this.root.store(file_or_fullPath);
   }
 }
