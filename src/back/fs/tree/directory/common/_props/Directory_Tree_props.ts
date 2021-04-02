@@ -4,9 +4,9 @@ import { specs as obj_specs } from "@src/both/types/obj/_obj.js";
 import { Stats } from "fs";
 import { join as join_path, sep as os_path_separator } from "path";
 import { Entry_Stats_intf, iDirectory_Tree } from "../iDirectory_Tree.js";
-import { get_map } from "../../../util.js";
 import { iDirectory_Tree_Node } from "../../iDirectory_Tree_Node.js";
 import { iDirectory_Tree_Root } from "../../iDirectory_Tree_Root.js";
+import { get_map } from "../common.js";
 
 export abstract class Directory_Tree_props
   extends Entry

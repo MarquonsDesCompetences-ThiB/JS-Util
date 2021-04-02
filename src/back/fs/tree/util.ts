@@ -11,66 +11,7 @@ import {
 } from "./directory/common/iDirectory_Tree.js";
 import { iDirectory_Tree_Node } from "./directory/iDirectory_Tree_Node.js";
 import { iDirectory_Tree_Root } from "./directory/iDirectory_Tree_Root.js";
-
-/**
- * Get a map of subdirs' trees and files,
- * as map whose keys are the full_path
- */
-export function get_map<
-  Tdir extends iDirectory_Tree,
-  Tfile extends Entry_Stats_intf
->(
-  directory_tree: iDirectory_Tree,
-  full_parent_path?: string,
-  recursive?: boolean
-): Map<string, Tdir | Tfile> {
-  //
-  // Sanitize arguments
-  {
-    if (!full_parent_path) {
-      full_parent_path = directory_tree.path;
-    } else {
-      full_parent_path += "/" + directory_tree.name;
-    }
-  }
-
-  const map = new Map<string, Tdir | Tfile>();
-
-  //
-  // Add subdirs
-  {
-    if (directory_tree.dirs) {
-      directory_tree.dirs.forEach((dir_tree, name) => {
-        map.set(full_parent_path + "/" + name, <Tdir>dir_tree);
-      });
-    }
-  }
-
-  //
-  // Add files
-  {
-    if (directory_tree.files) {
-      directory_tree.files.forEach((file_entry, name) => {
-        map.set(full_parent_path + "/" + name, <Tfile>file_entry);
-      });
-    }
-  }
-
-  //
-  // If recursive map requested
-  {
-    if (recursive && directory_tree.dirs) {
-      directory_tree.dirs.forEach((dir_tree) => {
-        const submap = dir_tree.get_map(full_parent_path, recursive);
-        submap.forEach((subdir_tree, full_path) => {
-          map.set(full_path, <Tdir | Tfile>subdir_tree);
-        });
-      });
-    }
-  }
-
-  return map;
-}
+import { Directory_Tree_Node } from "./directory/Directory_Tree_Node.js";
 
 /**
  * Construct a slave tree
@@ -244,16 +185,18 @@ export async function get_fs_updates<
      */
     {
       const tree_slave = new Directory_Tree_Slave<Tmaster_tree>({
-        master: <any>(
-          (directory_Tree_or_Dirent instanceof Directory_Tree
-            ? directory_Tree_or_Dirent
-            : undefined)
-        ),
-        dirent: <any>(
-          (directory_Tree_or_Dirent instanceof Directory_Tree
-            ? undefined
-            : directory_Tree_or_Dirent)
-        ),
+        master: <any>(directory_Tree_or_Dirent instanceof Directory_Tree
+          ? directory_Tree_or_Dirent
+          : //
+          // Create a Directory_Tree from the {dirent} directory_Tree_or_Dirent
+          parent_slave
+          ? new Directory_Tree_Node({
+              dirent: <any>directory_Tree_or_Dirent,
+              parent: parent_slave.master,
+            })
+          : new Directory_Tree_Root({
+              dirent: <any>directory_Tree_or_Dirent,
+            })),
 
         parent: parent_slave,
         stats: stats,

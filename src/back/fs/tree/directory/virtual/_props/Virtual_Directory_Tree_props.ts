@@ -8,7 +8,6 @@ import { get_fs_updates, select } from "../../../util.js";
 import { iDirectory_Tree_Root_Slave } from "../../slave/iDirectory_Tree_Slave.js";
 import {
   Entry_Stats_intf,
-  tDirectory_Tree,
   iDirectory_Tree,
 } from "../../common/iDirectory_Tree.js";
 import { Directory_Tree } from "../../common/Directory_Tree.js";

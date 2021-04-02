@@ -117,6 +117,10 @@ export class Directory_Tree_Slave<
 
     this.slave = this.master.clone();
     this.slave.dirs = undefined;
+
+    if (this.parent) {
+      (<iDirectory_Tree_Node>this.slave).parent = this.parent.slave;
+    }
   }
 
   /**
