@@ -261,7 +261,7 @@ export class Obj extends Obj_props {
 
   clone(props_flags = props_specs.eSpec.ALL_JSONIFYING, explicit?: boolean) {
     const cloned_obj = this.get(props_flags, explicit);
-    return new (Object.getPrototypeOf(this).class.ctor)(cloned_obj);
+    return new (Object.getPrototypeOf(this).constructor)(cloned_obj);
   }
 
   equals(obj, include_not_enumerable_props = true) {
