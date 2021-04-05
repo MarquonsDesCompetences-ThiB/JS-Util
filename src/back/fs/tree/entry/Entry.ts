@@ -153,6 +153,7 @@ export class Entry extends Obj implements iDirent_json {
     }
   }
 
+  @obj_specs.decs.meths.jsonify
   get full_path() {
     const path = this.path;
     const name = this.full_name;
@@ -232,6 +233,7 @@ export class Entry extends Obj implements iDirent_json {
   }
   //
   // === DIRENT INTERFACE ===
+  @obj_specs.decs.meths.jsonify
   get full_name() {
     const ext = this.ext ? "." + this.ext : "";
     return this.name + ext;
