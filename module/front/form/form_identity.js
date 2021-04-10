@@ -2,7 +2,7 @@
  * To validate inputs relative to identities (users, companies)
  */
 "use strict";
-import { regex, text } from "../../both/_both.js";
+import { regex, string } from "../../both/types/_types.js";
 export var form_identity;
 (function (form_identity) {
     form_identity.minlengthes = {
@@ -150,7 +150,7 @@ export var form_identity;
                 mail_format: true,
             };
         }
-        if (text.string.has_special_characters(login)) {
+        if (string.has_special_characters(login)) {
             return {
                 special_chars: true,
             };

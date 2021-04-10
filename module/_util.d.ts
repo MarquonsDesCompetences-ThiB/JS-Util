@@ -20,6 +20,6 @@ declare const _default: {
 export default _default;
 export declare const bool: typeof both.types.bool, json: typeof both.types.json, string: typeof both.types.string;
 export declare const text: typeof both.text, number: typeof both.number;
-export declare const types: typeof both.types, obj: typeof both.obj;
+export declare const types: typeof both.types, obj: typeof both.types.obj;
 export declare const geo: typeof both.geo, graphic: typeof both.graphic;
-export declare const regex: typeof both.regex, time: typeof both.time;
+export declare const regex: typeof both.types.regex, time: typeof both.time;

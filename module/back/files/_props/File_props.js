@@ -19,9 +19,9 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __cntnt_2rr, __cntnt_str, __xt, __n, __p;
-import { obj, text } from "../../../both/_both.js";
-import { sep as os_path_separator } from "path";
-import { specs as obj_specs } from "../../../both/obj/_obj.js";
+import { obj, string } from "../../../both/types/_types.js";
+import { join as join_path, sep as os_path_separator } from "path";
+import { specs as obj_specs } from "../../../both/types/obj/_obj.js";
 export class File_props extends obj.Obj {
     constructor() {
         super(...arguments);
@@ -51,12 +51,25 @@ export class File_props extends obj.Obj {
          */
         __p.set(this, void 0);
     }
+    //
+    // === STATE ===
+    get is_open() {
+        return this.file_handle != null || this.write_stream != null;
+    }
+    get is_closed() {
+        return !this.is_open;
+    }
+    get mode() {
+        return this._mode;
+    }
     get content() {
         if (__classPrivateFieldGet(this, __cntnt_2rr)) {
             return __classPrivateFieldGet(this, __cntnt_2rr);
         }
         return __classPrivateFieldGet(this, __cntnt_str);
     }
+    //
+    // === Content setter
     set content(content) {
         if (content) {
             __classPrivateFieldSet(this, __cntnt_str, content);
@@ -66,6 +79,13 @@ export class File_props extends obj.Obj {
             __classPrivateFieldSet(this, __cntnt_2rr, content);
             return;
         }
+    }
+    set append_content(data) {
+        if (!__classPrivateFieldGet(this, __cntnt_str)) {
+            __classPrivateFieldSet(this, __cntnt_str, data);
+            return;
+        }
+        __classPrivateFieldSet(this, __cntnt_str, __classPrivateFieldGet(this, __cntnt_str) + data);
     }
     get ext() {
         return __classPrivateFieldGet(this, __xt);
@@ -95,20 +115,28 @@ export class File_props extends obj.Obj {
             return;
         }
         __classPrivateFieldSet(this, __n, full_name.slice(0, last_dot_idx));
-        __classPrivateFieldSet(this, __xt, full_name.slice(last_dot_idx));
+        __classPrivateFieldSet(this, __xt, full_name.slice(last_dot_idx + 1));
     }
     /**
      * === Full path : full_name + path ===
      */
     get full_path() {
-        return this.path + this.full_name;
+        const path = this.path;
+        const full_name = this.full_name;
+        if (path) {
+            if (full_name) {
+                return join_path(path, full_name);
+            }
+            return path;
+        }
+        return full_name;
     }
     /**
      * Parse the specified path to split directories path,
      * file's name and extension
      */
     set full_path(full_path) {
-        const last_delimiter_idx = full_path.search(/\\|\/(?=.+\\|\/)/);
+        const last_delimiter_idx = full_path.lastIndexOf(os_path_separator);
         if (last_delimiter_idx < 0) {
             __classPrivateFieldSet(this, __p, full_path);
             return;
@@ -137,9 +165,9 @@ export class File_props extends obj.Obj {
             /*
                   Keep ':' preceded by a drive letter
                   Keep everything else which is not : * ? " < > |
-                */
-            const formatted = path.match(/(?<=[A-Z]):|[^:\*\?"\<\>\|]/g).join("");
-            __classPrivateFieldSet(this, __p, formatted);
+                
+            const formatted = path.match(/(?<=[A-Z]):|[^:\*\?"\<\>\|]/g).join("");*/
+            __classPrivateFieldSet(this, __p, path);
             //
             // No ending slash or backslash
             if (!/(\/|\\)$/.test(__classPrivateFieldGet(this, __p))) {
@@ -168,7 +196,7 @@ export class File_props extends obj.Obj {
         //
         // If must be computed
         {
-            if (text.string.is(this.content) || this.content instanceof Array) {
+            if (string.is(this.content) || this.content instanceof Array) {
                 return this.content.length;
             }
             if (typeof this.content === "object") {

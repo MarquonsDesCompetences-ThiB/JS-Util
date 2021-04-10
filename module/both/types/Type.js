@@ -1,7 +1,7 @@
 "use strict";
 import * as bool from "./bool.js";
 import * as number from "./number.js";
-import * as string from "./string.js";
+import * as string from "./string/_string.js";
 /**
  * Return if obj is of specified type
  * Specified type can be a class instance
@@ -46,5 +46,26 @@ export function is_primitive(type) {
         type === "number" ||
         type === "string" ||
         type === "Symbol");
+}
+/**
+ * Convert primitive to its equivalent object type if it
+ * currently is a primitive
+ * Eg. convert boolean to Boolean
+ *             number to Number
+ *             string to String
+ */
+export function to_object(primitive) {
+    switch (typeof primitive) {
+        case "boolean":
+            primitive = new Boolean(primitive);
+            break;
+        case "number":
+            primitive = new Number(primitive);
+            break;
+        case "string":
+            primitive = new String(primitive);
+            break;
+    }
+    return primitive;
 }
 //# sourceMappingURL=type.js.map

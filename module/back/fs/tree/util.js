@@ -1,8 +1,10 @@
-import { Directory_Tree_Slave } from "./directory_tree_slave/Directory_Tree_Slave.js";
-import { sanitize_regex_path } from "../fs.js";
-import { equal as stats_equal } from "../stats.js";
+import { Directory_Tree } from "./directory/common/Directory_Tree.js";
+import { Directory_Tree_Slave } from "./directory/slave/Directory_Tree_Slave.js";
+import { sanitize_regex_path } from "../path/_path.js";
 import { promises as fs_promises } from "fs";
-import { Directory_Tree_Root } from "./Directory_Tree_Root.js";
+import { Directory_Tree_Root } from "./directory/Directory_Tree_Root.js";
+import { join as join_path, sep as os_path_separator } from "path";
+import { Directory_Tree_Node } from "./directory/Directory_Tree_Node.js";
 /**
  * Construct a slave tree
  * of directories and files (from directory_tree.dirs and directory_tree.files)
@@ -18,13 +20,15 @@ export function select(directory_tree, entries_matching_path, file_in_each_dir_m
     if (!parent_dir_path) {
         parent_dir_path = directory_tree.path;
     }
-    const tree = new Directory_Tree_Slave(directory_tree.master, undefined);
+    const tree = new Directory_Tree_Slave({
+        master: directory_tree,
+        scan_regex: entries_matching_path,
+    });
+    tree.init_slave_from_master();
     //
     // Fetch requested files through file_in_each_dir_matching_pattern
     {
-        if (file_in_each_dir_matching_pattern) {
-            tree.files = directory_tree.get_files_matching_pattern(file_in_each_dir_matching_pattern);
-        }
+        tree.slave.files = directory_tree.get_files_matching_pattern(file_in_each_dir_matching_pattern);
     }
     //
     // Format requested path
@@ -49,7 +53,7 @@ export function select(directory_tree, entries_matching_path, file_in_each_dir_m
             */
             requested_match: undefined,
         };
-        const dir_path = parent_dir_path + directory_tree.name + "/";
+        const dir_path = parent_dir_path + directory_tree.name + os_path_separator;
         //
         // Fill fetch to be as requested
         {
@@ -82,7 +86,7 @@ export function select(directory_tree, entries_matching_path, file_in_each_dir_m
                         ? sub_matching.slice(2)
                         : sub_matching, file_in_each_dir_matching_pattern, dir_path);
                     if (subtree) {
-                        tree.subdir = subtree;
+                        tree.set_subdir(subtree);
                     }
                 }
             });
@@ -100,92 +104,137 @@ export function select(directory_tree, entries_matching_path, file_in_each_dir_m
 /**
  * Fetch a slave tree of only entries having any updated stats in file system
  *
- * @param parent_path Required when directory_tree is not a Directory_Tree_Root,
+ * @param path Required when directory_tree is not a Directory_Tree_Root,
  *                    as they don't store their full path
  */
-export function get_fs_updates(directory_tree, parent_path) {
-    return new Promise((success) => {
+export async function get_fs_updates(directory_Tree_or_Dirent, path, parent_slave) {
+    //
+    // Check preconds
+    {
+        if (!(directory_Tree_or_Dirent instanceof Directory_Tree_Root) &&
+            (!path || path.length === 0)) {
+            throw TypeError("The specified directory_Tree_or_Dirent is not a root thus has no path, and no one is set as argument");
+        }
+    }
+    //
+    // According to the precondition above,
+    // directoryTree_or_parentSlaveTree is a Directory_Tree_Root
+    if (!path) {
+        path = directory_Tree_or_Dirent.full_path;
+    }
+    return fs_promises.stat(path).then((stats) => {
         //
-        // Check preconds
+        // If no change in file system
         {
-            if (!(directory_tree instanceof Directory_Tree_Root) &&
-                (!parent_path || parent_path.length === 0)) {
-                throw TypeError("The specified directory_tree is not a root thus has no path, and no one is set as argument");
+            if (directory_Tree_or_Dirent instanceof Directory_Tree &&
+                directory_Tree_or_Dirent.stats &&
+                directory_Tree_or_Dirent.stats.mtime === stats.mtime) {
+                return undefined;
             }
         }
-        if (!parent_path) {
-            parent_path = directory_tree.path;
-        }
-        const entry_full_path = parent_path + directory_tree.name;
-        fs_promises.stat(entry_full_path).then((stats) => {
+        /**
+         * Create a Directory_Tree_Slave with the loaded stats
+         * and look for updates in files and subdirs
+         */
+        {
+            const tree_slave = new Directory_Tree_Slave({
+                master: (directory_Tree_or_Dirent instanceof Directory_Tree
+                    ? directory_Tree_or_Dirent
+                    : //
+                        // Create a Directory_Tree from the {dirent} directory_Tree_or_Dirent
+                        parent_slave
+                            ? new Directory_Tree_Node({
+                                dirent: directory_Tree_or_Dirent,
+                                parent: parent_slave.master,
+                            })
+                            : new Directory_Tree_Root({
+                                dirent: directory_Tree_or_Dirent,
+                            })),
+                parent: parent_slave,
+                stats: stats,
+            });
+            tree_slave.init_slave_from_master();
             //
-            // If no change in file system
-            {
-                if (stats_equal(directory_tree.stats, stats)) {
-                    return success(undefined);
-                }
-            }
-            /**
-             * Create a Directory_Tree_Slave with the specified stats
-             * and look for updates in files and subdirs
-             */
-            {
-                const tree_slave = new Directory_Tree_Slave(directory_tree.master, undefined);
+            // Open the directory
+            return fs_promises.opendir(path).then((dir) => {
+                let dirent_i;
                 const proms = [];
-                //
-                // Look for files updates
-                {
-                    directory_tree.files.forEach((entry_stats) => {
-                        const prom = fs_promises.stat(entry_full_path + "/" + entry_stats.name);
-                        proms.push(prom);
-                        prom.then((stats) => {
+                while ((dirent_i = dir.readSync())) {
+                    //to access the right dirent_i in every promise below
+                    const dirent = dirent_i;
+                    const entry_path = join_path(path, dirent.name);
+                    let known_entry_stats;
+                    if (directory_Tree_or_Dirent instanceof Directory_Tree) {
+                        known_entry_stats = dirent.isFile()
+                            ? directory_Tree_or_Dirent.get_file_entry(dirent.name)
+                            : directory_Tree_or_Dirent.get_subdir(dirent.name);
+                    }
+                    //
+                    // Look for entry updates
+                    const prom = fs_promises.stat(entry_path).then((stats) => {
+                        //
+                        // No fs update
+                        {
+                            if (known_entry_stats &&
+                                known_entry_stats.stats &&
+                                known_entry_stats.stats.mtime === stats.mtime) {
+                                return;
+                            }
+                        }
+                        dirent.stats = stats;
+                        if (dirent.isFile()) {
                             //
-                            // No fs update
-                            {
-                                if (stats_equal(entry_stats.stats, stats)) {
-                                    return;
-                                }
+                            // else add dirent+stats to the tree slave
+                            tree_slave.file_entry = dirent;
+                            return;
+                        }
+                        //
+                        // else directory scan
+                        {
+                            //
+                            // Update from the known directory
+                            if (known_entry_stats) {
+                                return get_fs_updates(known_entry_stats, entry_path, tree_slave).then((subdir_tree_slave) => {
+                                    //
+                                    // No fs update
+                                    {
+                                        if (!subdir_tree_slave) {
+                                            return undefined;
+                                        }
+                                    }
+                                    //
+                                    // else add to tree slave
+                                    {
+                                        subdir_tree_slave.parent = tree_slave;
+                                        tree_slave.set_subdir(subdir_tree_slave);
+                                    }
+                                });
                             }
                             //
-                            // else add to tree slave
-                            tree_slave.file_entry = Object.assign(stats, {
-                                name: entry_stats.name,
-                            });
-                        });
+                            // else directory newly created -> scan it
+                            {
+                                return get_fs_updates(dirent, entry_path, tree_slave).then((new_sub_tree_slave) => {
+                                    tree_slave.set_subdir(new_sub_tree_slave);
+                                    return new_sub_tree_slave;
+                                });
+                            }
+                        }
                     });
-                }
-                //
-                // Look for directories updates
-                {
-                    directory_tree.dirs.forEach((subdir_tree) => {
-                        const prom = get_fs_updates(subdir_tree, entry_full_path + "/");
-                        proms.push(prom);
-                        prom.then((subdir_tree_slave) => {
-                            //
-                            // No fs update
-                            {
-                                if (!subdir_tree_slave) {
-                                    return;
-                                }
-                            }
-                            //
-                            // else add to tree slave
-                            {
-                                subdir_tree_slave.parent = tree_slave;
-                                tree_slave.slave_subdir = subdir_tree_slave;
-                            }
-                        });
-                    });
+                    proms.push(prom);
                 }
                 //
                 // Wait for promises
                 {
-                    Promise.all(proms).then(() => {
-                        success(tree_slave);
+                    return Promise.all(proms).then(() => {
+                        try {
+                            dir.close();
+                        }
+                        catch (ex) { }
+                        return tree_slave;
                     });
                 }
-            }
-        });
+            });
+        }
     });
 }
 //# sourceMappingURL=util.js.map

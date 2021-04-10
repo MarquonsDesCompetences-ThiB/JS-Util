@@ -17,6 +17,7 @@ import stream from "stream";
 import fs_extra from "fs-extra";
 //import File_  from process.env.SRC_ROOT + "dist/js/util/files/File.js";
 import output from "output-manager";
+import { join as join_path } from "path";
 export class Logger_props extends stream.Writable /*implements NodeJS.WriteStream*/ {
     /**
      * https://nodejs.org/api/stream.html#stream_implementing_a_writable_stream
@@ -25,7 +26,7 @@ export class Logger_props extends stream.Writable /*implements NodeJS.WriteStrea
      * @param other_stream_to_call Opional stream to call ; for example, original std.out
      * @param writable_stream_opts
      */
-    constructor(file_name_prefix = "", other_stream_to_call, writable_stream_opts) {
+    constructor(path = join_path(process.env.SRC_ROOT ? process.env.SRC_ROOT : "", "logs"), file_name_prefix = "", other_stream_to_call, writable_stream_opts) {
         super(writable_stream_opts);
         __f_p.set(this, void 0); //file_path
         {
@@ -41,17 +42,13 @@ export class Logger_props extends stream.Writable /*implements NodeJS.WriteStrea
         {
             const prefix = file_name_prefix + (file_name_prefix.length > 0 ? "-" : "");
             this.file_desc = undefined;
-            this.file_path =
-                process.env.SRC_ROOT +
-                    "\\logs\\" +
-                    prefix +
-                    this.logs.level_str +
-                    "-" +
-                    new Date().toLocaleTimeString() +
-                    ".log";
+            this.file_path = join_path(path, prefix +
+                this.logs.level_str +
+                "-" +
+                new Date().toLocaleTimeString() +
+                ".log");
         }
         {
-            let that = this;
             this.logs.output = (msg) => {
                 this.write(msg, (error_or_null) => {
                     if (error_or_null) {

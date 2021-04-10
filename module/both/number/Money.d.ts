@@ -1,4 +1,4 @@
-import { obj } from "../_both.js";
+import { obj } from "../types/_types.js";
 export declare class Money extends obj.Obj {
     #private;
     /**

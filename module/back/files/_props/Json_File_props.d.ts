@@ -9,4 +9,5 @@ export declare abstract class Json_File_props extends File {
      * objects (json files)
      */
     get nb(): number;
+    constructor(obj?: any);
 }

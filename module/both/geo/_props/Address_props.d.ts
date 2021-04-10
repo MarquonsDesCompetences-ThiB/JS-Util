@@ -1,4 +1,4 @@
-import { obj } from "../../_both.js";
+import { obj } from "../../types/_types.js";
 import { Location } from "../Location.js";
 export declare abstract class Address_props extends obj.Obj {
     #private;

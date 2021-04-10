@@ -23,7 +23,7 @@ export declare class Logger_props extends stream.Writable {
      * @param other_stream_to_call Opional stream to call ; for example, original std.out
      * @param writable_stream_opts
      */
-    constructor(file_name_prefix?: string, other_stream_to_call?: stream.Writable, writable_stream_opts?: stream.WritableOptions);
+    constructor(path?: string, file_name_prefix?: string, other_stream_to_call?: stream.Writable, writable_stream_opts?: stream.WritableOptions);
     add_stream_to_call(writable_stream: stream.Writable): void;
     get file_path(): string;
     set file_path(file_path: string);

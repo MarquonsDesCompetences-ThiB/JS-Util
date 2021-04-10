@@ -1,11 +1,10 @@
 "use strict";
-import { json } from "../../types/_types.js";
-import { file } from "../../../back/_back.js";
-import { default_lang } from "./localization.js";
-import * as string from "../../types/string.js";
-import { Texts_props } from "./_props/Texts_props.js";
 import fs_extra from "fs-extra";
 const { pathExistsSync, readJsonSync } = fs_extra;
+import { file } from "../../../back/_back.js";
+import { json, string } from "../../types/_types.js";
+import { default_lang } from "./config.js";
+import { Texts_props } from "./_props/Texts_props.js";
 export class Texts extends Texts_props {
     /**
      * Add the requested texts to dest_obj
@@ -15,7 +14,7 @@ export class Texts extends Texts_props {
      * @return dest_obj
      */
     add_texts(dest_obj, accessors, lang_id) {
-        Object.assign(dest_obj, this.get(accessors, lang_id));
+        Object.assign(dest_obj, this.get_localization(accessors, lang_id));
         return dest_obj;
     }
     /**
@@ -48,7 +47,7 @@ export class Texts extends Texts_props {
             if (access_request.length > 1) {
                 access = access_request.slice(1, access_request.length);
             }
-            texts[prop_name] = this.get(access, lang_id);
+            texts[prop_name] = this.get_localization(access, lang_id);
         });
         return texts;
     }
@@ -57,7 +56,7 @@ export class Texts extends Texts_props {
      *
      * @param accessors
      */
-    get(accessors, lang_id = default_lang) {
+    get_localization(accessors, lang_id = default_lang) {
         //
         //
         {
@@ -67,7 +66,7 @@ export class Texts extends Texts_props {
                         lang_id +
                         " ; returning texts from default language : " +
                         default_lang;
-                return this.get(accessors);
+                return this.get_localization(accessors);
             }
         }
         //
@@ -213,21 +212,20 @@ export class Texts extends Texts_props {
      *                  from texts.default if any,
      *                  otherwise from texts.localized
      */
-    static get_text(texts, property_accessor) {
-        logger.log = "Localized_Text#get_text ";
+    static get(texts, property_accessor) {
         logger.log = "get_text ";
         //
         // Check preconds
         {
             if (!texts || !texts.default) {
                 const msg = "No texts or texts.default argument";
-                logger.error = "get_text " + msg;
+                logger.error = msg;
                 throw msg;
             }
         }
         {
             const accessor_parts = json.get_accessor_parts(property_accessor);
-            logger.log = "get_text  accessor_parts " + accessor_parts.join(".");
+            logger.log = "accessor_parts " + accessor_parts.join(".");
             //
             // Fetch from texts.localized if any
             {
@@ -263,7 +261,7 @@ export class Texts extends Texts_props {
                         " from " +
                         property_accessor +
                         " is undefined in texts.default";
-                    logger.error = "get_text " + msg;
+                    logger.error = msg;
                     throw msg;
                 }
             }
@@ -275,7 +273,10 @@ export class Texts extends Texts_props {
      * @param {*} obj
      */
     constructor(obj = undefined) {
-        super(obj);
+        super();
+        if (obj) {
+            this.set(obj, undefined, true);
+        }
     }
     /**
      * Replace texts
@@ -303,7 +304,7 @@ export class Texts extends Texts_props {
      *          - If one of array's elements is a wrong type
      */
     replace(to_replace, accessors) {
-        const texts_resources = this.get(accessors);
+        const texts_resources = this.get_localization(accessors);
         //
         // Iterate obj to replace values
         {

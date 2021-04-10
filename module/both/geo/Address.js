@@ -7,24 +7,16 @@ export class Address extends Address_props {
      * @param {*} obj
      */
     constructor(obj = undefined) {
-        super(obj);
-    }
-    /**
-     *
-     * @param {bool} include_not_enumerable_props
-     * @param {bool} as_string  If true, everything is processed by
-     *                          this.toJSON_as_string
-     *                          => numbers are converted to string
-     */
-    toJSON(include_not_enumerable_props = false, as_string = false) {
-        return super.toJSON(include_not_enumerable_props, as_string);
+        super();
+        if (obj) {
+            this.set(obj, undefined, true);
+        }
     }
     to_string() {
         let str = "";
         if (this.number != null) {
             str += this.number + " ";
-            logger.debug =
-                "Address#to_string number " + str + " " + typeof this.number;
+            logger.debug = "number " + str + " " + typeof this.number;
         }
         if (this.address != null) {
             str += this.address + " ";
@@ -41,12 +33,12 @@ export class Address extends Address_props {
         if (this.country != null) {
             str += this.country + " ";
         }
-        logger.debug = "Address#to_string " + str;
+        logger.debug = str;
         return str;
     }
     equals(addr) {
         if (!addr || !(addr instanceof Address)) {
-            logger.debug = "Address#equals addr ! Address";
+            logger.debug = "addr ! Address";
             return false;
         }
         return super.equals(addr);

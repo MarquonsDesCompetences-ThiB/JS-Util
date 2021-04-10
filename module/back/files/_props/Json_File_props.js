@@ -15,14 +15,17 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
 var __cntnt_bj;
 import { File } from "../File.js";
 export class Json_File_props extends File {
-    constructor() {
-        super(...arguments);
+    constructor(obj = undefined) {
+        super();
         //
         // === CONTENT ===
         /**
          * Content as a json (object)
          */
         __cntnt_bj.set(this, void 0);
+        if (obj) {
+            this.set(obj, undefined, true);
+        }
     }
     get content() {
         return __classPrivateFieldGet(this, __cntnt_bj);

@@ -1,6 +1,6 @@
-import { Obj } from "../../../obj/_obj.js";
+import { obj } from "../../../types/_types.js";
 import { ELanguage_Code } from "../../language_codes.js";
-export declare abstract class Texts_props extends Obj {
+export declare abstract class Texts_props extends obj.Obj {
     #private;
     constructor(accessor?: string | (string | number)[]);
     get init_accessor(): string | (string | number)[];

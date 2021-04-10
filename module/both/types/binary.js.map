@@ -1,0 +1,1 @@
+{"version":3,"file":"binary.js","sourceRoot":"","sources":["../../../src/both/types/binary.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AACH,MAAM,UAAU,YAAY,CAAC,KAAa;IACxC,IAAI,EAAE,GAAG,CAAC,CAAC;IAEX,OAAO,KAAK,EAAE;QACZ,IAAI,KAAK,GAAG,CAAC,EAAE;YACb,EAAE,EAAE,CAAC;SACN;QAED,KAAK,KAAK,CAAC,CAAC;KACb;IAED,OAAO,EAAE,CAAC;AACZ,CAAC"}

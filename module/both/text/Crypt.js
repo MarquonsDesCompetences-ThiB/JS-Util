@@ -1,6 +1,6 @@
 "use strict";
 import crypto from "crypto";
-import { text } from "../_both.js";
+import { string } from "../types/_types.js";
 /**
  * Members :
  *  algo {string}
@@ -69,17 +69,17 @@ export class Crypt {
     decrypt(encrypted_text, iv = this.iv, key = this.key) {
         //
         // Fetch iv as buffer
-        if (text.string.is(iv)) {
+        if (string.is(iv)) {
             iv = Buffer.from(iv, "hex");
         }
         //
         // Fetch key as buffer
-        if (text.string.is(key)) {
+        if (string.is(key)) {
             key = Buffer.from(key, "hex");
         }
         //
         // Fetch text as buffer
-        if (text.string.is(encrypted_text)) {
+        if (string.is(encrypted_text)) {
             encrypted_text = Buffer.from(encrypted_text, "hex");
         }
         let decipher = crypto.createDecipheriv(this.algo, key, iv);

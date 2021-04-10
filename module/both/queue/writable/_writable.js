@@ -1,5 +1,5 @@
-import * as obj from "../../obj/_obj.js";
 import { createWriteStream } from "fs";
+import { obj } from "../../types/_types.js";
 /**
  * https://nodejs.org/api/fs.html#fs_fs_createwritestream_path_options
  *

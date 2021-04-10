@@ -2,6 +2,9 @@ export function equal(stats1, stats2) {
     return equal_metas(stats1, stats2) && equal_type(stats1, stats2);
 }
 export function equal_metas(stats1, stats2) {
+    if (!stats1 || !stats2) {
+        return false;
+    }
     return (stats1.dev === stats2.dev &&
         stats1.ino === stats2.ino &&
         stats1.mode === stats2.mode &&
@@ -22,6 +25,9 @@ export function equal_metas(stats1, stats2) {
         stats1.birthtime === stats2.birthtime);
 }
 export function equal_type(stats1, stats2) {
+    if (!stats1 || !stats2) {
+        return false;
+    }
     return (stats1.isFile() === stats2.isFile() &&
         stats1.isDirectory() === stats2.isDirectory() &&
         stats1.isBlockDevice() === stats2.isBlockDevice() &&

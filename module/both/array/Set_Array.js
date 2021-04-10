@@ -8,23 +8,20 @@ export class Set_Array extends Array {
         super(...arguments);
     }
     concat(array) {
-        const that = this;
-        let new_elmts = array.filter((value) => {
-            return !that.includes(value);
+        const new_elmts = array.filter((value) => {
+            return !this.includes(value);
         });
         return super.concat(new_elmts);
     }
-    push(array) {
-        const that = this;
-        let new_elmts = array.filter((value) => {
-            return !that.includes(value);
+    push(...vals) {
+        const new_elmts = vals.filter((value) => {
+            return !this.includes(value);
         });
         return super.push(...new_elmts);
     }
     unshift() {
-        const that = this;
-        let new_elmts = [].filter.call(arguments, (value) => {
-            return !that.includes(value);
+        const new_elmts = [].filter.call(arguments, (value) => {
+            return !this.includes(value);
         });
         return super.unshift(...new_elmts);
     }

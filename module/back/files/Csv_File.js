@@ -1,15 +1,6 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import { Csv_File_props } from "./_props/Csv_File_props.js";
-import { text } from "../../both/_both.js";
+import { string } from "../../both/types/_types.js";
 import $ from "jquery";
 export class Csv_File extends Csv_File_props {
     /**
@@ -48,7 +39,10 @@ export class Csv_File extends Csv_File_props {
         return next_letters;
     }
     constructor(obj = undefined) {
-        super(obj);
+        super();
+        if (obj) {
+            this.set(obj, undefined, true);
+        }
         /**
          * All column names asociated to their index
          * Keys are repercuted into this.content[0]
@@ -152,7 +146,7 @@ export class Csv_File extends Csv_File_props {
             logger.error = "Csv_File#to_csv_array The number of columns is not set";
             return undefined;
         }
-        if (text.string.is(this.content)) {
+        if (string.is(this.content)) {
             let all_columns = this.content.split(",");
             if (all_columns.length % this.nb_cols !== 0) {
                 logger.error =
@@ -176,38 +170,36 @@ export class Csv_File extends Csv_File_props {
                 typeof this.content;
         return undefined;
     }
-    to_csv_string() {
-        return __awaiter(this, void 0, void 0, function* () {
-            function converted() {
-                logger.info = this.content.length + " characters in " + this.name;
-                return this.content;
-            }
-            if (text.string.is(this.content)) {
-                return converted.call(this);
-            }
-            if (this.content instanceof Array) {
-                //
-                // Convert every array row in a string
-                // -> joins content[i][]
-                yield this.content.forEach((row_arr, idx) => {
-                    this.content[idx] = row_arr.join(",");
-                });
-                //
-                // Join all rows string in one
-                // -> joins content[]
-                this.content = this.content.join(",");
-                return converted.call(this);
-            }
-            if (typeof this.content === "object") {
-                this.add_json_content(this.content);
-                //now this.content is instanceof Array
-                return this.to_csv_string();
-            }
-            logger.error =
-                "Csv_File#to_csv_string Content is not an handled type : " +
-                    typeof this.content;
-            return undefined;
-        });
+    async to_csv_string() {
+        function converted() {
+            logger.info = this.content.length + " characters in " + this.name;
+            return this.content;
+        }
+        if (string.is(this.content)) {
+            return converted.call(this);
+        }
+        if (this.content instanceof Array) {
+            //
+            // Convert every array row in a string
+            // -> joins content[i][]
+            await this.content.forEach((row_arr, idx) => {
+                this.content[idx] = row_arr.join(",");
+            });
+            //
+            // Join all rows string in one
+            // -> joins content[]
+            this.content = this.content.join(",");
+            return converted.call(this);
+        }
+        if (typeof this.content === "object") {
+            this.add_json_content(this.content);
+            //now this.content is instanceof Array
+            return this.to_csv_string();
+        }
+        logger.error =
+            "Csv_File#to_csv_string Content is not an handled type : " +
+                typeof this.content;
+        return undefined;
     }
     //
     // === VALUES ASSOCIATION ===

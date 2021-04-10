@@ -34,7 +34,7 @@ export declare class Texts extends Texts_props {
      *
      * @param accessors
      */
-    get(accessors?: string | (string | number)[], lang_id?: ELanguage_Code): any;
+    get_localization(accessors?: string | (string | number)[], lang_id?: ELanguage_Code): any;
     /**
      * Return the requested texts reading files
      *
@@ -56,7 +56,7 @@ export declare class Texts extends Texts_props {
      *                  from texts.default if any,
      *                  otherwise from texts.localized
      */
-    static get_text(texts: any, property_accessor: string | (string | number)[]): any;
+    static get(texts: any, property_accessor: string | (string | number)[]): any;
     /**
      *
      * Parameters are for this.set

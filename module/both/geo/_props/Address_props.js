@@ -13,10 +13,10 @@ var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (
     return value;
 };
 var __nm, __nmbr, __ddrss, __ddrss2, __zp_cd, __ct, __cntr, __lctn;
-import { obj, text } from "../../_both.js";
+import { form_identity } from "../../../front/form/form_identity.js";
+import { obj, string } from "../../types/_types.js";
 import { address } from "../Address_statics.js";
 import { Location } from "../Location.js";
-import { form_identity } from "../../../front/form/form_identity.js";
 export class Address_props extends obj.Obj {
     constructor() {
         super(...arguments);
@@ -61,7 +61,7 @@ export class Address_props extends obj.Obj {
         }
         {
             if (!new RegExp(address.regex.number).test(decodeURI(number))) {
-                const nb_chars = number.length - text.string.count_utf8_characters(number) * 2;
+                const nb_chars = number.length - string.count_utf8_characters(number) * 2;
                 if (nb_chars > address.lengthes.number.max) {
                     throw "too_long";
                 }

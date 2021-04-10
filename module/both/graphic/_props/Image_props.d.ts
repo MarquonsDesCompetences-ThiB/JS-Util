@@ -1,4 +1,4 @@
-import { obj } from "../../_both.js";
+import { obj } from "../../types/_types.js";
 export declare abstract class Image_props extends obj.Obj {
     protected name: string;
     protected tooltip: string;

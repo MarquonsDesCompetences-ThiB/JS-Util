@@ -1,4 +1,5 @@
-import { Texts } from "../text/localization/Texts.js";
+import { localization } from "../text/_text.js";
+import Texts = localization.Texts;
 /**
 Utilities
 */

@@ -6,6 +6,6 @@
 export declare class Set_Array extends Array {
     constructor();
     concat(array: any): any[];
-    push(array: any[]): number;
+    push(...vals: any[]): number;
     unshift(): number;
 }
