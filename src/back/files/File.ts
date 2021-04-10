@@ -285,23 +285,26 @@ export class File extends File_props {
 
   /**
    *
-   * @param{boolean} use_stream If a WriteStream must be used to write
-   *                              When not used, fs.write is directly used
-   *                              => we have to wait for the
-   *                                  writing promise
-   *                              If previously used, will always be used
-   *                              as long as the stream is not closed
+   * @param{number} cursor_fileHandle If set, use a file handle :
+   *                                     fs.write is directly used
+   *                                     If value is a negative number,
+   *                                     the cursor is not moved
+   *                                     Move the cursor to the specified
+   *                                     position otherwise
    *
-   *                              WriteStream: https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_createwritestream_path_options
+   *                                  If not set, use a WriteStream :
+   *                                  => we have to wait for the
+   *                                    writing promise
+   *                                  If previously used, will always be used
+   *                                  whatever is the cursor_fileHandle value
+   *                                  as long as the stream is not closed
    *
-   * @param{number} cursor_fileHandle Position where to write in file
-   *                                  Works only when not using a write stream,
-   *                                  eg use_stream = false
+   *                                  WriteStream: https://nodejs.org/dist/latest-v15.x/docs/api/fs.html#fs_fs_createwritestream_path_options
    *
    * @return {Promise}  Success
    *                    Reject: {string} err
    */
-  async write(data?, use_stream?, cursor_fileHandle?: number): Promise<number> {
+  async write(data?, cursor_fileHandle?: number): Promise<number> {
     const full_path = this.full_path;
     if (
       full_path == null ||
@@ -321,18 +324,18 @@ export class File extends File_props {
     //
     // Write Stream
     {
-      if (use_stream) {
+      if (cursor_fileHandle == null) {
         if (this.write_stream) {
           return write_stream.call(this);
         }
         //
         // Open the stream
-        return this.open_stream().then(() => {
+        return this.open_stream(eMode.WRITE).then(() => {
           return write_stream.call(this);
         });
 
         function write_stream() {
-          return new Promise<any>((success) => {
+          return new Promise<number>((success) => {
             (<File>this).write_stream.write(this.content, (err) => {
               if (err) {
                 throw err;
