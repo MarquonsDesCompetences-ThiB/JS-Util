@@ -1,5 +1,6 @@
 export * as request from "./path_request.js";
 export * as split from "./split.js";
+export * as util from "./util.js";
 
 import { string } from "@both_types/_types.js";
 
